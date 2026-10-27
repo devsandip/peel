@@ -443,6 +443,8 @@ Version the canonical docs, mockups, code, and infrastructure in the clean publi
 
 Use the existing AWS account, initially us-east-1. Host the static browser shell from a private S3 origin behind CloudFront. Use API Gateway, Lambda, Cognito, and DynamoDB for cloud sync and web sessions. S3 is for application artifacts, not the primary note store. Define infrastructure as code, keep dev and production isolated, and use GitHub OIDC with a narrowly scoped deployment role rather than long-lived keys.
 
+The [controlled development hosting plan](features/cloud-dev-hosting.md) first packages and validates managed identity/data through operator-only Lambda invocation, with bounded synthetic work and verified cleanup. It creates no public API or app and does not establish API Gateway, browser/native login, live sync or production hosting acceptance.
+
 Set budget alerts, bounded logs, request throttles, alarms for write/authorization failures, backup retention, account deletion, and a tested rollback before hosted beta. Measure idle polling, API cost, transaction amplification, and retention storage from dogfooding. No infrastructure needs to be provisioned for screen mockups.
 
 ## Performance and reliability budgets
