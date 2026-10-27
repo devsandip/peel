@@ -22,6 +22,8 @@ Keep one purpose per subsequent PR:
 | [45](https://github.com/devsandip/peel/issues/45) | Private identity/session observation | Independent configured pin, metadata-only STS and redacted direct-lifetime evidence; no resource writes |
 | [47](https://github.com/devsandip/peel/issues/47) | Reviewed source/artifact observation | Clean public main, exact latest hosted attempt and reproducible run-specific inputs; no account or resource writes |
 | [49](https://github.com/devsandip/peel/issues/49) | Private regional capacity observation | Pinned account/role and Lambda unreserved concurrency; no quota or reservation changes |
+| [52](https://github.com/devsandip/peel/issues/52) | Public audit-region registry | Verify complete current Lake home-region coverage; no account calls |
+| [51](https://github.com/devsandip/peel/issues/51) | Private hook/audit observation | Complete account/organization/region metadata or explicit unknown; no audit changes or event payload reads |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
