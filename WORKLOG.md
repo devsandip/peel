@@ -1019,3 +1019,20 @@
 
 **Next:**
 - Merge the transport and composition PRs in order after their gates. Then implement issue 14's composed recovery/account-isolation evidence before closing M2.1.
+
+
+## 2026-10-27 - Exercise composed Cloud recovery with durable local clients
+
+**Did:**
+- Planned issue 14's exit evidence before implementing three composed local-engine groups with synthetic RSA identities and fresh SQLite stores.
+- Verified interrupted/failed page commits and reopen, cursor/owner isolation, identical retry after a lost response, later-draft conflict preservation/resolution and stale purge rejection with new-ID recovery.
+- Verified expired/revoked sessions, inactive entitlement and a private SDK failure cannot mutate saved drafts or retries through the reply validator. Reopen preserves them, and restored authorization completes both the original and later work.
+
+**State now:**
+- All 27 DynamoDB cases and TypeScript pass; final shared/build/hosted checks are pending. Prior main integration 40535667266 is now successful. M2.1 remains open until this evidence PR passes and merges; no app Cloud login, hosting or live delivery is enabled.
+
+**Next:**
+- Finish focused checks/review and merge this issue 14 PR, then close the foundation milestone with explicit remaining gates. Keep the separate public-repository SPEC wording fix in issue 24 out of this test PR.
+
+**Verification:**
+- All 135 shared cases, 27 DynamoDB Local cases, TypeScript, source formatting and the unchanged web build pass locally. The existing bundle-size warning remains; hosted checks are pending.
