@@ -67,7 +67,6 @@ async function fixture(
     now: { value: number };
     queries: QueryCommandInput[];
     hooks: {
-      beforeQuery?: (input: QueryCommandInput) => void;
       afterQuery?: (
         input: QueryCommandInput,
         output: QueryCommandOutput,
@@ -93,7 +92,6 @@ async function fixture(
     folder = await mkdtemp(join(tmpdir(), "peel-synthetic-pull-"));
   const queries: QueryCommandInput[] = [],
     hooks: {
-      beforeQuery?: (input: QueryCommandInput) => void;
       afterQuery?: (
         input: QueryCommandInput,
         output: QueryCommandOutput,
@@ -104,7 +102,6 @@ async function fixture(
       if (context.commandName !== "QueryCommand") return next(args);
       const input = args.input as QueryCommandInput;
       queries.push(structuredClone(input));
-      hooks.beforeQuery?.(input);
       const result = await next(args);
       await hooks.afterQuery?.(input, result.output as QueryCommandOutput);
       return result;
@@ -178,7 +175,6 @@ async function fixture(
     });
   } finally {
     hooks.afterQuery = undefined;
-    hooks.beforeQuery = undefined;
     try {
       await client.send(new DeleteTableCommand({ TableName: table }));
     } finally {
@@ -206,29 +202,41 @@ async function pages(
 }
 it("follows actual engine byte-limited continuation and public byte limits without losing notes", async () =>
   fixture(async ({ service, store, pull, queries, hooks }) => {
-    const ids = ["a", "b", "c", "d", "e", "f"];
+    const ids = ["a", "b", "c", "d", "e", "f", "g"];
     for (const id of ids)
       await service.mutate(
         subject,
         await mutation(`large-${id}`, id, 0, "x".repeat(200000)),
       );
     queries.length = 0;
-    // Unresolved: Local did not return a byte-limited page for this fixture.
-    // This projection-removal attempt also fails the continuation assertion below.
-    hooks.beforeQuery = (input) => {
-      delete input.ProjectionExpression;
+    const responses: { count: number; continued: boolean }[] = [];
+    hooks.afterQuery = async (_input, output) => {
+      responses.push({
+        count: output.Count ?? 0,
+        continued:
+          !!output.LastEvaluatedKey &&
+          Object.keys(output.LastEvaluatedKey).length > 0,
+      });
     };
+    // Local includes the item crossing 1 MiB before stopping. A seventh item
+    // leaves actual work after that crossover, forcing a byte-limited continuation.
     expect(
-      (await store.headKeys(subject, "notes", null, "f", 32)).keys,
+      (await store.headKeys(subject, "notes", null, "g", 32)).keys,
     ).toEqual(ids);
     expect(queries.some((query) => query.ExclusiveStartKey)).toBe(true);
+    expect(queries[0].Limit).toBeGreaterThan(ids.length);
+    expect(responses[0].continued).toBe(true);
+    expect(responses[0].count).toBeLessThan(ids.length);
+    expect(responses.reduce((sum, page) => sum + page.count, 0)).toBe(
+      ids.length,
+    );
+    hooks.afterQuery = undefined;
     expect(
       queries.every(
         (query) =>
           query.ConsistentRead && query.ProjectionExpression === "PK, SK",
       ),
     ).toBe(true);
-    hooks.beforeQuery = undefined;
     const download = await pages(pull, await pull.bootstrap(subject, scope));
     const heads = download
       .filter((page) => page.kind === "heads")
@@ -237,7 +245,7 @@ it("follows actual engine byte-limited continuation and public byte limits witho
     expect(
       download.filter((page) => page.kind === "heads")[0].heads,
     ).toHaveLength(2);
-    expect(download.at(-1)?.throughSequence).toBe(6);
+    expect(download.at(-1)?.throughSequence).toBe(7);
   }));
 it("reconciles edits, out-of-bound creates and purges into durable local pages, then resumes after offline edits", async () =>
   fixture(

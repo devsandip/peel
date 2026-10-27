@@ -17,7 +17,8 @@ import {
 } from "./server-dynamodb";
 
 type Item = Record<string, AttributeValue>;
-const identifier = (value: string) => /^[a-zA-Z0-9-]{1,128}$/.test(value);
+const identifier = (value: unknown): value is string =>
+  typeof value === "string" && /^[a-zA-Z0-9-]{1,128}$/.test(value);
 const changeKey = (sequence: number) =>
   `CHANGE#${String(sequence).padStart(16, "0")}`;
 const unavailable = (): never => {
