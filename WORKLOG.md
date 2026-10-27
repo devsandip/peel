@@ -1194,3 +1194,21 @@
 
 **Verification:**
 - 176 shared cases, TypeScript, formatting, web build, five provider-schema templates and Node 24 focused/packaged checks pass locally. The public-only command observes 1,342,298 bytes from six sources, with no account/resource operations. Lambda ZIP/hash is unchanged; the existing browser warning remains. Hosted checks are pending.
+
+
+## 2026-10-28 - Observe private AWS identity and direct session runway
+
+**Did:**
+- Confirmed PR 44's postmerge main run 40580268639 passed all three jobs. Its price collection evidence remains separate from actual account readiness.
+- Added issue 45's pre-code plan and bounded read-only collector using an independent existing SSO profile configuration, explicit regional STS and private process-format credential resolution.
+- Blocked CLI history, credential/config/endpoint overrides and unsupported profile flows before authentication. Kept exported credentials, raw session ARNs and child error payloads out of normalized output and reports; reported direct expiry without inventing refresh proof.
+- Verified a private live Node 24/AWS CLI observation: configured identity/role matched, the session was active and direct runway covered the projected two-hour window. Restricted ignored output contains normalized metadata only.
+
+**State now:**
+- Identity/session observation works; no resource/configuration was created or modified, and app Cloud remains disabled. Later runway and source/quota/audit/ownership/lifecycle/managed gates remain open. No real note/default database was accessed.
+
+**Next:**
+- Merge this focused credential-boundary PR after hosted gates/review, then implement separately tracked source/artifact attestation and quota/audit observation before owned lifecycle/apply tooling. Recheck actual credentials against the exact lease before any write.
+
+**Verification:**
+- 186 shared cases, TypeScript, formatting, web build, five provider-schema templates and Node 24 focused/packaged checks pass locally. A private output-mode/redaction check passed; no account identifiers or credential values enter this log. Lambda ZIP/hash and browser warning are unchanged. Hosted checks are pending.
