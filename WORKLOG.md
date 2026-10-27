@@ -988,3 +988,17 @@
 
 **Decisions:**
 - A private Node instance owns one initiator's attempt. Restart loses it safely. Do not treat a shared singleton as a web login service; browser binding and atomic multi-worker attempt persistence must precede exposed routes.
+
+
+## 2026-10-27 - Bound Lambda payload-v2 event conversion
+
+**Did:**
+- Split issue 13 into transport issue 21 and a dependent authenticated-composition PR after the combined draft exceeded a comfortable review size. Recorded the decomposition in the milestone and issue; no product scope changed.
+- Added an isolated trusted-origin event/response adapter with bounded URL, headers, cookies, UTF-8/base64 bodies and response streams. Raw query duplicates and duplicate cookies survive conversion for the service to reject.
+- Added focused transport failure and response tests, including cancellation of oversized streams and separate Set-Cookie response entries. No listener or AWS resource is created.
+
+**State now:**
+- PRs 19/20 are merged and their main integration checks passed. Transport and authenticated composition are separate review units; local final checks and hosted transport gates are pending.
+
+**Next:**
+- Verify and merge the transport PR, then finish issue 13's composed Cognito/session and DynamoDB integration PR. Issue 14 remains the broader recovery/isolation evidence slice.
