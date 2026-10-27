@@ -17,4 +17,8 @@ Automated scans and OCR have limits; this is scoped review evidence, not a guara
 
 ## Follow-through
 
-Before initial publication, scan the exact staged public snapshot and its no-reply Git metadata again. Verify the original remains private and the new repository has a different identity and no old refs/PRs/logs. Run CI on the public snapshot. Subsequent workflow fixes and product changes each receive their own small, single-purpose PR and merge when ready.
+The exact 518-file staged snapshot and its fresh root history pass Gitleaks with zero findings and no matches for the old personal author email. The new public repository has a different identity, a single clean starting commit, and no imported old refs/PRs/logs. Anonymous API access succeeds; the original archive remains private. All 49 additional logo images pass local OCR/pattern checks.
+
+Public CI now executes real hosted jobs. Its first run reproduced the pnpm installer-policy issue, followed by a separate missing temporary-directory issue after installation was repaired. Both fixes and trigger deduplication are separate small PRs with explicit evidence. These are code/setup failures rather than an Actions quota block.
+
+Future agent-created commits use repository-local GitHub no-reply identities. GitHub's merge API rejected the nominated no-reply address, so the reviewed PR is merged locally with no-reply author/committer metadata checked before a normal push. Required repository gates still apply; a personal address is never the fallback. Verify the PR's merged state and resulting identities afterward. The old private history must never be pushed into this repository. Product changes continue in small, single-purpose PRs; public-beta and distribution gates remain unchanged.
