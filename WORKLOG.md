@@ -889,3 +889,20 @@
 
 **Next:**
 - Complete hosted verification and merge the small repair/documentation stack in order, verifying no-reply metadata after every merge. Continue product work from the new checkout.
+
+
+## 2026-10-27 - Add conditional DynamoDB Cloud storage
+
+**Did:**
+- Implemented the existing Cloud mutation/read contract using the pinned server-only AWS SDK, coherent transaction reads and conditional all-or-nothing writes. Account policy/generation, note revision, receipts and compact change sequence participate in the commit.
+- Shared the existing transition invariants with SQLite. Purge replaces note content with a permanent body-free marker; receipt/change TTL is separate from logical expiry. Encoded attribute sizes are checked before submission.
+- Passed nine actual DynamoDB Local cases with synthetic data, including concurrency, revocation at commit, lost responses, expiry, isolation, malformed storage, exact size bounds and private retryable failures. Added a checksum-pinned disposable runtime runner to Linux CI.
+
+**State now:**
+- TypeScript, all 116 shared tests, source formatting and web build pass. Hosted checks are pending. The app's Cloud mode is not activated and no AWS resources or real credentials were used.
+
+**Next:**
+- Finish hosted checks and merge this focused PR, then plan DynamoDB Query pagination separately. Native/web login and sessions, hosted infrastructure, live push and app integration remain distinct work.
+
+**Decisions:**
+- Use the same mutation service and invariants on both backends. Keep transactional correctness testable locally without provisioning billable infrastructure. Managed-service costs, IAM, backup and rollout still need hosting evidence.

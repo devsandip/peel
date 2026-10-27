@@ -1,0 +1,29 @@
+# DynamoDB conditional Cloud mutations
+
+## Requirements and PR boundary
+
+FR-04/13/14/20 and AC-09/10/12/13/22 require account-isolated, conditional and idempotent Cloud storage. This PR implements only the existing mutation/read store contract on DynamoDB. Pagination, login/session UI, hosted infrastructure, live push and app activation remain separate PRs. No AWS resource or real credential is needed.
+
+## Plan before implementation
+
+1. Use pinned AWS SDK v3 low-level DynamoDB commands on an explicitly supplied client/table. Match SPEC's USER/META/NOTE/TOMB/OP/CHANGE keys. Atomically read account, note, permanent tombstone and optional receipt with TransactGetItems; validate persisted schemas, key identity and library scope before use.
+2. Share the existing transition validation with SQLite so both stores enforce the same account/head/receipt/change invariants. Use one bounded TransactWriteItems operation: condition account revision/current paid policy/library generation, the note revision and permanent marker, receipt absence/logical expiry, and change absence. Never target one item with two actions. Purge deletes current note text and installs a body-free permanent marker in the same transaction.
+3. Store versioned JSON records with bounded scalar key/revision/TTL attributes. Check UTF-8 attribute names and values plus conservative number overhead against 400 KiB before submitting. Receipts/changes use expiry in epoch seconds for physical TTL; service-side 90-day logical expiry remains authoritative. Permanent markers have no TTL. Hosting infrastructure must explicitly enable the `ttl` attribute for expendable records.
+4. Map conditional or transaction contention to the existing bounded service retry. Keep throttling, validation and transport failures retryable/private without treating them as note conflicts or applied writes. Ambiguous lost responses retry the immutable operation through the existing receipt contract.
+5. Run actual DynamoDB Local with synthetic credentials and isolated disposable tables. Verify independent owners, concurrent same/different-note writes, policy revocation before commit, stable receipts after response loss/reopen, atomic rollback on rejected conditions, permanent purge, expiry and malformed stored records. Add a reproducible local/CI suite and record actual evidence.
+
+## Sources and operational limits
+
+AWS documents atomic [transaction writes](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html), [transaction reads](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactGetItems.html), [item sizing](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CapacityUnitCalculations.html) and [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html). DynamoDB Local tests validate the local engine/API contract; they do not establish managed-service IAM, cost, throttling, backup/restore, multi-process outage or hosted authentication acceptance. Cloud remains disabled in the app.
+
+## Evidence
+
+Nine actual DynamoDB Local 3.3.2 cases pass. They cover matching owner/note/op IDs with isolated content; current-head receipt replay after adapter reopen; concurrent same/different-note writes; a policy revocation after the final read (including an administrative update without revision advancement); lost response after a committed write; Trash expiry and atomic body-free permanent purge; logical receipt expiry before physical TTL deletion; malformed/foreign stored records; encoded-size rejection before submission; and one action per key with real rejected-transaction rollback. Injected throttling, validation cancellation and transport failures return a private HTTP 503 without creating a conflict receipt or partial note.
+
+`pnpm check`, all 116 shared tests across 23 files, repository source formatting and `pnpm build` pass. The browser bundle retains its existing size warning; the server SDK is not imported by the app. The item-boundary case fits the existing serialized-head budget and is rejected only after including DynamoDB attribute/key overhead. Both adapters share the original transition invariants; existing SQLite behavior remains covered by its tests. The SQLite/Chrome durability experiment also passes eight scenario groups per adapter, four head and four pull groups per adapter, and six local SIGKILL boundaries. All three server SQLite SIGKILL boundaries pass.
+
+Reproduce with Java 17 or newer and `pnpm test:dynamodb`. The runner downloads AWS's runtime with a pinned SHA-256, refuses changed bytes, disables runtime telemetry, starts a disposable in-memory engine, passes only a loopback endpoint and synthetic credentials to the tests, and cleans up its owned process/directory. CI runs the same command. Docker image acquisition was blocked by the local credential helper, so the checksum-verified official Java runtime is the tested path. No Docker credentials, real AWS credentials or hosted resources are used.
+
+Each ordinary write currently uses two atomic reads of up to four records and a five-action transaction (metadata, note, tombstone guard, compact change and receipt). A conflict writes metadata and receipt with note/tombstone guards; a server-expiry purge omits the operation receipt. Bounded account sequence contention remains serialized per owner. Measure managed-service request consumption, retry contention and cost before hosting; Local timings are not production latency evidence.
+
+Hosted CI and final merge evidence are pending. Query pagination, account administration/billing authority, scheduled cleanup, managed-service policies and backup/restore remain separate gates. The injectable client/table are server composition inputs, not request fields. The adapter does not create accounts/tables or own the shared SDK client's lifetime.

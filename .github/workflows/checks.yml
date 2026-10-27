@@ -25,6 +25,7 @@ jobs:
       - run: pnpm exec prettier --check apps/web/src packages infra tests
       - run: bash -n infra/relay/bootstrap.sh && python3 -m py_compile infra/relay/lease.py infra/relay/health.py
       - run: pnpm test
+      - run: pnpm test:dynamodb
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: node scripts/experiment-cloud-durability.mjs
