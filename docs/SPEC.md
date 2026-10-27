@@ -332,6 +332,8 @@ Reject unsupported schema versions without rewriting data. Back up native data b
 
 Clients call an authenticated HTTPS API implemented with API Gateway and Lambda. They do not access the DynamoDB table directly. Use DynamoDB key queries for per-user notes and changes; do not scan the complete table for a user's library or for search.
 
+The isolated [Lambda payload-v2 adapter](features/cloud-lambda-event.md) bounds event/response conversion, pins the configured origin and preserves raw query/cookie ambiguity for the trusted Fetch service. It supplies no authentication policy, listener or infrastructure by itself. Verified service composition, real gateway/proxy configuration and hosted acceptance remain separate gates.
+
 Initial single-table layout:
 
 | Partition key | Sort key | Purpose |
