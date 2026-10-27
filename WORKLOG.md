@@ -1086,3 +1086,21 @@
 
 **Verification:**
 - 139 shared cases, 27 DynamoDB Local cases, TypeScript, formatting and web build pass locally. Actual Node v24.22.1 packaged smoke passes all three modes with zero network attempts; the 336,713-byte ZIP reproduces across repeated builds and UTC/Asia-Kolkata. Browser bundle-size warning remains. Hosted gates are pending, not claimed passing.
+
+
+## 2026-10-27 - Define disposable Cloud data and identity
+
+**Did:**
+- Confirmed all three postmerge main jobs passed for PR 34 at run 40554519940. No app or hosted resource was activated by that artifact merge.
+- Added issue 28's requirement-linked plan and pure six-resource DynamoDB/Cognito template with isolated UUID names, bounded on-demand capacity, AWS-owned encryption, expendable-item TTL configuration and explicit deletion behavior.
+- Defined administrator-only synthetic identity configuration, a public code-flow client/custom scope, reserved callback and managed-login domain/branding, without creating users, credentials, roles or a data API.
+- Pinned the isolated AWS cfn-lint toolchain and its CI setup code; added offline rendering/schema checks plus runtime/PKCE wiring and policy cases.
+
+**State now:**
+- Template and protocol wiring are defined locally. Managed issuance, IAM, hosted storage, secret/lease/deletion controls and app/live acceptance remain open. No AWS account operation or resource creation occurred.
+
+**Next:**
+- Merge this focused IaC PR after hosted gates and review, then issue 29's private Lambda/owned-artifact/key/independent-cleanup definitions. Actual provisioning remains gated by issue 30 and the cleanup rehearsal.
+
+**Verification:**
+- 142 shared cases, TypeScript, formatting, Node 24 rendering and packaged checks, provider-schema lint and web build pass locally. A malformed table-class control is rejected. The existing browser-size warning remains; the Lambda ZIP/hash is unchanged. Hosted checks are pending.
