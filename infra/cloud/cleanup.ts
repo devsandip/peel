@@ -29,7 +29,13 @@ export function cloudCleanupGuardTemplate(input: {
     name = table.TableName,
     stacks = cloudDevStackNames(input.runId),
     { started, expires } = cloudHostingLease(input.lease);
-  if (started % 1000 || expires % 1000 || expires - started < 60 * 60000)
+  if (
+    input.lease.startedAt.length !== 24 ||
+    input.lease.expiresAt.length !== 24 ||
+    started % 1000 ||
+    expires % 1000 ||
+    expires - started < 60 * 60000
+  )
     throw Error("Invalid Cloud cleanup lease");
   const arn = (service: string, resource: string) =>
     sub(

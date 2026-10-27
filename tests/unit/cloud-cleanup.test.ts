@@ -115,8 +115,13 @@ it("rejects unowned/coerced identities and leases that cannot fit the rehearsal 
     { ...lease, startedAt: "2026-10-27T12:00:00Z" },
     { ...lease, expiresAt: "2026-10-27T12:59:59.000Z" },
     { ...lease, expiresAt: "2026-10-27T13:30:00.001Z" },
+    { ...lease, expiresAt: "2026-10-27T13:00:00.001Z" },
     { ...lease, startedAt: "2026-10-27T12:00:00.001Z" },
     { ...lease, expiresAt: lease.startedAt },
+    {
+      startedAt: "+010000-10-27T12:00:00.000Z",
+      expiresAt: "+010000-10-27T13:00:00.000Z",
+    },
   ])
     expect(() =>
       cloudCleanupGuardTemplate({
