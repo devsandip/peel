@@ -863,3 +863,16 @@
 
 **Decisions:**
 - Fix clean-checkout setup without suppressing recovery experiments or reducing their coverage.
+
+
+## 2026-10-27 - Avoid duplicate CI on feature branch updates
+
+**Did:**
+- Limited push-triggered checks to main. PR events still validate every proposed change; both existing jobs and their commands remain unchanged.
+- Parsed and compared old/new YAML to verify that only the push branch list changed.
+
+**State now:**
+- Feature branch pushes no longer duplicate a PR's complete suite. Main integration checks still run after applicable merges. Hosted verification is pending.
+
+**Next:**
+- Merge the small CI repair stack in dependency order once the combined hosted checks pass, then continue product work in fresh branches.
