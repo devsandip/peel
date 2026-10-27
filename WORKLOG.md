@@ -954,3 +954,20 @@
 
 **Next:**
 - Merge after its dependency and hosted gates, then implement issue 11 for durable browser sessions. Continue the current Cloud foundations milestone one small issue/PR at a time.
+
+
+## 2026-10-27 - Persist browser sessions and revocation in DynamoDB
+
+**Did:**
+- Planned issue 11 as one durable-store slice. Added explicit-client atomic session/directory inserts, strongly consistent digest lookup and bounded conditional revocation, with no raw browser credential storage.
+- Verified disposable DynamoDB tables across fresh clients and a separate Node process. Six new groups cover collisions, account isolation, durable logout, concurrent revocation/deletion, logical expiry, malformed state and private failures.
+- Passed all 22 DynamoDB cases, all 123 shared cases, TypeScript, source formatting and the production web build. Browser assets remain unchanged; no AWS resources or real notes were used.
+
+**State now:**
+- Earlier session and TTL PRs are merged with passing hosted checks, including their main integration runs. This durable-store slice is ready for its own hosted checks; login and app Cloud activation remain disabled.
+
+**Next:**
+- Merge the focused issue 11 PR after its gates, then plan issue 12 for the authorization-code PKCE handshake. Keep hosted storage, account-wide cleanup and provider refresh separate from this adapter's evidence.
+
+**Decisions:**
+- The global lookup is the single authorization source. A body-free owner directory enables future account cleanup without a table Scan; its presence never grants access. Physical TTL is cleanup only, with deadlines rounded up and logical expiry enforced by the request boundary.
