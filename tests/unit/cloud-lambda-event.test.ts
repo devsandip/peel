@@ -160,10 +160,11 @@ it("preserves response status, retry headers and separate cookies, bounds stream
   headers.append("set-cookie", "synthetic-a=one; Path=/");
   headers.append("set-cookie", "synthetic-b=two; Path=/");
   service.mockResolvedValueOnce(
-    new Response("Synthetic response", { status: 429, headers }),
+    new Response("\uFEFFSynthetic 笔记", { status: 429, headers }),
   );
   const response = await handler(event());
   expect(response.statusCode).toBe(429);
+  expect(response.body).toBe("\uFEFFSynthetic 笔记");
   expect(response.headers["retry-after"]).toBe("5");
   expect(response.headers["cache-control"]).toBe("no-store");
   expect(response.cookies).toEqual([

@@ -185,7 +185,9 @@ async function responseToEvent(
     statusCode: response.status,
     headers,
     ...(cookies.length ? { cookies } : {}),
-    body: new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+    body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+      bytes,
+    ),
     isBase64Encoded: false,
   };
 }

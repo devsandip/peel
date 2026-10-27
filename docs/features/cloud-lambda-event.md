@@ -17,4 +17,6 @@ Provisional limits: 10 KiB path/query, 64 header entries and 16 KiB combined hea
 
 ## Evidence
 
-Implementation and verification pending.
+Four focused groups pass with actual Fetch requests/responses. Invalid/oversized input never enters the service. Passing cases preserve UTF-8/base64 text, raw duplicate query values, duplicate cookie entries, pinned origin despite forged host/identity metadata, retry status/headers and separate response cookies. An oversized response stream is cancelled; private service failures return only a fixed error. Response Unicode and its leading BOM survive conversion.
+
+TypeScript, source formatting, all 134 shared cases in 26 files, all 22 existing DynamoDB Local cases and the unchanged production web build pass. The browser bundle retains its size warning. Hosted checks remain pending; actual results are recorded in the linked PR/issue. The service in these transport tests is synthetic, so they establish no authentication, real API Gateway invocation or managed-service acceptance. The dependent composition branch has separate synthetic RSA/DynamoDB tests and will be reviewed independently.

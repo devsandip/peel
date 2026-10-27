@@ -1002,3 +1002,6 @@
 
 **Next:**
 - Verify and merge the transport PR, then finish issue 13's composed Cognito/session and DynamoDB integration PR. Issue 14 remains the broader recovery/isolation evidence slice.
+
+**Verification:**
+- TypeScript, source formatting, all 134 shared cases, all 22 existing DynamoDB Local cases and the unchanged web build pass. Hosted transport checks are pending. The dependent composition draft is committed on its own unpublished branch, keeping transport validation independent.
