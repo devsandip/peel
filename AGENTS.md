@@ -12,3 +12,5 @@ Read the applicable user and Developer-folder instructions, then `docs/PRFAQ.md`
 - Do not provision infrastructure simply to validate local capture. AWS deployment follows the hosting milestone and its infrastructure plan.
 - Never commit notes, real account tokens, local databases, exports, or credentials. Use synthetic fixtures for tests.
 - Preserve canonical docs across branches; do not copy them into worktree-specific folders.
+- This is the clean public repository. Never import refs/history from `peel-private-archive`; its old commit-author metadata stays private.
+- Use a GitHub no-reply identity for agent-created commits and merges. Set the repository-local Git identity before committing, pass that email explicitly through `gh pr merge --author-email`, and verify the resulting author/committer metadata. Do not expose a personal email through Git or logs.

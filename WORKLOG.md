@@ -876,3 +876,16 @@
 
 **Next:**
 - Merge the small CI repair stack in dependency order once the combined hosted checks pass, then continue product work in fresh branches.
+
+
+## 2026-10-27 - Preserve commit privacy after source publication
+
+**Did:**
+- Recorded repository instructions for GitHub no-reply commit and merge identities, explicit merge-author selection and post-merge metadata verification.
+- Recorded successful anonymous public access, private archive preservation and clean staged/root-history scans without publishing identifying audit values.
+
+**State now:**
+- The new public repository has no old private refs, PRs or Actions history. Fresh CI is executing; its setup repairs remain separate focused PRs.
+
+**Next:**
+- Complete hosted verification and merge the small repair/documentation stack in order, verifying no-reply metadata after every merge. Continue product work from the new checkout.
