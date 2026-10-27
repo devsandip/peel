@@ -33,7 +33,18 @@ const schema = [
     "CREATE TABLE cleanup_receipts(run_id TEXT PRIMARY KEY REFERENCES reservations(run_id), plan_sha256 TEXT NOT NULL, inventory_sha256 TEXT NOT NULL, checked_at TEXT NOT NULL) STRICT",
   ],
 ] as const;
-type Code = "invalid-input" | "unrecognized" | "unavailable" | "busy";
+type Code =
+  | "invalid-input"
+  | "unrecognized"
+  | "unavailable"
+  | "busy"
+  | "stale"
+  | "duplicate"
+  | "exhausted"
+  | "unresolved"
+  | "policy-refused"
+  | "uncertain"
+  | "receipt-conflict";
 export class CloudRunLedgerError extends Error {
   readonly code: Code;
   constructor(code: Code) {

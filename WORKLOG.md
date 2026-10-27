@@ -1295,3 +1295,17 @@
 
 **Next:**
 - Merge the namespace PR after focused review/hosted gates, then finish issue 55's separately reviewed transactional reservation/receipt layer and independent-process interruption cases. Keep actual inventory/teardown proof separate.
+
+## 2026-10-28 - Reserve run slots before acknowledging a resource attempt
+
+**Did:**
+- Implemented issue 55's SQLite compare-and-reserve with the actual stored prior projection, full new-run guard under lock and time/policy recheck before commit.
+- Added immutable matching cleanup-receipt accounting, expired-authorization cleanup inspection and fixed failure/uncertain-commit behavior. No delete/refund/reset or apply command was added.
+- Verified independent writers and real SIGKILL before commit, after commit before acknowledgement, and after acknowledgement. Twelve ledger cases plus nine namespace cases pass under actual Node 24; all 247 shared cases, TypeScript, formatting and web build pass locally.
+
+**State now:**
+- Namespace PR 57 has passed all hosted jobs and must merge first. Counter hosted gates follow before integration. No actual operator authorization ledger, AWS run/resource or real note/default database was created or accessed.
+- Receipts record external verifier facts; they do not establish AWS ownership/deletion. Audit issue 51 remains unresolved/stopped, Cloud disabled and v0.7 unchanged.
+
+**Next:**
+- Integrate the two focused PRs in order after their hosted gates, then plan exact target ownership and owned lifecycle/recovery under issue 30. Keep actual audit/managed cleanup acceptance open.
