@@ -19,6 +19,7 @@
     "cloud:prices": "node scripts/observe-cloud-prices.mjs",
     "cloud:identity": "node scripts/observe-cloud-identity.mjs",
     "cloud:source": "node scripts/observe-cloud-source.mjs",
+    "cloud:capacity": "node scripts/observe-cloud-capacity.mjs",
     "cloud:iac:render": "node scripts/render-cloud-iac.mjs",
     "cloud:iac:check": ".venv/cloud-iac/bin/cfn-lint --config-file infra/cloud/cfn-lint.json --template artifacts/cloud-iac/data-identity.json artifacts/cloud-iac/artifact-bootstrap.json artifacts/cloud-iac/private-hosting.json artifacts/cloud-iac/cleanup-guard.json artifacts/cloud-iac/cleanup-sentinel.json"
   },
