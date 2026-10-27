@@ -1,0 +1,35 @@
+# Independent Cloud development cleanup
+
+## Purpose and boundary
+
+[Issue 36](https://github.com/devsandip/peel/issues/36) implements the independent cleanup definitions in [M2.2](https://github.com/devsandip/peel/milestone/2). This is a prerequisite for SPEC FR-04/14/20 and AC-04/12/13, under the [bounded hosting plan](cloud-dev-hosting.md). One PR defines the outside-stack authority, schedules and empty sentinel. It does not provision resources, implement a runner or establish managed-service acceptance. Version 0.7 requirements and mockups stay unchanged.
+
+## Resource and permission graph
+
+- Derive every name from the same canonical random run UUID used by [private hosting](cloud-private-hosting.md). Use separate `-guard`, `-artifacts`, `-sentinel` and `-data` stacks. The guard contains the CloudFormation deletion role, Scheduler execution role, dedicated tagged schedule group and two one-time schedules. It contains neither the table/function nor artifact bucket, so deleting a target cannot remove the cleanup authority.
+- Scheduler may delete only the two exact sentinel/data stack names in the current account and region. It passes only the dedicated deletion role to CloudFormation, with `iam:PassedToService` restricted to that service. Each [universal target](https://docs.aws.amazon.com/scheduler/latest/UserGuide/managing-targets-universal.html) supplies an exact stack name, `RoleARN`, stable deletion request token and `STANDARD` deletion. No retained resources or forced stack deletion.
+- The Scheduler role trusts only `scheduler.amazonaws.com`, this account and the dedicated [schedule-group ARN](https://docs.aws.amazon.com/scheduler/latest/UserGuide/cross-service-confused-deputy-prevention.html). A schedule ARN is not a valid replacement for that trust condition. The deletion role trusts CloudFormation and has only resource metadata/deletion actions for the owned table, sentinel table, function, execution role and cursor secret. It cannot delete the guard/artifact stacks or roles, invoke code, read notes/secret values, create/retag resources or pass another role.
+- Cognito assigns its pool ID at creation. Restrict its deletion/metadata actions to the current account/region's pool ARN and all three existing ownership tags, using the supported [user-pool tag conditions](https://docs.aws.amazon.com/service-authorization/latest/reference/list_cognito-idp.html). Grant no tagging action. `DescribeUserPoolDomain` requires a separate resource wildcard, restricted to that read-only action and `us-east-1`. This does not authorize deletion of an unowned pool.
+- Normal deletion providers may read metadata. Lambda metadata can include resolved environment secrets. The future runner must never print or persist full function/stack/provider responses; whitelist safe observations. These policies remain unproven against actual provider handlers until the controlled run. An access failure stops the run for a focused fix, without widening permissions automatically.
+
+## Lease and actual rehearsal gate
+
+Require a canonical UTC, whole-second lease lasting 60 to 90 minutes. The first write starts it; the handler keeps the identical absolute expiry. Schedule sentinel deletion at start plus 15 minutes and data deletion at expiry. Both use UTC `at(...)`, enabled state, no flexible window, at most three retries and 15 minutes of event age. [Scheduler has minute precision](https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html); expiry is an application fence, not a promise of instantaneous infrastructure deletion. One-time schedules remain owned resources until guard removal.
+
+Before the first write, the later runner must verify that all create/rehearsal/wait work fits the lease, authorization and refreshable SSO window plus the separate 30-minute cleanup margin. It must have the guard and empty sentinel ready and read back both correct schedules by start plus 10 minutes, leaving five minutes before rehearsal. A late/missing/disabled/mismatched schedule aborts creation and enters cleanup; do not reschedule to extend the lease. The sentinel is one empty, encrypted, on-demand DynamoDB table with deletion protection/PITR off and no ingestion capability. It uses the same deletion role and scheduling path as the data target.
+
+Wait for the scheduled sentinel deletion, verify stack settlement and table absence, and then verify the still-armed data schedule before creating the main stack. No manual deletion may masquerade as the rehearsal. A lost response or local interruption requires ownership discovery and cleanup, not a second blind create. Stop managed tests at expiry minus 30 minutes. An actual sentinel success proves that path only; the complete data/function/identity teardown must also be observed. No policies, schemas or mocked checks replace either observation.
+
+The runner's `finally` separately deletes exact owned targets, verifies their inventory, empties only the proven-owned ZIP object(s), deletes the artifact stack and finally removes the guard. Scheduler cannot remove those bootstrap resources itself. Losing the runner can leave bootstrap resources behind; this is a reported cleanup failure, with private recovery inventory and no further run. Scheduler/DeleteStack acceptance alone is not teardown evidence.
+
+## Provider deletion semantics
+
+The hosting plan's prohibition concerns forced/retained **stack** shortcuts. CloudFormation's ordinary deletion of this newly generated disposable cursor secret uses [ForceDeleteWithoutRecovery](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-attribute-deletionpolicy.html). Secret removal is [asynchronous](https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_DeleteSecret.html). Existing secrets must never be targeted.
+
+Deleted Cognito pools become invisible/inoperable, but AWS [retains them inactive for 14 days before final cleanup starts](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DeleteUserPool.html). Only synthetic users without real contacts are permitted. Report account-visible teardown and documented provider deletion states accurately; neither proves immediate physical erasure or production account-deletion acceptance.
+
+## Validation and remaining gates
+
+Five focused cases pass for malformed/coerced identities and lease boundaries, exact permission targets, wrong account/group/run tags, prohibited data/public/admin capabilities and target-to-template wiring. The full local suite passes 151 cases in 31 files. Node 24 renders the actual guard and sentinel factories alongside the three existing templates; pinned CloudFormation schema/policy lint passes all five with no suppressed findings. The existing packaged checks pass and the Lambda ZIP hash is unchanged. Policy subset assertions and provider schemas are offline evidence, not an AWS IAM simulator or an actual deletion result.
+
+Actual IAM/Scheduler timing, provider deletion, quota availability, source/account/cost/ownership guards and private evidence remain issues 30/31. No apply command or AWS account operation belongs in this PR.

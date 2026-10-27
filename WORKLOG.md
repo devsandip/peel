@@ -1122,3 +1122,21 @@
 
 **Verification:**
 - 146 shared cases, TypeScript, source/script formatting, three provider-schema templates, existing Node 24 packaged checks and web build pass locally. Lambda ZIP/hash is unchanged; the existing browser warning remains. Hosted checks are pending, not claimed passing.
+
+
+## 2026-10-28 - Define independent Cloud cleanup authority
+
+**Did:**
+- Confirmed PR 37's postmerge main run 40563840614 passed all three hosted jobs.
+- Added issue 36's pre-code plan and separate guard/sentinel factories. The guard keeps its deletion role and two one-time schedules outside the exact owned data/sentinel stacks.
+- Confined Scheduler to those two targets and the dedicated CloudFormation role, with current-account/schedule-group trust. Resource deletion authority excludes notes, key reads, invocation, creation, retagging and guard/artifact deletion.
+- Documented the actual scheduled-rehearsal gate, metadata response redaction, minute-level Scheduler precision, asynchronous secret removal and Cognito's 14-day inactive retention.
+
+**State now:**
+- Offline definitions and policy checks pass. No AWS account operation or resource creation occurred. Actual rehearsal, provider permissions and teardown remain unproven; app Cloud stays disabled.
+
+**Next:**
+- Merge this single-purpose PR after hosted gates and focused review, then split issue 30's pure source/account/cost/ownership guards from lifecycle tooling as needed. No managed data probe before observed cleanup rehearsal.
+
+**Verification:**
+- 151 shared cases, TypeScript, formatting, five provider-schema templates and actual Node 24 packaged checks pass locally. The Lambda ZIP/hash is unchanged. Hosted jobs are pending, not claimed passing.

@@ -16,6 +16,13 @@ function leaseTime(value: unknown): number {
     throw Error("Invalid Cloud hosting lease");
   return time;
 }
+export function cloudHostingLease(lease: CloudHostingInput["lease"]) {
+  const started = leaseTime(lease?.startedAt),
+    expires = leaseTime(lease?.expiresAt);
+  if (expires <= started || expires - started > 90 * 60000)
+    throw Error("Invalid Cloud hosting lease");
+  return { started, expires };
+}
 /** Artifact storage must exist before uploading code and creating the main stack. No apply. */
 export function cloudArtifactBootstrapTemplate(runId: string) {
   const base = cloudDataIdentityTemplate(runId),
@@ -108,10 +115,7 @@ export function cloudPrivateHostingTemplate(input: CloudHostingInput) {
     input.artifact.bytes > 20 * 1024 * 1024
   )
     throw Error("Invalid Cloud hosting artifact");
-  const started = leaseTime(input.lease?.startedAt),
-    expires = leaseTime(input.lease?.expiresAt);
-  if (expires <= started || expires - started > 90 * 60000)
-    throw Error("Invalid Cloud hosting lease");
+  cloudHostingLease(input.lease);
   const artifactKey = "cloud-lambda/" + input.artifact.sha256 + ".zip";
   return {
     ...base,
