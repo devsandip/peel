@@ -24,6 +24,9 @@ Keep one purpose per subsequent PR:
 | [49](https://github.com/devsandip/peel/issues/49) | Private regional capacity observation | Pinned account/role and Lambda unreserved concurrency; no quota or reservation changes |
 | [52](https://github.com/devsandip/peel/issues/52) | Public audit-region registry | Verify complete current Lake home-region coverage; no account calls |
 | [51](https://github.com/devsandip/peel/issues/51) | Private hook/audit observation | Complete account/organization/region metadata or explicit unknown; no audit changes or event payload reads |
+| [56](https://github.com/devsandip/peel/issues/56) | Owned local ledger namespace | Private SQLite/filesystem boundary; no reservation or AWS authority |
+| [55](https://github.com/devsandip/peel/issues/55) | Durable run-slot reservations | Atomic allowance and receipt storage with competing-process/crash evidence; no AWS writes |
+| [59](https://github.com/devsandip/peel/issues/59) | Expected owned inventory | Exact reviewed four-stack/17-resource description; no observed ownership or cleanup authority |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 

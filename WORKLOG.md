@@ -1309,3 +1309,17 @@
 
 **Next:**
 - Integrate the two focused PRs in order after their hosted gates, then plan exact target ownership and owned lifecycle/recovery under issue 30. Keep actual audit/managed cleanup acceptance open.
+
+## 2026-10-28 - Bind expected inventory to reviewed development templates
+
+**Did:**
+- Merged namespace PR 57 and transactional ledger PR 58 after focused review and all three respective hosted PR jobs passed. PR 57's main run also passed; PR 58's main run 40603246378 is still pending at this checkpoint.
+- Planned issue 59 and derived one offline four-stack/17-resource inventory from the actual reviewed five-template source bundle, with exhaustive resource mapping, exact names/tags/parents and mandatory owned CloudFormation resolution for generated identifiers.
+- Verified six inventory cases plus 11 source cases, all 253 shared cases, TypeScript, formatting and web build. All 38 focused namespace/ledger/inventory/source cases pass under actual Node 24.22.1; added the contract and source composition to that hosted check.
+
+**State now:**
+- The frozen expected inventory binds explicit account/region, run, lease, artifact and template digests. It is not observed ownership, absence or deletion authority; no AWS request, actual operator slot or real note/default database was accessed.
+- Audit issue 51 remains unresolved and live retries stay stopped. App Cloud stays disabled and v0.7 requirements/mockups are unchanged.
+
+**Next:**
+- Complete hosted gates, then merge this focused contract. Plan a separate bounded target/ownership metadata observer before lifecycle/recovery or managed resources; keep issues 30/31 open.
