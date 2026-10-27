@@ -1050,3 +1050,21 @@
 
 **Next:**
 - Merge after documentation review/repository gates, then issue 26: verify current official runtime/pricing/permission sources and write the hosting/cost/lease plan before infrastructure code or provisioning.
+
+
+## 2026-10-27 - Plan a bounded private managed Cloud experiment
+
+**Did:**
+- Merged documentation PR 32 after both hosted jobs passed (run 40546710906); GitHub closed issue 24 and recorded merge 6ccb401 with no-reply attribution.
+- Wrote issue 26's requirement-linked hosting plan, current us-east-1 price sources, USD 2/run allowance, at most two runs and USD 1 cleanup reserve, with arithmetic checked against a USD 1.488729 conservative forecast.
+- Refined the first hosted experiment to operator-only Lambda Invoke with real Cognito/DynamoDB. Best-effort public API throttles do not establish a bounded spend ceiling; actual API Gateway/app/live acceptance stays open.
+- Specified independently rehearsed deletion, exact ownership, short lease, synthetic suppressed-delivery users and account/source/cost gates before provisioning. Linked the plan from SPEC without changing public v1 scope.
+
+**State now:**
+- No AWS resource, managed user, public endpoint or app feature was enabled. The plan is implementation guidance; artifact/IaC/guard/cleanup/managed evidence remains required.
+
+**Next:**
+- Merge this focused documentation PR after its gates, then issue 27's reproducible Node 24 Lambda artifact and offline checks.
+
+**Verification:**
+- Reviewed official runtime, regional price-list, Cognito callback/scope/suppression and Scheduler/CloudFormation deletion sources; arithmetic and git diff whitespace checks pass. No runtime change or new runtime test; hosted repository checks remain pending.
