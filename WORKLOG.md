@@ -971,3 +971,20 @@
 
 **Decisions:**
 - The global lookup is the single authorization source. A body-free owner directory enables future account cleanup without a table Scan; its presence never grants access. Physical TTL is cleanup only, with deadlines rounded up and logical expiry enforced by the request boundary.
+
+
+## 2026-10-27 - Bound authorization attempts with PKCE and exact callbacks
+
+**Did:**
+- Planned issue 12 as one handshake slice with pinned provider/client/callback and actual S256 challenges. Private per-initiator state, verifier and nonce support one bounded attempt without an embedded secret.
+- Rejected malformed, mismatched, duplicated, expired and replayed callbacks before an injected exchange. Consumption precedes asynchronous work; cancellation/replacement also withholds late candidate results.
+- Passed seven security/failure groups and all 130 shared cases, TypeScript, source formatting and the production web build. No real provider, token or app login was used.
+
+**State now:**
+- PR 19 durable sessions merged with hosted Linux/Mac success; its main integration run also passed. Cloud foundations are 6/9 complete. This handshake is ready for its own focused hosted checks; native execution, provider exchange and browser-bound shared attempt storage remain separate gates.
+
+**Next:**
+- Merge issue 12 after hosted gates, then plan issue 13 for a bounded composed Lambda HTTP handler. Preserve the distinction between backend foundation tests and usable app Cloud login.
+
+**Decisions:**
+- A private Node instance owns one initiator's attempt. Restart loses it safely. Do not treat a shared singleton as a web login service; browser binding and atomic multi-worker attempt persistence must precede exposed routes.
