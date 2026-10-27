@@ -1,0 +1,33 @@
+# Private hook and audit observations
+
+## Purpose and PR boundary
+
+[Issue 51](https://github.com/devsandip/peel/issues/51) supplies hook/data-event facts to the [deployment guard](cloud-deployment-guards.md), within [M2.2](https://github.com/devsandip/peel/milestone/2), under SPEC FR-04/14/20 and AC-04/12/13 prerequisites. The public [region registry prerequisite](cloud-audit-regions.md) merged separately in PR 53. This PR reads private configuration metadata only. Ownership/target names, atomic run slots, lifecycle/apply/recovery and managed proof remain separate issues 30/31. No product v0.7 behavior or app Cloud activation changes.
+
+## Collection contract
+
+Capture explicit existing profile, us-east-1 resource scope and authorization cutoff before awaiting. Verify the current official complete Lake registry before account calls; use the existing private configured-identity/history guard and require a matched active SSO session. Account expectations come from existing configuration, not observed STS/organization metadata. Preserve the account and all settings.
+
+Read only these fixed metadata operations, with argument arrays, explicit regional service endpoints, no pager/prompt/debug, one attempt, bounded output/subprocess timeouts and a shared 90-second deadline:
+
+- Organizations [DescribeOrganization](https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganization.html), selecting only the management-account ID for comparison. Only the precise documented not-in-use service exception establishes standalone status; denied/unknown errors do not. Do not store the organization's ARN, name, email or management ID.
+- CloudFormation [ListTypes](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListTypes.html), HOOK/PRIVATE/LIVE, including activated public hooks. [Lambda hooks register a private entry](https://docs.aws.amazon.com/cloudformation-cli/latest/hooks-userguide/lambda-hooks.html). Any present hook requires separate configuration review; do not execute or disable it.
+- CloudTrail [DescribeTrails](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DescribeTrails.html), explicitly including shadow/organization/multi-region trails in us-east-1. Any trail requires later selector review; do not read event payloads.
+- [ListEventDataStores](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_ListEventDataStores.html) in every verified commercial home region. Read small presence pages only. Absence requires zero count and no continuation in every region. A present/partial result requires review; denied, unsupported or disabled-region access remains unavailable, never empty. Limit concurrent reads to four, stop later batches once readiness cannot be established, and cancel outstanding reads on failure.
+- Recheck STS account/SSO role after successful or conservatively not-ready metadata collection. Account drift or missing recheck invalidates the observation.
+
+Organization member accounts [cannot normally see organization event data stores](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-lake-organizations.html). This collector accepts organization coverage only in the independently pinned management account, or a proven standalone account. A member returns explicit unknown without changing profiles or assuming an empty local list proves absence. Management/standalone status does not substitute for complete regional visibility.
+
+CLI queries retain counts/continuation facts only; raw resource addresses/selection configurations and error messages never enter normalized output. Never invoke hooks, query audit events, list/read note tables/functions or change regions, quotas, IAM, audit, billing or resources. No automatic pagination into configurations is necessary to prove emptiness: a nonempty or truncated page is not-ready.
+
+Pin CLI error formatting to JSON. The installed CLI 2.34.14 defaults to enhanced human output; its [versioned error handler](https://github.com/aws/aws-cli/blob/2.34.14/awscli/errorhandler.py) emits structured service `Code`/`Message` with JSON selected. Inspect only the code from a bounded service-error exit with empty stdout, never infer it from free text or retain the message/service-specific fields. Distinguish fixed Lake authentication, denied, unsupported and unknown failures without guessing which region setting caused them.
+
+## Evidence and output
+
+Return frozen normalized private identity, credentials, public registry provenance, coarse coverage, hook/data-event states and safe readiness facts. Target-name absence is deliberately omitted because ownership is another boundary. Public command output contains only fixed codes/booleans, zero writes and the ignored output path. Create a fresh private directory/mode-0600 observation file; never overwrite earlier artifacts. Unavailable results have no raw errors or partial identities. Recompute direct cleanup runway at completion, without claiming refresh, deployment authority or managed acceptance.
+
+Test complete absence across all regions, nonempty/partial pages, member/denied organization visibility, regional failures without fallbacks, account/role drift, concurrency/deadline cancellation, privacy/immutability and fixed read scope. Run focused actual Node 24, shared tests, TypeScript/formatting/web build and all hosted gates. An actual private metadata observation may be unavailable; record that honestly and keep managed gates open. Do not change settings to force a positive result or rerun unknown errors blindly.
+
+Thirteen focused cases pass under development Node and actual Node 24; all 226 shared cases in 39 files pass. TypeScript, formatting and web build pass. Fixtures establish the observer's absence/unknown contract, not private account acceptance.
+
+Two bounded private attempts under Node 24/AWS CLI 2.34.14 matched configured identity but returned `lake-unavailable`. No resource/settings changes or raw error output occurred; neither attempt establishes absence or a regional cause. Stop live audit retries while that remains unresolved. The JSON formatter correction was then verified against installed CLI source and a local no-sign skeleton diagnostic; the latter failed on an upstream generated retention sample and sent no API request. The complete current observer has not been rerun against AWS. Its code can integrate after hosted gates, but issue 51 stays open for current live coverage or a concrete reviewed visibility diagnosis. No managed run is authorized by these fixtures or earlier attempts.

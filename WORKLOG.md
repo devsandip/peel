@@ -1254,3 +1254,30 @@
 
 **Next:**
 - Merge the focused registry PR after all hosted gates, then implement issue 51's private hook/audit observer. Treat denied, disabled-region, organization or partial coverage as unknown; preserve every existing account setting. Keep ownership and durable lifecycle/apply separate under issue 30.
+
+## 2026-10-28 - Inspect hook and audit configuration without changing it
+
+**Did:**
+- Implemented issue 51 on a dependent branch after PR 53's registry boundary, keeping the two purposes separate.
+- Added pinned read-only organization, hook, shadow-trail and regional Lake presence checks, with four-reader bounds, identity recheck, fixed failures and private normalized output.
+- Tested complete absence, present/partial/member/denied coverage, privacy and cancellation. Twelve focused cases pass under actual Node 24; all 225 shared cases, TypeScript, formatting and web build pass locally.
+
+**State now:**
+- Parent PR 53 has passed all three hosted jobs and can merge first. Private live audit metadata and this branch's hosted gates remain unclaimed at this checkpoint.
+- No AWS resources/settings, audit payloads, real notes/default database or customer billing were accessed. Cloud remains disabled; v0.7 is unchanged.
+
+**Next:**
+- Integrate PR 53, run one bounded private metadata observation, record any coverage blocker honestly, and finish the focused audit PR gates. Keep target ownership and durable lifecycle/apply/recovery as separate issue 30 work.
+
+## 2026-10-28 - Keep incomplete audit coverage explicit
+
+**Did:**
+- Merged registry PR 53 after all hosted PR jobs passed, then made two bounded private audit attempts; both matched identity but could not establish Lake coverage. No absence or regional cause is claimed.
+- Verified the installed CLI's enhanced-error default and pinned JSON code-only error classification. Local no-sign skeleton diagnostics made no API request; the current complete observer was not rerun live.
+- Thirteen focused Node 24 cases and all 226 shared cases pass, with TypeScript/formatting/web build. Hosted observer gates remain pending.
+
+**State now:**
+- Live audit retries stop with issue 51 still open. No resources/settings, audit payloads, real notes/default database or customer billing were accessed or changed. App Cloud stays disabled.
+
+**Next:**
+- Integrate the tested observer foundation after hosted gates, preserve the unresolved live gate in issue 51, and continue offline target-ownership/run-ledger/lifecycle prerequisites under issue 30. Do not enable regions or change permissions/audit to force readiness.
