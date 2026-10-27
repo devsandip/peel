@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cloudAuditCommandArgs,
+  cloudAuditLakeFailure,
   cloudAuditStandaloneOrganization,
   collectCloudAuditObservation,
   type CloudAuditCommand,
@@ -306,8 +307,10 @@ describe("Cloud hook/audit observations", () => {
     const good = {
       code: 254,
       stdout: "",
-      stderr:
-        "\nAn error occurred (AWSOrganizationsNotInUseException) when calling the DescribeOrganization operation: Synthetic standalone account.\n",
+      stderr: JSON.stringify({
+        Code: "AWSOrganizationsNotInUseException",
+        Message: "Synthetic standalone account.",
+      }),
     };
     expect(cloudAuditStandaloneOrganization(good)).toBe(true);
     for (const patch of [
@@ -327,6 +330,42 @@ describe("Cloud hook/audit observations", () => {
       expect(cloudAuditStandaloneOrganization({ ...good, ...patch })).toBe(
         false,
       );
+  });
+  it("classifies only safe Lake service facts without retaining messages or guessing regional causes", () => {
+    const error = (code: string) => ({
+      code: 254,
+      stdout: "",
+      stderr: JSON.stringify({
+        Code: code,
+        Message: "private identity/resource details",
+        ResourceArn: arn,
+      }),
+    });
+    expect(cloudAuditLakeFailure(error("UnrecognizedClientException"))).toBe(
+      "lake-auth-unavailable",
+    );
+    expect(cloudAuditLakeFailure(error("AccessDeniedException"))).toBe(
+      "lake-access-denied",
+    );
+    expect(cloudAuditLakeFailure(error("UnsupportedOperationException"))).toBe(
+      "lake-unsupported",
+    );
+    expect(cloudAuditLakeFailure(error("OtherException"))).toBe(
+      "lake-unavailable",
+    );
+    expect(
+      cloudAuditLakeFailure({
+        ...error("UnrecognizedClientException"),
+        code: 253,
+      }),
+    ).toBe("lake-unavailable");
+    expect(
+      cloudAuditLakeFailure({
+        code: 254,
+        stdout: "",
+        stderr: "private prefix UnrecognizedClientException",
+      }),
+    ).toBe("lake-unavailable");
   });
   it("captures input before awaits, rejects unsafe values/overrides and separates direct runway", async () => {
     const f = fixture(now + 90 * 60000),
@@ -406,6 +445,7 @@ describe("Cloud hook/audit observations", () => {
     );
     for (const argument of ["HOOK", "PRIVATE", "LIVE", "--no-paginate"])
       expect(hooks).toContain(argument);
+    expect(hooks).toContain("--cli-error-format");
     expect(
       cloudAuditCommandArgs("synthetic", { kind: "trails" }, regions),
     ).toContain("--include-shadow-trails");

@@ -29,6 +29,9 @@ type Code =
   | "hooks-unavailable"
   | "trails-unavailable"
   | "lake-unavailable"
+  | "lake-auth-unavailable"
+  | "lake-access-denied"
+  | "lake-unsupported"
   | "identity-recheck-unavailable"
   | "read-unavailable"
   | "deadline"
@@ -80,9 +83,8 @@ function snapshot(input: Input) {
     return fail("invalid-input");
   return Object.freeze({ profile, region, authorizedUntil: cutoff });
 }
-/** Only this precise service exception establishes standalone status; never AccessDenied or a missing response. */
-export function cloudAuditStandaloneOrganization(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
+function serviceError(error: unknown) {
+  if (!error || typeof error !== "object") return null;
   const e = error as {
     code?: unknown;
     stdout?: unknown;
@@ -90,18 +92,46 @@ export function cloudAuditStandaloneOrganization(error: unknown): boolean {
     killed?: unknown;
     signal?: unknown;
   };
-  return (
-    e.code === 254 &&
-    e.stdout === "" &&
-    e.killed !== true &&
-    e.signal == null &&
-    typeof e.stderr === "string" &&
-    Buffer.byteLength(e.stderr, "utf8") <= limit &&
-    full(
-      e.stderr,
-      /^(?:\r?\n)?An error occurred \(AWSOrganizationsNotInUseException\) when calling the DescribeOrganization operation: [^\r\n]+(?:\r?\n)?$/,
-    )
-  );
+  if (
+    e.code !== 254 ||
+    e.stdout !== "" ||
+    e.killed === true ||
+    e.signal != null ||
+    typeof e.stderr !== "string" ||
+    Buffer.byteLength(e.stderr, "utf8") > limit
+  )
+    return null;
+  // The fixed command pins JSON error formatting. Inspect only the structured code;
+  // discard Message and any service-specific fields, which may contain private IDs.
+  try {
+    const data: unknown = JSON.parse(e.stderr);
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+    const code = (data as Record<string, unknown>).Code;
+    return full(code, /^[A-Za-z][A-Za-z0-9]{0,63}$/) ? code : null;
+  } catch {
+    return null;
+  }
+}
+/** Only the precise service exception establishes standalone status. Never return raw CLI messages. */
+export function cloudAuditStandaloneOrganization(error: unknown): boolean {
+  return serviceError(error) === "AWSOrganizationsNotInUseException";
+}
+export function cloudAuditLakeFailure(error: unknown) {
+  const code = serviceError(error);
+  if (
+    code === "UnrecognizedClientException" ||
+    code === "InvalidClientTokenId" ||
+    code === "ExpiredTokenException"
+  )
+    return "lake-auth-unavailable" as const;
+  if (
+    code === "AccessDeniedException" ||
+    code === "InsufficientPermissionsException"
+  )
+    return "lake-access-denied" as const;
+  if (code === "UnsupportedOperationException")
+    return "lake-unsupported" as const;
+  return "lake-unavailable" as const;
 }
 /** Fixed metadata-only commands, with small presence pages and explicit endpoints. */
 export function cloudAuditCommandArgs(
@@ -112,7 +142,11 @@ export function cloudAuditCommandArgs(
   if (!full(profile, /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/))
     return fail("invalid-input");
   if (command.kind === "caller-identity")
-    return cloudIdentityCommandArgs(profile, "caller-identity");
+    return [
+      ...cloudIdentityCommandArgs(profile, "caller-identity"),
+      "--cli-error-format",
+      "json",
+    ];
   const region = command.kind === "lake" ? command.region : "us-east-1";
   if (
     !full(region, /^[a-z]{2}(?:-[a-z]+)+-\d+$/) ||
@@ -133,6 +167,8 @@ export function cloudAuditCommandArgs(
     "5",
     "--cli-read-timeout",
     "10",
+    "--cli-error-format",
+    "json",
   ];
   const countQuery = "{Count:length(TypeSummaries),NextToken:NextToken}";
   if (command.kind === "organization")
@@ -235,6 +271,7 @@ function defaultReader(profile: string, regions: readonly string[]): Reader {
         cloudAuditStandaloneOrganization(error)
       )
         return '{"Standalone":true}';
+      if (command.kind === "lake") return fail(cloudAuditLakeFailure(error));
       throw error;
     }
   };

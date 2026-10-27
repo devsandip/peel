@@ -1268,3 +1268,16 @@
 
 **Next:**
 - Integrate PR 53, run one bounded private metadata observation, record any coverage blocker honestly, and finish the focused audit PR gates. Keep target ownership and durable lifecycle/apply/recovery as separate issue 30 work.
+
+## 2026-10-28 - Keep incomplete audit coverage explicit
+
+**Did:**
+- Merged registry PR 53 after all hosted PR jobs passed, then made two bounded private audit attempts; both matched identity but could not establish Lake coverage. No absence or regional cause is claimed.
+- Verified the installed CLI's enhanced-error default and pinned JSON code-only error classification. Local no-sign skeleton diagnostics made no API request; the current complete observer was not rerun live.
+- Thirteen focused Node 24 cases and all 226 shared cases pass, with TypeScript/formatting/web build. Hosted observer gates remain pending.
+
+**State now:**
+- Live audit retries stop with issue 51 still open. No resources/settings, audit payloads, real notes/default database or customer billing were accessed or changed. App Cloud stays disabled.
+
+**Next:**
+- Integrate the tested observer foundation after hosted gates, preserve the unresolved live gate in issue 51, and continue offline target-ownership/run-ledger/lifecycle prerequisites under issue 30. Do not enable regions or change permissions/audit to force readiness.
