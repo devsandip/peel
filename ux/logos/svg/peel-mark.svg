@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Peel">
+  <!-- Concept 3: a sticky note shaped as a P, with its top-right corner folded down. -->
+  <defs>
+    <clipPath id="peel-p">
+      <path d="M16 10H38A14 14 0 0 1 38 38H30V54H16Z"/>
+    </clipPath>
+  </defs>
+  <path d="M16 10H38A14 14 0 0 1 38 38H30V54H16Z" fill="#efd06b"/>
+  <!-- Area uncovered by the fold, behind the lifted corner. -->
+  <polygon points="36,10 64,10 64,38" fill="#d4aa3c" clip-path="url(#peel-p)"/>
+  <!-- The folded flap: corner reflected across the fold line y = x - 26. -->
+  <polygon points="36,10 52,26 36,26" fill="#fff5c7" stroke="#c19a30" stroke-width="1" stroke-linejoin="round"/>
+</svg>

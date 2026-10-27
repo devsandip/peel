@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+<title>Peel note window mark</title>
+<path d="M32 14H88A18 18 0 0 1 106 32V78L78 106H32A18 18 0 0 1 14 88V32A18 18 0 0 1 32 14Z" fill="#FFF5C7"/>
+<path d="M14 40V32A18 18 0 0 1 32 14H88A18 18 0 0 1 106 32V40Z" fill="#EFD06B"/>
+<circle cx="31" cy="27" r="5.5" fill="#292C28"/>
+<rect x="28" y="54" width="56" height="7" rx="3.5" fill="#45412D" fill-opacity=".55"/>
+<rect x="28" y="70" width="40" height="7" rx="3.5" fill="#45412D" fill-opacity=".55"/>
+<path d="M106 78L78 106V86A8 8 0 0 1 86 78Z" fill="#D9AE34"/>
+<path d="M32 14H88A18 18 0 0 1 106 32V78L78 106H32A18 18 0 0 1 14 88V32A18 18 0 0 1 32 14Z" fill="none" stroke="#D9AE34" stroke-width="2.5" stroke-opacity=".6"/>
+</svg>

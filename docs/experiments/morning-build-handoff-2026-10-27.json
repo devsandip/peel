@@ -1,0 +1,19 @@
+{
+  "scope": "Read-only development-build handoff metadata, not native UI/device acceptance",
+  "generatedAt": "2026-10-27T02:21:00.841771+00:00",
+  "applicationBundle": "apps/native/src-tauri/target/release/bundle/macos/Peel.app",
+  "bundleIdentifier": "com.peelnotes.desktop",
+  "bundleVersion": "0.1.0",
+  "executableSHA256": "d9f072e6dbf184de846b54b2b0c700cfcb57512eef2ac12f328bff5735d16f32",
+  "bundleBytes": 15575773,
+  "lastVerifiedProductionBuildHead": "d969dde",
+  "productionSourcePathsChangedSinceBuild": [],
+  "runtimeDependencyDeclarationsChangedSinceBuild": false,
+  "openGates": [
+    "Actual native dragging and global key dispatch",
+    "Picker/drive/multiwindow/VoiceOver/performance matrix",
+    "App remote peer sync, paid Cloud, iPhone",
+    "Meaning-search app integration and device budgets"
+  ],
+  "realNotesOrApplicationDatabasesRead": false
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+<title>Peel two notes mark, small, dark backgrounds</title>
+<defs><mask id="peel-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120"><rect width="120" height="120" fill="#fff"/><path transform="rotate(-4 60 60)" d="M32 30H82A14 14 0 0 1 96 44V76L76 96H32A14 14 0 0 1 18 82V44A14 14 0 0 1 32 30Z" fill="#000" stroke="#000" stroke-width="10" stroke-linejoin="round"/></mask></defs>
+<g mask="url(#peel-gap)"><rect transform="rotate(10 60 60)" x="28" y="18" width="74" height="74" rx="14" fill="#B98E22"/></g>
+<g transform="rotate(-4 60 60)"><path d="M32 30H82A14 14 0 0 1 96 44V76L76 96H32A14 14 0 0 1 18 82V44A14 14 0 0 1 32 30Z" fill="#EFD06B"/></g>
+</svg>

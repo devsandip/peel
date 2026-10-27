@@ -1,0 +1,387 @@
+{
+  "scope": "Isolated native ONNX CPU inference in a fresh Node host, not a Tauri/app/iPhone bridge or supported-device acceptance",
+  "generatedAt": "2026-10-27T01:21:18.207Z",
+  "environment": {
+    "node": "v26.4.0",
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "model": {
+    "repository": "Xenova/all-MiniLM-L6-v2",
+    "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
+    "runtime": "onnxruntime-node1.30.0",
+    "dtype": "q8",
+    "dimensions": 384,
+    "pooling": "mean",
+    "normalize": true,
+    "intraOpThreads": 1,
+    "interOpThreads": 1,
+    "executionMode": "sequential"
+  },
+  "fixtureSHA256": "8e04b40da6d95b30925a51b303e7feaed551cf5b90b7ee5f4c8a05dd069f5989",
+  "initialization": {
+    "coldReadyMs": 79.793292,
+    "boundary": "After module/native-binding load through model and first vector; fresh process with OS/file caches potentially warm, not app startup"
+  },
+  "indexing": {
+    "notes": 70,
+    "chunks": 75,
+    "maxTokens": 199,
+    "longNoteChunks": 6,
+    "longNoteTailCovered": true,
+    "indexMs": 262.036084
+  },
+  "quality": {
+    "cases": [
+      {
+        "caseId": "q01",
+        "semanticRank": 2,
+        "hybridRank": 2
+      },
+      {
+        "caseId": "q02",
+        "semanticRank": 2,
+        "hybridRank": 2
+      },
+      {
+        "caseId": "q03",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q04",
+        "semanticRank": 4,
+        "hybridRank": 4
+      },
+      {
+        "caseId": "q05",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q06",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q07",
+        "semanticRank": 17,
+        "hybridRank": 17
+      },
+      {
+        "caseId": "q08",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q09",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q10",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q11",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q12",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q13",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q14",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q15",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q16",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q17",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q18",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q19",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q20",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q21",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q22",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q23",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q24",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q25",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q26",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q27",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q28",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q29",
+        "semanticRank": 1,
+        "hybridRank": 1
+      },
+      {
+        "caseId": "q30",
+        "semanticRank": 1,
+        "hybridRank": 1
+      }
+    ],
+    "semanticTop3": 28,
+    "hybridTop3": 28,
+    "total": 30,
+    "syntheticTop3ThresholdMet": true
+  },
+  "filters": {
+    "trashExcluded": true,
+    "activeOnly": true,
+    "tag": true
+  },
+  "scale": {
+    "rows": 10000,
+    "independentVectorCopies": true,
+    "source": "Cycled fixture vectors, not10000 independently embedded bodies"
+  },
+  "warmQueryMs": {
+    "count": 100,
+    "p50": 7.203082999999992,
+    "p95": 8.080832999999984,
+    "max": 32.54454199999998,
+    "samples": [
+      32.54454199999998,
+      21.08050000000003,
+      7.056291999999985,
+      6.99570899999992,
+      6.822292000000061,
+      6.8381669999999986,
+      6.702958000000081,
+      6.623417000000018,
+      6.914875000000052,
+      6.783667000000037,
+      7.247625000000085,
+      7.6845839999999725,
+      7.567915999999968,
+      7.888541000000032,
+      7.755500000000097,
+      8.080832999999984,
+      7.579166999999984,
+      7.36591599999997,
+      7.607250000000022,
+      7.530416000000059,
+      8.195832999999993,
+      7.3799999999999955,
+      8.098208,
+      7.937667000000033,
+      7.464291000000003,
+      7.813916999999947,
+      7.429665999999997,
+      7.119625000000042,
+      7.332209000000034,
+      7.618333000000007,
+      7.175375000000031,
+      6.895209000000023,
+      7.336250000000064,
+      7.072250000000054,
+      7.085874999999987,
+      7.397874999999999,
+      7.108459000000039,
+      7.024125000000026,
+      7.638249999999971,
+      7.210666999999944,
+      7.2878749999999854,
+      7.156708999999978,
+      7.366541999999981,
+      7.250499999999988,
+      7.1235000000000355,
+      6.951332999999977,
+      7.494916999999987,
+      7.102499999999964,
+      7.092832999999928,
+      6.7309999999999945,
+      7.238958000000025,
+      7.021124999999984,
+      7.203082999999992,
+      7.125791999999933,
+      6.879374999999982,
+      6.842167000000018,
+      7.453374999999937,
+      7.9669999999999845,
+      7.968291000000022,
+      7.324207999999999,
+      7.700958999999898,
+      8.442583000000013,
+      7.630333999999948,
+      7.648584000000028,
+      7.494750000000067,
+      7.168958999999859,
+      7.002707999999984,
+      6.817332999999962,
+      7.032166999999845,
+      7.291208000000097,
+      7.225750000000062,
+      7.013124999999945,
+      7.240416000000096,
+      6.7899589999999534,
+      6.930707999999868,
+      6.921333000000004,
+      7.205291999999872,
+      7.245916999999963,
+      7.481999999999971,
+      7.174665999999888,
+      7.175541000000067,
+      6.991667000000007,
+      6.789624999999887,
+      7.00912500000004,
+      7.13370800000007,
+      7.184833000000026,
+      7.44658400000003,
+      6.966959000000088,
+      7.4075410000000375,
+      7.0322909999999865,
+      6.787249999999858,
+      6.771957999999813,
+      6.7973749999998745,
+      7.239832999999862,
+      7.360542000000123,
+      7.231333000000177,
+      7.142917000000125,
+      7.1056670000000395,
+      7.1660830000000715,
+      7.027417000000014
+    ]
+  },
+  "memory": {
+    "beforeModel": {
+      "rss": 116424704,
+      "heapTotal": 14827520,
+      "heapUsed": 9920272,
+      "external": 26879030,
+      "arrayBuffers": 23131333,
+      "peakRSSReportedKiB": 113696
+    },
+    "afterReady": {
+      "rss": 203571200,
+      "heapTotal": 29638656,
+      "heapUsed": 19154424,
+      "external": 28801585,
+      "arrayBuffers": 23535589,
+      "peakRSSReportedKiB": 198800
+    },
+    "afterIndex": {
+      "rss": 234045440,
+      "heapTotal": 35667968,
+      "heapUsed": 18986224,
+      "external": 34131789,
+      "arrayBuffers": 28865793,
+      "peakRSSReportedKiB": 228560
+    },
+    "afterScale": {
+      "rss": 257982464,
+      "heapTotal": 36454400,
+      "heapUsed": 23253920,
+      "external": 52500366,
+      "arrayBuffers": 47232322,
+      "peakRSSReportedKiB": 251936
+    },
+    "final": {
+      "rss": 293519360,
+      "heapTotal": 61341696,
+      "heapUsed": 31648392,
+      "external": 35451098,
+      "arrayBuffers": 30183054,
+      "peakRSSReportedKiB": 286640
+    },
+    "boundary": "One Node inference child; RSS/heap/external/ArrayBuffer fields are bytes, maxRSS is Node-reported KiB. External includes ArrayBuffers, do not sum them. Excludes parent bundler/other OS processes and full-app/device acceptance."
+  },
+  "forbiddenFetches": 0,
+  "applicationDatabasesOpened": 0,
+  "realNotesUsed": false,
+  "runner": {
+    "parentExcludedFromMemory": true,
+    "networkPolicy": "Own inference child denied network*; remote model loading/cache/fetch disabled",
+    "transformers": {
+      "version": "4.3.1",
+      "license": "Apache-2.0"
+    },
+    "nativeRuntime": {
+      "version": "1.30.0",
+      "license": "MIT",
+      "binaries": [
+        {
+          "file": "libonnxruntime.1.30.0.dylib",
+          "bytes": 44589928,
+          "sha256": "685d2be5dba1309c89d3a5324b7fd06a5c42f1a61bfea32d14c4cc28d072121d"
+        },
+        {
+          "file": "libonnxruntime.1.dylib",
+          "bytes": 44589928,
+          "sha256": "685d2be5dba1309c89d3a5324b7fd06a5c42f1a61bfea32d14c4cc28d072121d"
+        },
+        {
+          "file": "onnxruntime_binding.node",
+          "bytes": 266840,
+          "sha256": "a3f993357759b06ae2411f70af60f5e041d04521ea7f0d12cb7546e411a527dd"
+        }
+      ]
+    },
+    "compiledEntrySHA256": "3eef9f1f0a2114f423ba989067170750f22a680457f24733d7a0e710a16d5c6b",
+    "sourceFixtureSHA256": "8e04b40da6d95b30925a51b303e7feaed551cf5b90b7ee5f4c8a05dd069f5989"
+  }
+}

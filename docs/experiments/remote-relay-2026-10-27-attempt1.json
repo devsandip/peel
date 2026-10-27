@@ -1,0 +1,31 @@
+{
+  "scope": "M0 two synthetic browser endpoints on one Mac through a disposable remote relay; not different-client-network, app pairing/sync, native or iPhone acceptance",
+  "startedAt": "2026-10-26T22:29:30.118Z",
+  "region": "us-east-1",
+  "estimatedAllowanceUSD": 0.22855342465753425,
+  "allowanceUSD": 2,
+  "appDatabasesOpened": 0,
+  "payloadsPersistedByServer": 0,
+  "cleanupVerified": true,
+  "independentExpiryConfigured": true,
+  "runtime": {
+    "coturnPackageVersion": "4.6.1-1build4",
+    "serviceActive": true,
+    "guestTimerActive": true,
+    "swapEntries": 0,
+    "coreDumpDisabled": true,
+    "runtimeInMemory": true,
+    "authenticationConfigured": true,
+    "limitsConfigured": true,
+    "logsDisabled": true,
+    "peerRestricted": true
+  },
+  "channel": {
+    "passed": false,
+    "failureStage": "udp"
+  },
+  "failureStage": "experiment",
+  "failureOperation": "ssm-get-command-invocation",
+  "passed": false,
+  "finishedAt": "2026-10-26T22:37:32.690Z"
+}

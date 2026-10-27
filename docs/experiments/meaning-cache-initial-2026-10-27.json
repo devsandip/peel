@@ -1,0 +1,138 @@
+{
+  "scope": "Isolated Chrome public model cache and fresh-worker offline inference; no app integration, offline shell startup, native/iPhone or RAM acceptance",
+  "generatedAt": "2026-10-27T00:43:28.404Z",
+  "environment": {
+    "browser": "156.0.8078.48",
+    "node": "v26.4.0",
+    "platform": "darwin",
+    "release": "25.6.0",
+    "cpu": "Apple M4"
+  },
+  "model": {
+    "repository": "Xenova/all-MiniLM-L6-v2",
+    "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
+    "runtime": {
+      "transformers": "4.3.1",
+      "onnx": "1.31.0-dev.20260914-8d85527a0",
+      "device": "wasm",
+      "dtype": "q8",
+      "pooling": "mean",
+      "normalize": true,
+      "threads": 1
+    },
+    "fixtureSHA256": "8e04b40da6d95b30925a51b303e7feaed551cf5b90b7ee5f4c8a05dd069f5989"
+  },
+  "contract": {
+    "checks": [
+      "complete-reopen-verified",
+      "exact-set-reuse-no-download",
+      "version-and-path-bound",
+      "oversize-corrupt-missing-preserve-ready",
+      "cancel-cleans-stage-preserves-ready",
+      "durable-corruption-rejected-and-repaired",
+      "atomic-replacement-reclaims-old-generation",
+      "remove-invalidates-handles",
+      "concurrent-install-serialized-and-queued-cancel"
+    ],
+    "count": 9,
+    "realNotesUsed": false
+  },
+  "interrupted": {
+    "abandonedStageObserved": true,
+    "priorReadyPreserved": true,
+    "stagedArtifactReclaimed": true,
+    "heldLockObserved": true,
+    "workerTerminated": true
+  },
+  "abortedWrite": {
+    "errorName": "AbortError",
+    "previousReadyPreserved": true,
+    "boundary": "Actual artifact write transaction forcibly aborted by synthetic fixture; not quota exhaustion"
+  },
+  "quota": {
+    "passed": false,
+    "boundary": "Prior 64 KiB DevTools override did not confirm QuotaExceededError; real quota exhaustion remains open, no repeated unchanged override"
+  },
+  "installation": {
+    "id": "a1038c258c212ba9e52019f0ff042b790e2cefa0263d5e54004da564509f6784",
+    "reused": false,
+    "ms": 142.8400001525879,
+    "progress": [
+      {
+        "completedFiles": 1,
+        "totalFiles": 8,
+        "verifiedBytes": 1767
+      },
+      {
+        "completedFiles": 2,
+        "totalFiles": 8,
+        "verifiedBytes": 2417
+      },
+      {
+        "completedFiles": 3,
+        "totalFiles": 8,
+        "verifiedBytes": 22974787
+      },
+      {
+        "completedFiles": 4,
+        "totalFiles": 8,
+        "verifiedBytes": 22974912
+      },
+      {
+        "completedFiles": 5,
+        "totalFiles": 8,
+        "verifiedBytes": 23686573
+      },
+      {
+        "completedFiles": 6,
+        "totalFiles": 8,
+        "verifiedBytes": 23686939
+      },
+      {
+        "completedFiles": 7,
+        "totalFiles": 8,
+        "verifiedBytes": 23739996
+      },
+      {
+        "completedFiles": 8,
+        "totalFiles": 8,
+        "verifiedBytes": 50601773
+      }
+    ]
+  },
+  "offlineFreshWorkers": [
+    {
+      "kind": "result",
+      "readiedMs": 61,
+      "initializedMs": 552.5950002670288,
+      "totalMs": 2248.7300000190735,
+      "notes": 70,
+      "top3": 29,
+      "total": 30,
+      "cacheReads": 8,
+      "forbiddenFetches": 0,
+      "dimensions": 384
+    },
+    {
+      "kind": "result",
+      "readiedMs": 50.83500003814697,
+      "initializedMs": 518.8899998664856,
+      "totalMs": 2238.949999809265,
+      "notes": 70,
+      "top3": 29,
+      "total": 30,
+      "cacheReads": 8,
+      "forbiddenFetches": 0,
+      "dimensions": 384
+    }
+  ],
+  "artifactRequests": {
+    "install": 8,
+    "afterOffline": 0
+  },
+  "blockedExternalRequests": 0,
+  "unexpectedLocalRequests": 0,
+  "pageErrors": 0,
+  "applicationDatabasesOpened": 0,
+  "realNotesUsed": false
+}

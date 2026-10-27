@@ -1,0 +1,87 @@
+{
+  "scope": "Pinned public M0 embedding artifacts; no app integration or model-quality result",
+  "model": "Xenova/all-MiniLM-L6-v2",
+  "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
+  "baseModel": "sentence-transformers/all-MiniLM-L6-v2",
+  "baseRevision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+  "declaredLicense": "Apache-2.0",
+  "licenseSources": [
+    "https://huggingface.co/Xenova/all-MiniLM-L6-v2/blob/751bff37182d3f1213fa05d7196b954e230abad9/README.md",
+    "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
+  ],
+  "runtime": {
+    "transformers": "4.3.1",
+    "onnx": "1.31.0-dev.20260914-8d85527a0",
+    "device": "wasm",
+    "dtype": "q8",
+    "pooling": "mean",
+    "normalize": true,
+    "threads": 1
+  },
+  "fixtureSHA256": "8e04b40da6d95b30925a51b303e7feaed551cf5b90b7ee5f4c8a05dd069f5989",
+  "files": [
+    {
+      "path": "/models/Xenova/all-MiniLM-L6-v2/config.json",
+      "relative": "models/Xenova/all-MiniLM-L6-v2/config.json",
+      "bytes": 650,
+      "sha256": "7135149f7cffa1a573466c6e4d8423ed73b62fd2332c575bf738a0d033f70df7",
+      "url": "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/config.json",
+      "gitOid": "72147e4ff4426ebedbfa2146c4a0999def51a313"
+    },
+    {
+      "path": "/models/Xenova/all-MiniLM-L6-v2/tokenizer.json",
+      "relative": "models/Xenova/all-MiniLM-L6-v2/tokenizer.json",
+      "bytes": 711661,
+      "sha256": "da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0",
+      "url": "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/tokenizer.json",
+      "gitOid": "c17ed520ed8438736732a54957a69306b8822215"
+    },
+    {
+      "path": "/models/Xenova/all-MiniLM-L6-v2/tokenizer_config.json",
+      "relative": "models/Xenova/all-MiniLM-L6-v2/tokenizer_config.json",
+      "bytes": 366,
+      "sha256": "9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+      "url": "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/tokenizer_config.json",
+      "gitOid": "37fca74771bc76a8e01178ce3a6055a0995f8093"
+    },
+    {
+      "path": "/models/Xenova/all-MiniLM-L6-v2/special_tokens_map.json",
+      "relative": "models/Xenova/all-MiniLM-L6-v2/special_tokens_map.json",
+      "bytes": 125,
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3",
+      "url": "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/special_tokens_map.json",
+      "gitOid": "a8b3208c2884c4efb86e49300fdd3dc877220cdf"
+    },
+    {
+      "path": "/models/Xenova/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
+      "relative": "models/Xenova/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
+      "bytes": 22972370,
+      "sha256": "afdb6f1a0e45b715d0bb9b11772f032c399babd23bfc31fed1c170afc848bdb1",
+      "url": "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/onnx/model_quantized.onnx",
+      "gitOid": "bdb02d11c4446148e92a9210ab4d1013b3450a72",
+      "lfsSHA256": "afdb6f1a0e45b715d0bb9b11772f032c399babd23bfc31fed1c170afc848bdb1"
+    },
+    {
+      "path": "/models/Xenova/all-MiniLM-L6-v2/README.md",
+      "relative": "models/Xenova/all-MiniLM-L6-v2/README.md",
+      "bytes": 1767,
+      "sha256": "63ea99bf681a2e9eda4f6a537d5ed8fda95d1677111656da37e9cfd080c3af02",
+      "url": "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/README.md",
+      "gitOid": "980ba38150c4c24f9858f3b585a1113ab01f47a2"
+    },
+    {
+      "path": "/runtime/ort-wasm-simd-threaded.asyncify.mjs",
+      "relative": "runtime/ort-wasm-simd-threaded.asyncify.mjs",
+      "bytes": 53057,
+      "sha256": "0966b6105cd936744498aa60df7a22cbd47af3374dbc64a9ab561c08a71e3611",
+      "sourcePackage": "onnxruntime-web@1.31.0-dev.20260914-8d85527a0"
+    },
+    {
+      "path": "/runtime/ort-wasm-simd-threaded.asyncify.wasm",
+      "relative": "runtime/ort-wasm-simd-threaded.asyncify.wasm",
+      "bytes": 26861777,
+      "sha256": "49871f5a4409519797e127440868a6d1923339d9185907f301a5b2a1d90af082",
+      "sourcePackage": "onnxruntime-web@1.31.0-dev.20260914-8d85527a0"
+    }
+  ]
+}

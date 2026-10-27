@@ -1,0 +1,29 @@
+{
+  "scope": "Morning handoff cleanup evidence; historical deletion remains distinct from unavailable fresh AWS reads",
+  "generatedAt": "2026-10-27T02:15:29.602341+00:00",
+  "newAwsResourcesProvisionedThisSession": false,
+  "freshAwsResourceAbsenceConfirmed": false,
+  "freshRead": {
+    "status": "unavailable",
+    "reason": "expired-login",
+    "noManualLoginOrAccountChanges": true
+  },
+  "experiments": [
+    {
+      "runId": "rmvptwu44-25ead6",
+      "previousCleanupVerified": true,
+      "leaseAbsent": true
+    },
+    {
+      "runId": "rmvpukv7v-0c2df3",
+      "previousCleanupVerified": true,
+      "leaseAbsent": true
+    }
+  ],
+  "temporaryExperimentDirectoriesRemaining": {
+    "clock-diagnostic-build-": [],
+    "meaning-cache-build-": [],
+    "meaning-cache-profile-": []
+  },
+  "realNotesUsed": false
+}

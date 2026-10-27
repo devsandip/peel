@@ -1,0 +1,7 @@
+{
+  "$schema":"../gen/schemas/desktop-schema.json",
+  "identifier":"local-app",
+  "description":"Local Peel windows. No remote pages, filesystem or shell execution.",
+  "windows":["library","note-*"],
+  "permissions":["core:default","core:window:allow-start-dragging","core:window:allow-set-focus","core:window:allow-show"]
+}

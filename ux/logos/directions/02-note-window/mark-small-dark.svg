@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+<title>Peel note window mark, small, dark backgrounds</title>
+<path d="M32 14H88A18 18 0 0 1 106 32V78L78 106H32A18 18 0 0 1 14 88V32A18 18 0 0 1 32 14Z" fill="#FFF5C7"/>
+<path d="M14 44V32A18 18 0 0 1 32 14H88A18 18 0 0 1 106 32V44Z" fill="#EFD06B"/>
+<path d="M106 78L78 106V86A8 8 0 0 1 86 78Z" fill="#D9AE34"/>
+</svg>

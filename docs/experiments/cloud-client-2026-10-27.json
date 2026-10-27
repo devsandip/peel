@@ -1,0 +1,25 @@
+{
+  "scope": "Isolated M0 Cloud client reducer and operation hash on the same deterministic synthetic fixture in Node and Chrome; no backend, account, entitlement, app storage or network sync",
+  "generatedAt": "2026-10-27T02:55:41.671Z",
+  "environment": {
+    "node": "v26.4.0",
+    "browser": "156.0.8078.48",
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "fixtureSHA256": "5ac80ac32b6e76e142f6ede808a55d31bef574535d491f0ad21807e1675ddf38",
+  "focusedNodeCases": 5,
+  "sharedTopLevelTestsPassing": 88,
+  "chromeMatchesNodeHashAndTransitions": true,
+  "retryOperationUnchanged": true,
+  "acknowledgementRetainsLaterDraft": true,
+  "conflictRetainsBothBranches": true,
+  "mergedMutationUsesLatestRemoteRevision": true,
+  "blockedExternalRequests": 0,
+  "unexpectedLocalRequests": 0,
+  "pageErrors": 0,
+  "applicationDatabasesOpened": 0,
+  "realNotesUsed": false,
+  "awsResourcesCreated": false,
+  "paidEntitlementEnabled": false
+}

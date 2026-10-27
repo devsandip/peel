@@ -1,0 +1,62 @@
+{
+  "scope": "Manual M0 native runtime observations; repeatability and shared WebKit protocol composition remain open",
+  "recordSource": "Basic observation transcribed from captured launcher tool output; latest diagnostic copied from scratch/native-peer-runtime.json. Initial composition watchdog had no stage instrumentation.",
+  "basicObservation": {
+    "generatedAt": "2026-10-26T21:21:20.650936+00:00",
+    "checks": {
+      "customProtocol": true,
+      "secureContext": true,
+      "webRTC": true,
+      "webCrypto": true,
+      "p256SignVerify": true,
+      "privateKeyNonExtractable": true,
+      "cryptoKeyIndexedDBReopen": true,
+      "dataChannelOpened": true,
+      "boundedTransferHashMatches": true,
+      "dtlsConnected": true
+    },
+    "payloadBytes": 217000,
+    "frameBytes": 16384,
+    "frames": 14,
+    "localCandidateType": "host",
+    "remoteCandidateType": "host",
+    "scheme": "tauri:",
+    "externalIceServers": 0,
+    "appDatabasesOpened": 0,
+    "persistentWebViewStore": false,
+    "exitCode": 0
+  },
+  "initialCompositionAttempt": {
+    "exitCode": 2,
+    "failureStage": "native-watchdog",
+    "checks": {}
+  },
+  "diagnosticAttempt": {
+    "appDatabasesOpened": 0,
+    "checks": {
+      "customProtocol": true,
+      "p256SignVerify": true,
+      "privateKeyNonExtractable": true,
+      "secureContext": true,
+      "webCrypto": true,
+      "webRTC": true
+    },
+    "externalIceServers": 0,
+    "failureStage": "native-watchdog",
+    "lastStage": "crypto-key-idb",
+    "persistentWebViewStore": false,
+    "environment": {
+      "platform": "darwin",
+      "release": "25.6.0",
+      "cpu": "Apple M4"
+    },
+    "exitCode": 2,
+    "assetRequests": {
+      "asset-index": 1,
+      "asset-module": 0,
+      "asset-other": 0
+    }
+  },
+  "decision": "Stop after two failed attempts; control hidden/locked conditions and isolate IndexedDB/CryptoKey substeps before retry",
+  "boundChannelNativeAcceptance": false
+}

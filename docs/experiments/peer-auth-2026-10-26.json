@@ -1,0 +1,24 @@
+{
+  "scope": "M0 ephemeral Node/Chrome signature and browser CryptoKey persistence experiment; no production pairing, native Keychain, durable replay or network-session acceptance",
+  "generatedAt": "2026-10-26T16:54:58.499Z",
+  "environment": {
+    "node": "v26.4.0",
+    "browser": "155.0.8059.85",
+    "platform": "darwin",
+    "release": "25.6.0",
+    "cpu": "Apple M4"
+  },
+  "algorithm": "Web Crypto ECDSA P-256 / SHA-256",
+  "signatureFormat": "64-byte raw Web Crypto signature",
+  "privateKeysExported": 0,
+  "keys": "Generated synthetic keys; temporary isolated profile only",
+  "nodePrivateKeyNonExtractable": true,
+  "chromePrivateKeyExportBlocked": true,
+  "nodeToChromeVerified": true,
+  "chromeToNodeVerified": true,
+  "replayRejected": true,
+  "browserIdentityStableAcrossReload": true,
+  "restoredKeyNonExtractable": true,
+  "restoredKeySignatureVerified": true,
+  "errors": []
+}

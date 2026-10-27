@@ -1,0 +1,31 @@
+{
+  "scope": "M0 same-page Chrome host-channel experiment; not cross-network, relay, pairing, native or iPhone acceptance",
+  "generatedAt": "2026-10-26T16:25:51.252Z",
+  "environment": {
+    "browser": "155.0.8059.85",
+    "platform": "darwin",
+    "release": "25.6.0",
+    "cpu": "Apple M4"
+  },
+  "externalIceServers": 0,
+  "payloadsPersistedByServer": 0,
+  "pageErrors": [],
+  "direct": {
+    "bytes": 252025,
+    "chunks": 16,
+    "frameBytes": 16384,
+    "negotiatedMax": 262144,
+    "connectMs": 29.199999809265137,
+    "transferMs": 8.900000095367432,
+    "equal": true,
+    "dtlsState": "connected",
+    "localCandidateType": "host",
+    "remoteCandidateType": "host",
+    "protocol": "udp"
+  },
+  "relayWithoutServer": {
+    "requestedPolicy": "relay",
+    "candidateTypes": [],
+    "connected": false
+  }
+}

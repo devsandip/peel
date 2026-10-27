@@ -1,0 +1,24 @@
+{
+  "scope": "Synthetic model cache controls only; no user data, app databases, infrastructure or billing",
+  "environment": {
+    "browser": "Chrome 156.0.8078.48",
+    "platform": "Apple M4, Darwin 25.6.0"
+  },
+  "quotaOverride": {
+    "attempts": 1,
+    "requestedBytes": 65536,
+    "mechanism": "Storage.overrideQuotaForOrigin in a fresh disposable context",
+    "observed": "The fixture did not confirm the expected QuotaExceededError and stopped at its assertion; the actual error name was not recorded",
+    "passed": false,
+    "cleanup": "Override removed in finally and the owned context/browser closed",
+    "remaining": "Actual quota exhaustion and cleanup-failure recovery remain open; later forced aborts are not quota evidence"
+  },
+  "promotionAbortFixture": {
+    "mechanism": "Force native IDB transaction.abort immediately after the ready-marker put request is created",
+    "initialExpectation": ["AbortError", "TransactionInactiveError"],
+    "observedError": "InvalidStateError on the next operation after the intentional abort",
+    "correction": "Include this observed API error class; require an actual forced abort, reverify the prior complete set and observe zero unhandled page errors",
+    "subsequentResult": "Artifact-write and promotion aborts both preserve the prior ready set in the complete report"
+  },
+  "realNotesUsed": false
+}

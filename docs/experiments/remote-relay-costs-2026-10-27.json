@@ -1,0 +1,47 @@
+{
+  "observedAt": "2026-10-26T22:01:27.836536+00:00",
+  "region": "us-east-1",
+  "source": "AWS Price List GetProducts API; no account identifier or credentials retained",
+  "rates": {
+    "t4g.micro": {
+      "available": true,
+      "rates": [
+        {
+          "usd": "0.0084000000",
+          "unit": "Hrs",
+          "description": "$0.0084 per On Demand Linux t4g.micro Instance Hour",
+          "effectiveDate": "2026-10-01T00:00:00Z"
+        }
+      ]
+    },
+    "gp3": {
+      "available": true,
+      "rates": [
+        {
+          "usd": "0.0800000000",
+          "unit": "GB-Mo",
+          "description": "$0.08 per GB-month of General Purpose (gp3) provisioned storage - US East (N. Virginia)",
+          "effectiveDate": "2026-10-01T00:00:00Z"
+        }
+      ]
+    },
+    "publicIPv4": {
+      "available": true,
+      "rates": [
+        {
+          "usd": "0.0050000000",
+          "unit": "Hrs",
+          "description": "$0.005 per In-use public IPv4 address per hour",
+          "effectiveDate": "2026-10-01T00:00:00Z"
+        }
+      ]
+    },
+    "internetTransferOut": {
+      "usdPerGB": 0.09,
+      "source": "AWSDataTransfer Price List API, fromRegionCode us-east-1 toLocation External; ordinary first 10 TB tier beyond shared free tier; S3 accelerated rows excluded"
+    }
+  },
+  "baseOneHourUSD": 0.014276712328767122,
+  "provisioned": false,
+  "note": "Estimate excludes transfer/tax; no free allowance assumed. Reverify before provisioning."
+}

@@ -1,0 +1,16 @@
+{
+  "acceleratedDot" : 0.11338583436161423,
+  "calculatedDistance" : 0.8866141656383858,
+  "controls" : {
+    "dotImplementationsAgree" : true,
+    "exactSourceRanksFirst" : true,
+    "frameworkCosineAgrees" : false
+  },
+  "errorCode" : "sanity-control-failed",
+  "exactSourceResult" : "picnic",
+  "expectedSource" : "picnic",
+  "frameworkDistance" : 1.3316261768341064,
+  "realNotesUsed" : false,
+  "scalarDot" : 0.11338583436161422,
+  "scope" : "Synthetic OS sentence embedding controls"
+}

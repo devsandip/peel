@@ -1,0 +1,1102 @@
+[
+  {
+    "id": "mac-desktop",
+    "title": "Notes on the desktop",
+    "group": "Mac capture",
+    "kind": "desktop",
+    "description": "Independent notes stay close to the work. Each can float above other windows.",
+    "requirements": "FR-01 · FR-11",
+    "platform": "mac",
+    "variant": ""
+  },
+  {
+    "id": "mac-capture",
+    "title": "Quick capture",
+    "group": "Mac capture",
+    "kind": "floating",
+    "description": "A draggable desktop note with a ready cursor. Its only window control is a green minus that saves and puts it away.",
+    "requirements": "FR-01 · FR-02",
+    "platform": "mac",
+    "variant": "capture"
+  },
+  {
+    "id": "mac-note",
+    "title": "Formatted note",
+    "group": "Mac capture",
+    "kind": "floating",
+    "description": "The same floating note window, showing supported Markdown, checklists, and inline tags.",
+    "requirements": "FR-02 · FR-09 · FR-10",
+    "platform": "mac",
+    "variant": "note"
+  },
+  {
+    "id": "mac-source",
+    "title": "Markdown source",
+    "group": "Mac capture",
+    "kind": "floating",
+    "description": "Markdown source stays in the same independent desktop window, with one green Put away control.",
+    "requirements": "FR-10",
+    "platform": "mac",
+    "variant": "source"
+  },
+  {
+    "id": "mac-note-menu",
+    "title": "Note actions",
+    "group": "Mac capture",
+    "kind": "floating",
+    "description": "Right-click or use the app menu for note actions. The window keeps only its green Put away button.",
+    "requirements": "FR-07 · FR-11 · FR-12",
+    "platform": "mac",
+    "variant": "menu"
+  },
+  {
+    "id": "mac-menu-bar",
+    "title": "Menu bar capture",
+    "group": "Mac capture",
+    "kind": "desktop",
+    "description": "The resident menu bar opens a floating note even when the library and all note windows are closed.",
+    "requirements": "FR-01 · FR-11",
+    "platform": "mac",
+    "variant": "menu"
+  },
+  {
+    "id": "mac-library",
+    "title": "Notes library",
+    "group": "Library",
+    "kind": "library",
+    "description": "A searchable home for open and closed notes in the selected collection.",
+    "requirements": "FR-05 · FR-08",
+    "platform": "mac",
+    "variant": ""
+  },
+  {
+    "id": "mac-empty",
+    "title": "First local note",
+    "group": "Library",
+    "kind": "library",
+    "description": "Local capture is available immediately, without an account.",
+    "requirements": "FR-01 · FR-03",
+    "platform": "mac",
+    "variant": "empty"
+  },
+  {
+    "id": "mac-tags",
+    "title": "Filter by tags",
+    "group": "Library",
+    "kind": "library",
+    "description": "Tags are derived from note text. Multiple selected tags use AND.",
+    "requirements": "FR-09",
+    "platform": "mac",
+    "variant": "tags"
+  },
+  {
+    "id": "mac-archive",
+    "title": "Archive",
+    "group": "Library",
+    "kind": "library",
+    "description": "Archived notes remain searchable and can be returned to Notes.",
+    "requirements": "FR-07",
+    "platform": "mac",
+    "variant": "archive"
+  },
+  {
+    "id": "mac-trash",
+    "title": "Trash and restore",
+    "group": "Library",
+    "kind": "library",
+    "description": "Deleted notes can be restored for 30 days.",
+    "requirements": "FR-07",
+    "platform": "mac",
+    "variant": "trash"
+  },
+  {
+    "id": "delete-note",
+    "title": "Delete permanently",
+    "group": "Library",
+    "kind": "dialog",
+    "description": "A separate confirmation explains irreversible removal and offline copies.",
+    "requirements": "FR-07",
+    "platform": "mac",
+    "variant": "delete"
+  },
+  {
+    "id": "search-words",
+    "title": "Word search",
+    "group": "Search",
+    "kind": "search",
+    "description": "Search body text, derived titles, and tags without a cloud round trip.",
+    "requirements": "FR-06",
+    "platform": "mac",
+    "variant": "words"
+  },
+  {
+    "id": "search-empty",
+    "title": "No search matches",
+    "group": "Search",
+    "kind": "search",
+    "description": "An empty result gives a clear way back without inventing an answer.",
+    "requirements": "FR-06",
+    "platform": "mac",
+    "variant": "empty"
+  },
+  {
+    "id": "search-meaning",
+    "title": "Search by meaning",
+    "group": "Search",
+    "kind": "search",
+    "description": "Natural-language retrieval returns saved notes and matched excerpts.",
+    "requirements": "FR-06 · FR-14",
+    "platform": "mac",
+    "variant": "meaning"
+  },
+  {
+    "id": "model-consent",
+    "title": "Enable meaning search",
+    "group": "Search",
+    "kind": "dialog",
+    "description": "An explicit model download choice explains on-device processing. The size is illustrative until M0.",
+    "requirements": "FR-06 · FR-14",
+    "platform": "mac",
+    "variant": "model-consent"
+  },
+  {
+    "id": "model-download",
+    "title": "Model download",
+    "group": "Search",
+    "kind": "dialog",
+    "description": "Pause or cancel the download while word search remains available.",
+    "requirements": "FR-06",
+    "platform": "mac",
+    "variant": "model-download"
+  },
+  {
+    "id": "model-indexing",
+    "title": "Preparing meaning search",
+    "group": "Search",
+    "kind": "dialog",
+    "description": "The app explains indexing progress while keeping capture available.",
+    "requirements": "FR-06 · FR-08",
+    "platform": "mac",
+    "variant": "model-indexing"
+  },
+  {
+    "id": "model-unavailable",
+    "title": "Meaning search unavailable",
+    "group": "Search",
+    "kind": "dialog",
+    "description": "An unsupported device can continue with word search.",
+    "requirements": "FR-06",
+    "platform": "mac",
+    "variant": "model-unavailable"
+  },
+  {
+    "id": "storage-destination",
+    "title": "Choose saving mode",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "Choose free remote periodic device sync or paid whole-library live Cloud sync.",
+    "requirements": "FR-03 · FR-17 · FR-18",
+    "platform": "mac",
+    "variant": "destination"
+  },
+  {
+    "id": "cloud-signin",
+    "title": "Connect Peel Cloud",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "Sign in to Peel to open the account’s cloud collection.",
+    "requirements": "FR-04 · FR-14",
+    "platform": "mac",
+    "variant": "cloud-signin"
+  },
+  {
+    "id": "cloud-authorizing",
+    "title": "Waiting for authorization",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "System-browser authorization can be completed or cancelled without blocking local work.",
+    "requirements": "FR-04",
+    "platform": "mac",
+    "variant": "cloud-authorizing"
+  },
+  {
+    "id": "cloud-download",
+    "title": "Downloading cloud notes",
+    "group": "Storage",
+    "kind": "library",
+    "description": "Initial progress is visible; partial results are not presented as a complete collection.",
+    "requirements": "FR-04 · FR-08",
+    "platform": "mac",
+    "variant": "download"
+  },
+  {
+    "id": "move-to-cloud",
+    "title": "Enable Cloud for all notes",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "Explicitly authorize the complete library upload after paid-plan verification. Keep local copies until acknowledged.",
+    "requirements": "FR-03 · FR-13 · FR-18",
+    "platform": "mac",
+    "variant": "move-cloud"
+  },
+  {
+    "id": "move-to-local",
+    "title": "Switch library to On-device",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "Verify a complete device copy before leaving Cloud. Cancellation and cloud-data removal are separate.",
+    "requirements": "FR-03 · FR-13",
+    "platform": "mac",
+    "variant": "move-local"
+  },
+  {
+    "id": "signout-cloud",
+    "title": "Sign out of Peel",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "Choose whether downloaded copies stay. Unsynced edits have a recovery path.",
+    "requirements": "FR-04 · FR-14",
+    "platform": "mac",
+    "variant": "sign out"
+  },
+  {
+    "id": "switch-account",
+    "title": "Change Peel account",
+    "group": "Storage",
+    "kind": "dialog",
+    "description": "Account switching preserves pending work and separates collections.",
+    "requirements": "FR-14",
+    "platform": "mac",
+    "variant": "account"
+  },
+  {
+    "id": "settings-general",
+    "title": "General settings",
+    "group": "Settings",
+    "kind": "settings",
+    "description": "Configure quick capture, launch behavior, and appearance.",
+    "requirements": "FR-01 · FR-11",
+    "platform": "mac",
+    "variant": "general"
+  },
+  {
+    "id": "settings-storage",
+    "title": "Storage settings",
+    "group": "Settings",
+    "kind": "settings",
+    "description": "App-wide mode, paired devices, local folder, and paid Cloud plan in one place.",
+    "requirements": "FR-03 · FR-04",
+    "platform": "mac",
+    "variant": "storage"
+  },
+  {
+    "id": "settings-search",
+    "title": "Search settings",
+    "group": "Settings",
+    "kind": "settings",
+    "description": "Manage the local search model and derived index.",
+    "requirements": "FR-06",
+    "platform": "mac",
+    "variant": "search"
+  },
+  {
+    "id": "transfer-export",
+    "title": "Export your notes",
+    "group": "Settings",
+    "kind": "transfer",
+    "description": "Portable Markdown and metadata make leaving straightforward.",
+    "requirements": "FR-12",
+    "platform": "mac",
+    "variant": "export"
+  },
+  {
+    "id": "transfer-import",
+    "title": "Import notes",
+    "group": "Settings",
+    "kind": "transfer",
+    "description": "Import into the current mode, with sync/upload consequences shown before proceeding.",
+    "requirements": "FR-12",
+    "platform": "mac",
+    "variant": "import"
+  },
+  {
+    "id": "transfer-results",
+    "title": "Import results",
+    "group": "Settings",
+    "kind": "dialog",
+    "description": "Imported, skipped, and oversized notes are reported explicitly.",
+    "requirements": "FR-12",
+    "platform": "mac",
+    "variant": "import-results"
+  },
+  {
+    "id": "sync-offline",
+    "title": "Offline and saved locally",
+    "group": "Recovery",
+    "kind": "library",
+    "description": "Cloud notes remain editable. Local success and cloud status are separate.",
+    "requirements": "FR-04 · FR-13",
+    "platform": "mac",
+    "variant": "offline"
+  },
+  {
+    "id": "sync-reconnect",
+    "title": "Sign in to sync again",
+    "group": "Recovery",
+    "kind": "library",
+    "description": "Expired authorization does not prevent local editing.",
+    "requirements": "FR-04 · FR-13",
+    "platform": "mac",
+    "variant": "reconnect"
+  },
+  {
+    "id": "sync-paused",
+    "title": "Cloud sync paused",
+    "group": "Recovery",
+    "kind": "library",
+    "description": "A cloud error pauses sync while preserving local changes.",
+    "requirements": "FR-04 · FR-13",
+    "platform": "mac",
+    "variant": "paused"
+  },
+  {
+    "id": "save-error",
+    "title": "Local save failed",
+    "group": "Recovery",
+    "kind": "floating",
+    "description": "The note stays open, with Retry and Copy text available.",
+    "requirements": "FR-02 · FR-13",
+    "platform": "mac",
+    "variant": "save-error"
+  },
+  {
+    "id": "conflict-compare",
+    "title": "Compare concurrent versions",
+    "group": "Recovery",
+    "kind": "conflict",
+    "description": "Both offline versions survive until the person chooses how to resolve them.",
+    "requirements": "FR-13",
+    "platform": "mac",
+    "variant": "compare"
+  },
+  {
+    "id": "conflict-merge",
+    "title": "Combine versions",
+    "group": "Recovery",
+    "kind": "conflict",
+    "description": "Merge the text or keep separate notes; neither version is silently discarded.",
+    "requirements": "FR-13",
+    "platform": "mac",
+    "variant": "merge"
+  },
+  {
+    "id": "cloud-missing",
+    "title": "Cloud collection missing",
+    "group": "Recovery",
+    "kind": "dialog",
+    "description": "Local copies remain available while the person chooses a recovery action.",
+    "requirements": "FR-04 · FR-13",
+    "platform": "mac",
+    "variant": "cloud-missing"
+  },
+  {
+    "id": "local-drive-missing",
+    "title": "Local folder unavailable",
+    "group": "Recovery",
+    "kind": "dialog",
+    "description": "A disconnected local drive does not trigger a hidden change of storage location.",
+    "requirements": "FR-03 · FR-13",
+    "platform": "mac",
+    "variant": "local-missing"
+  },
+  {
+    "id": "unsupported-version",
+    "title": "Update required",
+    "group": "Recovery",
+    "kind": "dialog",
+    "description": "A newer storage schema is kept intact instead of being rewritten by an older app.",
+    "requirements": "FR-13",
+    "platform": "mac",
+    "variant": "version"
+  },
+  {
+    "id": "note-limit",
+    "title": "Note length limit",
+    "group": "Recovery",
+    "kind": "floating",
+    "description": "An oversized paste is rejected explicitly, with the existing text preserved.",
+    "requirements": "FR-10 · FR-13",
+    "platform": "mac",
+    "variant": "limit"
+  },
+  {
+    "id": "shortcut-conflict",
+    "title": "Shortcut unavailable",
+    "group": "Recovery",
+    "kind": "dialog",
+    "description": "A conflicting shortcut can be replaced without blocking menu bar capture.",
+    "requirements": "FR-01",
+    "platform": "mac",
+    "variant": "shortcut"
+  },
+  {
+    "id": "iphone-library",
+    "title": "iPhone notes library",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "A compact two-column library with direct capture and collection selection.",
+    "requirements": "FR-01 · FR-05",
+    "platform": "iphone",
+    "variant": "library"
+  },
+  {
+    "id": "iphone-editor",
+    "title": "iPhone note editor",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Readable paper, touch checkboxes, and a clear local-save status.",
+    "requirements": "FR-02 · FR-05 · FR-10",
+    "platform": "iphone",
+    "variant": "editor"
+  },
+  {
+    "id": "iphone-capture",
+    "title": "iPhone quick capture",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "The editor opens with the keyboard ready. Closing keeps the note.",
+    "requirements": "FR-01 · FR-02",
+    "platform": "iphone",
+    "variant": "capture"
+  },
+  {
+    "id": "iphone-source",
+    "title": "iPhone Markdown source",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "The same source text is available on the phone.",
+    "requirements": "FR-05 · FR-10",
+    "platform": "iphone",
+    "variant": "source"
+  },
+  {
+    "id": "iphone-search",
+    "title": "iPhone search",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Word and meaning search share the same collection boundaries.",
+    "requirements": "FR-05 · FR-06",
+    "platform": "iphone",
+    "variant": "search"
+  },
+  {
+    "id": "iphone-tags",
+    "title": "iPhone tag filters",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "An accessible bottom sheet keeps filtering within reach.",
+    "requirements": "FR-09",
+    "platform": "iphone",
+    "variant": "tags"
+  },
+  {
+    "id": "iphone-collections",
+    "title": "iPhone saving mode",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Choose a free On-device library or paid Cloud for all notes.",
+    "requirements": "FR-03 · FR-05",
+    "platform": "iphone",
+    "variant": "collections"
+  },
+  {
+    "id": "iphone-actions",
+    "title": "iPhone note actions",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "A touch action sheet exposes sync status, archive, export, and delete.",
+    "requirements": "FR-07 · FR-12",
+    "platform": "iphone",
+    "variant": "actions"
+  },
+  {
+    "id": "iphone-settings",
+    "title": "iPhone settings",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Storage and search settings use the same vocabulary as Mac.",
+    "requirements": "FR-03 · FR-06",
+    "platform": "iphone",
+    "variant": "settings"
+  },
+  {
+    "id": "iphone-conflict",
+    "title": "iPhone conflict resolution",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Stacked versions preserve legibility on a small screen.",
+    "requirements": "FR-13",
+    "platform": "iphone",
+    "variant": "conflict"
+  },
+  {
+    "id": "iphone-trash",
+    "title": "iPhone Trash",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Recovery actions stay available on mobile.",
+    "requirements": "FR-07",
+    "platform": "iphone",
+    "variant": "trash"
+  },
+  {
+    "id": "iphone-move",
+    "title": "iPhone mode switch",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Switching applies to the entire library and keeps a verified local copy.",
+    "requirements": "FR-03 · FR-13",
+    "platform": "iphone",
+    "variant": "move"
+  },
+  {
+    "id": "web-library",
+    "title": "Browser notes library",
+    "group": "Browser",
+    "kind": "library",
+    "description": "The same notes and navigation in a browser application shell. The URL is illustrative.",
+    "requirements": "FR-05",
+    "platform": "web",
+    "variant": ""
+  },
+  {
+    "id": "web-editor",
+    "title": "Browser note editor",
+    "group": "Browser",
+    "kind": "web-editor",
+    "description": "Open a cloud note without losing the library context.",
+    "requirements": "FR-02 · FR-05",
+    "platform": "web",
+    "variant": ""
+  },
+  {
+    "id": "web-welcome",
+    "title": "Browser first use",
+    "group": "Browser",
+    "kind": "library",
+    "description": "Start locally or sign in to Peel, without implying access to a Mac local folder.",
+    "requirements": "FR-03 · FR-05",
+    "platform": "web",
+    "variant": "welcome"
+  },
+  {
+    "id": "web-offline",
+    "title": "Browser offline",
+    "group": "Browser",
+    "kind": "library",
+    "description": "Cached notes remain available without a network connection.",
+    "requirements": "FR-04 · FR-08",
+    "platform": "web",
+    "variant": "offline"
+  },
+  {
+    "id": "web-storage",
+    "title": "Browser storage settings",
+    "group": "Browser",
+    "kind": "settings",
+    "description": "Browser storage limitations, persistence status, and export are explicit.",
+    "requirements": "FR-03 · FR-13",
+    "platform": "web",
+    "variant": "browser-storage"
+  },
+  {
+    "id": "browser-quota",
+    "title": "Browser storage is full",
+    "group": "Browser",
+    "kind": "dialog",
+    "description": "Unsaved text has an immediate copy/export recovery path.",
+    "requirements": "FR-02 · FR-13",
+    "platform": "web",
+    "variant": "browser-quota"
+  },
+  {
+    "id": "web-mobile",
+    "title": "Android browser layout",
+    "group": "Browser",
+    "kind": "phone",
+    "description": "A responsive browser layout provides Android access without a native Android app.",
+    "requirements": "FR-05",
+    "platform": "android",
+    "variant": "web-mobile"
+  },
+  {
+    "id": "cloud-signup",
+    "title": "Create a Peel account",
+    "group": "Account",
+    "kind": "auth",
+    "description": "An account is needed for paid Cloud. Signing in alone does not activate Cloud or upload the On-device library.",
+    "requirements": "FR-04 · FR-14",
+    "platform": "web",
+    "variant": "signup"
+  },
+  {
+    "id": "account-verify",
+    "title": "Verify email",
+    "group": "Account",
+    "kind": "auth",
+    "description": "Email verification protects the cloud account.",
+    "requirements": "FR-14",
+    "platform": "web",
+    "variant": "verify"
+  },
+  {
+    "id": "account-password",
+    "title": "Reset password",
+    "group": "Account",
+    "kind": "auth",
+    "description": "Recover access without changing local notes.",
+    "requirements": "FR-14",
+    "platform": "web",
+    "variant": "password"
+  },
+  {
+    "id": "account-delete",
+    "title": "Delete Peel account",
+    "group": "Account",
+    "kind": "auth",
+    "description": "Account deletion requires an explicit confirmation and explains retention.",
+    "requirements": "FR-07 · FR-14",
+    "platform": "web",
+    "variant": "delete-account"
+  },
+  {
+    "id": "account-deleting",
+    "title": "Account deletion status",
+    "group": "Account",
+    "kind": "auth",
+    "description": "A clear status distinguishes signing out from deleting server data.",
+    "requirements": "FR-14",
+    "platform": "web",
+    "variant": "deleting"
+  },
+  {
+    "id": "account-reset-code",
+    "title": "Choose new password",
+    "group": "Account",
+    "kind": "auth",
+    "description": "Complete password recovery with a reset code.",
+    "requirements": "FR-14",
+    "platform": "web",
+    "variant": "reset-code"
+  },
+  {
+    "id": "iphone-meaning",
+    "title": "iPhone meaning search",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Meaning search retrieves source notes, using the local index.",
+    "requirements": "FR-06 · FR-14",
+    "platform": "iphone",
+    "variant": "meaning"
+  },
+  {
+    "id": "iphone-more",
+    "title": "iPhone library menu",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Archive, Trash, and Settings stay easy to reach.",
+    "requirements": "FR-07",
+    "platform": "iphone",
+    "variant": "more"
+  },
+  {
+    "id": "iphone-archive",
+    "title": "iPhone Archive",
+    "group": "iPhone",
+    "kind": "phone",
+    "description": "Archived notes remain available on the phone.",
+    "requirements": "FR-07",
+    "platform": "iphone",
+    "variant": "archive"
+  },
+  {
+    "id": "mac-archived-note",
+    "title": "Archived note editor",
+    "group": "Library",
+    "kind": "floating",
+    "description": "Archived notes remain editable and can be unarchived.",
+    "requirements": "FR-07",
+    "platform": "mac",
+    "variant": "archived"
+  },
+  {
+    "id": "web-local-editor",
+    "title": "Browser local note",
+    "group": "Browser",
+    "kind": "web-editor",
+    "description": "A local browser note needs no account and never uploads implicitly.",
+    "requirements": "FR-02 · FR-03",
+    "platform": "web",
+    "variant": "local"
+  },
+  {
+    "id": "mac-library-desktop",
+    "title": "Notes Library and desktop",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Open the full Notes Library while pinned notes remain on the desktop. Drag a card outside the library window to pin it.",
+    "requirements": "FR-11 · FR-15",
+    "platform": "mac",
+    "variant": "library"
+  },
+  {
+    "id": "mac-library-drag",
+    "title": "Drag a note onto the desktop",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "A drag preview shows where the same note will be pinned. Its library mode stays unchanged.",
+    "requirements": "FR-15",
+    "platform": "mac",
+    "variant": "drag"
+  },
+  {
+    "id": "mac-library-pinned",
+    "title": "Pinned from the library",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "The note stays in the library with an On desktop indicator. Both views share one identity.",
+    "requirements": "FR-11 · FR-15",
+    "platform": "mac",
+    "variant": "pinned"
+  },
+  {
+    "id": "mac-library-context",
+    "title": "Right-click to pin",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Right-click a library card for Pin to desktop. Already open notes offer Bring to front or Remove from desktop.",
+    "requirements": "FR-15",
+    "platform": "mac",
+    "variant": "context"
+  },
+  {
+    "id": "mac-arrange-menu",
+    "title": "Arrange open notes menu",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Window offers four edge arrangements, configurable shortcuts, and Undo last arrangement.",
+    "requirements": "FR-16",
+    "platform": "mac",
+    "variant": "arrange-menu"
+  },
+  {
+    "id": "mac-arrange-left",
+    "title": "Arrange notes left",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Control Option Command Left arrow arranges open notes at the left edge of the active display.",
+    "requirements": "FR-16",
+    "platform": "mac",
+    "variant": "left"
+  },
+  {
+    "id": "mac-arrange-right",
+    "title": "Arrange notes right",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Control Option Command Right arrow arranges open notes at the right edge.",
+    "requirements": "FR-16",
+    "platform": "mac",
+    "variant": "right"
+  },
+  {
+    "id": "mac-arrange-top",
+    "title": "Arrange notes top",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Control Option Command Up arrow arranges open notes along the top.",
+    "requirements": "FR-16",
+    "platform": "mac",
+    "variant": "top"
+  },
+  {
+    "id": "mac-arrange-bottom",
+    "title": "Arrange notes bottom",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "Control Option Command Down arrow arranges open notes along the bottom.",
+    "requirements": "FR-16",
+    "platform": "mac",
+    "variant": "bottom"
+  },
+  {
+    "id": "settings-desktop",
+    "title": "Desktop and shortcuts",
+    "group": "Settings",
+    "kind": "settings",
+    "description": "Pinning, always-on-top behavior, library access, and configurable edge arrangement shortcuts.",
+    "requirements": "FR-11 · FR-15 · FR-16",
+    "platform": "mac",
+    "variant": "desktop"
+  },
+  {
+    "id": "mac-library-closed",
+    "title": "Library closed, notes visible",
+    "group": "Mac desktop",
+    "kind": "desktop",
+    "description": "The Notes Library is closed. The independent note window remains visible on the macOS desktop, with one Save and close control.",
+    "requirements": "FR-02 · FR-11",
+    "platform": "mac",
+    "variant": "library-closed"
+  },
+  {
+    "id": "peer-library",
+    "title": "On-device notes",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Free notes live on paired devices. Remote sync is periodic and never creates a server-stored note copy.",
+    "requirements": "FR-03 · FR-17",
+    "platform": "mac",
+    "variant": "peer-library"
+  },
+  {
+    "id": "peer-devices",
+    "title": "Your paired devices",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Last sync, remote reachability, Sync now, pairing and unpairing are explicit.",
+    "requirements": "FR-17",
+    "platform": "mac",
+    "variant": "peer-devices"
+  },
+  {
+    "id": "peer-pair",
+    "title": "Pair another device",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Pairing authenticates a device before sharing any notes. The example code is a mockup.",
+    "requirements": "FR-14 · FR-17",
+    "platform": "mac",
+    "variant": "peer-pair"
+  },
+  {
+    "id": "peer-confirm",
+    "title": "Confirm the paired device",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Verify the same device phrase on both devices before exchanging the library.",
+    "requirements": "FR-14 · FR-17",
+    "platform": "mac",
+    "variant": "peer-confirm"
+  },
+  {
+    "id": "peer-waiting",
+    "title": "Waiting for a device",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Keep work locally until a paired device has an overlapping online sync opportunity.",
+    "requirements": "FR-13 · FR-17",
+    "platform": "mac",
+    "variant": "peer-waiting"
+  },
+  {
+    "id": "peer-syncing",
+    "title": "Periodic device sync",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Local saving is already complete while a remote peer commits the latest changes.",
+    "requirements": "FR-02 · FR-17",
+    "platform": "mac",
+    "variant": "peer-syncing"
+  },
+  {
+    "id": "peer-relay",
+    "title": "Remote encrypted connection",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "An encrypted transient relay helps peers connect across networks. No note copy is retained on the relay.",
+    "requirements": "FR-14 · FR-17",
+    "platform": "mac",
+    "variant": "peer-relay"
+  },
+  {
+    "id": "peer-latest",
+    "title": "Latest edit applied",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "The newer peer edit becomes current automatically. Recent versions offer optional recovery.",
+    "requirements": "FR-13 · FR-19",
+    "platform": "mac",
+    "variant": "peer-latest"
+  },
+  {
+    "id": "peer-history",
+    "title": "Recent local versions",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Replaced text remains on a device for seven days. Recovery creates a new edit or separate note.",
+    "requirements": "FR-13 · FR-19",
+    "platform": "mac",
+    "variant": "peer-history"
+  },
+  {
+    "id": "peer-unpair",
+    "title": "Unpair a device",
+    "group": "On-device sync",
+    "kind": "mode",
+    "description": "Unpairing stops future exchange and explains that an offline device can retain its existing copy.",
+    "requirements": "FR-14 · FR-17",
+    "platform": "mac",
+    "variant": "peer-unpair"
+  },
+  {
+    "id": "cloud-plan",
+    "title": "Paid Cloud plan",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Cloud includes the entire library and live sync. Price remains undecided; no charge occurs in this mockup.",
+    "requirements": "FR-03 · FR-18",
+    "platform": "mac",
+    "variant": "cloud-plan"
+  },
+  {
+    "id": "cloud-activating",
+    "title": "Activating Cloud for all notes",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Keep complete local copies until the initial whole-library upload is acknowledged.",
+    "requirements": "FR-03 · FR-13 · FR-18",
+    "platform": "mac",
+    "variant": "cloud-activating"
+  },
+  {
+    "id": "cloud-live",
+    "title": "Cloud live sync",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Committed Cloud changes push to active online devices. Offline devices catch up on return.",
+    "requirements": "FR-04 · FR-20",
+    "platform": "mac",
+    "variant": "cloud-live"
+  },
+  {
+    "id": "cloud-billing",
+    "title": "Cloud subscription",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Show server-verified plan status and separate subscription management from cloud-data removal.",
+    "requirements": "FR-18",
+    "platform": "mac",
+    "variant": "cloud-billing"
+  },
+  {
+    "id": "cloud-payment-failed",
+    "title": "Cloud payment needs attention",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "A payment problem pauses Cloud without deleting local notes or preventing capture/export.",
+    "requirements": "FR-13 · FR-18",
+    "platform": "mac",
+    "variant": "cloud-payment"
+  },
+  {
+    "id": "cloud-cancel",
+    "title": "Cancel Cloud renewal",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Cancellation stops renewal according to plan terms. It does not silently remove notes.",
+    "requirements": "FR-18",
+    "platform": "mac",
+    "variant": "cloud-cancel"
+  },
+  {
+    "id": "cloud-expired",
+    "title": "Cloud plan expired",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Keep local work usable and make recovery, downgrade and retention next steps explicit.",
+    "requirements": "FR-13 · FR-18",
+    "platform": "mac",
+    "variant": "cloud-expired"
+  },
+  {
+    "id": "cloud-downgrading",
+    "title": "Verify the complete device copy",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Finish the full download and pending-edit reconciliation before activating On-device mode.",
+    "requirements": "FR-03 · FR-13",
+    "platform": "mac",
+    "variant": "cloud-downgrading"
+  },
+  {
+    "id": "cloud-remove-data",
+    "title": "Remove retained Cloud data",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "Cloud-data removal is separate from mode switching, account deletion and canceling renewal.",
+    "requirements": "FR-03 · FR-07 · FR-18",
+    "platform": "mac",
+    "variant": "cloud-remove-data"
+  },
+  {
+    "id": "cloud-data-removed",
+    "title": "Cloud data removal requested",
+    "group": "Paid Cloud",
+    "kind": "mode",
+    "description": "On-device replicas remain available while server data removal follows the published retention policy.",
+    "requirements": "FR-03 · FR-07",
+    "platform": "mac",
+    "variant": "cloud-data-removed"
+  },
+  {
+    "id": "iphone-peer-library",
+    "title": "iPhone On-device notes",
+    "group": "iPhone",
+    "kind": "mode-phone",
+    "description": "Free local replicas sync periodically with paired devices, including remotely.",
+    "requirements": "FR-05 · FR-17",
+    "platform": "iphone",
+    "variant": "peer-library"
+  },
+  {
+    "id": "iphone-peer-devices",
+    "title": "iPhone paired devices",
+    "group": "iPhone",
+    "kind": "mode-phone",
+    "description": "Show remote peer status and the fact that suspended apps sync when iOS allows or on return.",
+    "requirements": "FR-05 · FR-17",
+    "platform": "iphone",
+    "variant": "peer-devices"
+  },
+  {
+    "id": "iphone-peer-pair",
+    "title": "iPhone device pairing",
+    "group": "iPhone",
+    "kind": "mode-phone",
+    "description": "Confirm a device code before sharing the On-device library.",
+    "requirements": "FR-14 · FR-17",
+    "platform": "iphone",
+    "variant": "peer-pair"
+  },
+  {
+    "id": "web-peer-library",
+    "title": "Browser On-device notes",
+    "group": "Browser",
+    "kind": "mode",
+    "description": "This browser keeps a local replica and periodically exchanges updates with paired devices.",
+    "requirements": "FR-05 · FR-17",
+    "platform": "web",
+    "variant": "peer-library"
+  },
+  {
+    "id": "web-peer-pair",
+    "title": "Browser device pairing",
+    "group": "Browser",
+    "kind": "mode",
+    "description": "Explicit browser pairing links a local replica without paid Cloud or a server note copy.",
+    "requirements": "FR-05 · FR-14 · FR-17",
+    "platform": "web",
+    "variant": "peer-pair"
+  }
+]

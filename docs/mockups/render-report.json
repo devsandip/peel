@@ -1,0 +1,591 @@
+{
+  "screenCount": 110,
+  "additionalDarkScreens": 5,
+  "browserErrors": [],
+  "checks": [
+    "free/paid whole-library modes",
+    "remote peer pairing routes",
+    "automatic latest-edit recovery",
+    "paid activation and downgrade routes",
+    "no stale per-note destination flows",
+    "green minus Put away control",
+    "all screens render",
+    "all mockup routes resolve",
+    "all dialogs inside artboard",
+    "branding/provider check",
+    "one Close control per floating note",
+    "all six Mac capture screens use shared desktop design",
+    "capture navigation",
+    "account navigation",
+    "appearance switch",
+    "desktop titlebar drag",
+    "quick capture/formatted/source titlebar drag",
+    "empty capture dismisses its draft",
+    "capture right-click actions and Keep on top",
+    "resident menu bar capture with all windows closed",
+    "library drag-out pin",
+    "cancel drag",
+    "right-click pin",
+    "no duplicate window",
+    "notes outside library hierarchy",
+    "library Close preserves existing note windows and positions",
+    "note Close affects only its window and retains library entry",
+    "standalone note Close",
+    "failed-save Close keeps note open",
+    "four keyboard edge arrangements",
+    "undo arrangement",
+    "390px gallery width"
+  ],
+  "screens": [
+    {
+      "id": "mac-desktop",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-capture",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-note",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-source",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-note-menu",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-menu-bar",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-library",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-empty",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-tags",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-archive",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-trash",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "delete-note",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "search-words",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "search-empty",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "search-meaning",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "model-consent",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "model-download",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "model-indexing",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "model-unavailable",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "storage-destination",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-signin",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-authorizing",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-download",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "move-to-cloud",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "move-to-local",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "signout-cloud",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "switch-account",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "settings-general",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "settings-storage",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "settings-search",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "transfer-export",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "transfer-import",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "transfer-results",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "sync-offline",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "sync-reconnect",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "sync-paused",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "save-error",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "conflict-compare",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "conflict-merge",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-missing",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "local-drive-missing",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "unsupported-version",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "note-limit",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "shortcut-conflict",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "iphone-library",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-editor",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-capture",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-source",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-search",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-tags",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-collections",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-actions",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-settings",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-conflict",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-trash",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-move",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "web-library",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-editor",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-welcome",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-offline",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-storage",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "browser-quota",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-mobile",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "cloud-signup",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "account-verify",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "account-password",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "account-delete",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "account-deleting",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "account-reset-code",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "iphone-meaning",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-more",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-archive",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "mac-archived-note",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-local-editor",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-library-desktop",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-library-drag",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-library-pinned",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-library-context",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-arrange-menu",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-arrange-left",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-arrange-right",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-arrange-top",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-arrange-bottom",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "settings-desktop",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "mac-library-closed",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-library",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-devices",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-pair",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-confirm",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-waiting",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-syncing",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-relay",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-latest",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-history",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "peer-unpair",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-plan",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-activating",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-live",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-billing",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-payment-failed",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-cancel",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-expired",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-downgrading",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-remove-data",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "cloud-data-removed",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "iphone-peer-library",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-peer-devices",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "iphone-peer-pair",
+      "width": 393,
+      "height": 852
+    },
+    {
+      "id": "web-peer-library",
+      "width": 1100,
+      "height": 710
+    },
+    {
+      "id": "web-peer-pair",
+      "width": 1100,
+      "height": 710
+    }
+  ]
+}

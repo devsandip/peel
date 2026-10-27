@@ -1,0 +1,45 @@
+{
+  "scope": "Locally verified Cloud mutation service, Fetch HTTP adapter and durable-client response adapter with isolated SQLite server storage and synthetic authentication; no hosted API, Cognito, DynamoDB or app UI integration",
+  "generatedAt": "2026-10-27T08:48:15.704Z",
+  "environment": {
+    "node": "v26.4.0",
+    "sqlite": "3.53.2",
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "verification": {
+    "typeScriptPassed": true,
+    "formattingPassed": true,
+    "sharedTopLevelTestsPassing": 102,
+    "testFiles": 19,
+    "focusedServerAndHttpCasesPassing": 12
+  },
+  "checks": {
+    "conditionalNoteAndSequenceWrites": true,
+    "bodyFreeRetryReceiptsWithCurrentHead": true,
+    "twoOwnerContextsSeparated": true,
+    "requestSuppliedAuthorityRejected": true,
+    "entitlementRevocationBeforeCommitBlocksWrite": true,
+    "atomicAbortAndRestartRetry": true,
+    "serverTrashDeadlineAndFailedCleanupHidesExpiredBody": true,
+    "logicalNinetyDayReceiptExpiry": true,
+    "permanentTombstonesRejectReuse": true,
+    "boundedHttpPayloadAndPrivateErrorResponses": true,
+    "twoDurableClientsOverLoopbackHttp": true,
+    "repeatedConflictPreservesMergedDraft": true,
+    "lostAckAfterLocalRestartRetriesSameOperation": true,
+    "advancedHeadPreservesInFlightForReconciliation": true
+  },
+  "sqliteSIGKILLBoundaries": {
+    "committed": true,
+    "update-uncommitted": true,
+    "purge-uncommitted": true
+  },
+  "crashFixtureSHA256": "7e9ad72fa73ca0a04fd03c885fb7e2fdacec8d9b083b99ff83c20e222d148eb4",
+  "syntheticAuthenticationOnly": true,
+  "productionCognitoVerified": false,
+  "dynamoDbTransactionVerified": false,
+  "realNotesUsed": false,
+  "applicationDatabasesOpened": 0,
+  "awsResourcesCreated": false
+}

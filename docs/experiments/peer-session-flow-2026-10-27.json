@@ -1,0 +1,51 @@
+{
+  "scope": "M0 same-page ephemeral trusted peer proofs bound to installed WebRTC descriptions and isolated IndexedDB commits; not production pairing/signaling, cross-network/relay or native/iPhone acceptance",
+  "generatedAt": "2026-10-26T23:19:25.429Z",
+  "environment": {
+    "browser": "156.0.8078.48",
+    "platform": "darwin",
+    "release": "25.6.0",
+    "cpu": "Apple M4"
+  },
+  "checks": {
+    "actualInstalledDescriptionsBoundToBothProofs": true,
+    "unicodeNoteCommittedBeforeAcknowledgement": true,
+    "quarantinedEditSendsNoAcknowledgement": true,
+    "failedRecipientCommitSendsNoAcknowledgement": true,
+    "lostAcknowledgementRetainsSenderDelivery": true,
+    "recipientStoreReopenRetainsUnacknowledgedCommit": true,
+    "retryAfterReconnectDeduplicatesRecipient": true,
+    "purgeCommitsWithoutRetainedBody": true,
+    "activeRevocationClosesAndRejectsNewTraffic": true,
+    "wrongInstalledDescriptionProofRejected": true,
+    "earlyNoteFramesRejectedBeforeStore": true,
+    "revocationDuringClaimPreventsActivation": true,
+    "unverifiedForwardedAuthorRejected": true,
+    "malformedFrameClosesWithoutAcknowledgement": true,
+    "partialTransferTimesOutWithoutAcknowledgement": true,
+    "failedSenderReceiptCommitRetainsDelivery": true,
+    "senderReceiptFailureRetryDoesNotReapply": true,
+    "receiptTimeoutClosesWithDeliveryIntact": true,
+    "oneClaimCannotBypassMutualReadiness": true,
+    "delayedClaimCompletesReadyWithoutCoordinator": true,
+    "duplexReceiptProgressesDuringOppositeCommit": true,
+    "oneCreditRejectsExtraSendWithoutClosing": true,
+    "oldInflightReceiptRetainsCoalescedGeneration": true,
+    "duplexAndCoalescedEditsConverge": true,
+    "wrongSessionControlClosesBeforeData": true,
+    "renegotiationRequiresFreshBoundSession": true,
+    "independentDurableRevocationBlocksOutgoingFrames": true
+  },
+  "connectivity": {
+    "dtlsState": "connected",
+    "localCandidateType": "host",
+    "remoteCandidateType": "host",
+    "frameBytes": 16384,
+    "payloadBytes": 252026
+  },
+  "sessions": 19,
+  "payloadsPersistedByServer": 0,
+  "appDatabasesOpened": 0,
+  "externalIceServers": 0,
+  "pageErrors": []
+}

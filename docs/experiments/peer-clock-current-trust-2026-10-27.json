@@ -1,0 +1,22 @@
+{
+  "scope": "Isolated M0 current durable trust gate for signed peer-relative diagnostics; no note or session authorization, wire, app or native UI integration",
+  "generatedAt": "2026-10-27T02:47:46.012Z",
+  "environment": {
+    "node": "v26.4.0",
+    "browser": "156.0.8078.48",
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "nodeSQLiteContractScenarios": 4,
+  "chromeIndexedDBContractScenarios": 4,
+  "sharedTopLevelTestsPassing": 83,
+  "browserBundleSHA256": "eee3bc939e1873324131f0d1dcf73b4f790c5414035e24e2094e209919944137",
+  "browserBlockedExternalRequests": 0,
+  "browserUnexpectedLocalRequests": 0,
+  "browserPageErrors": 0,
+  "applicationDatabasesOpened": 0,
+  "durableDiagnosticWrites": 0,
+  "realNotesUsed": false,
+  "clockRepairImplemented": false,
+  "publicationAuthorizedByDiagnostic": false
+}

@@ -1,0 +1,39 @@
+{
+  "scope": "M0 same-page ephemeral trusted peer proofs bound to installed WebRTC descriptions and isolated IndexedDB commits; not production pairing/signaling, cross-network/relay or native/iPhone acceptance",
+  "generatedAt": "2026-10-26T17:59:20.103Z",
+  "environment": {
+    "browser": "155.0.8059.85",
+    "platform": "darwin",
+    "release": "25.6.0",
+    "cpu": "Apple M4"
+  },
+  "checks": {
+    "actualInstalledDescriptionsBoundToBothProofs": true,
+    "unicodeNoteCommittedBeforeAcknowledgement": true,
+    "quarantinedEditSendsNoAcknowledgement": true,
+    "failedRecipientCommitSendsNoAcknowledgement": true,
+    "lostAcknowledgementRetainsSenderDelivery": true,
+    "recipientStoreReopenRetainsUnacknowledgedCommit": true,
+    "retryAfterReconnectDeduplicatesRecipient": true,
+    "purgeCommitsWithoutRetainedBody": true,
+    "activeRevocationClosesAndRejectsNewTraffic": true,
+    "wrongInstalledDescriptionProofRejected": true,
+    "earlyNoteFramesRejectedBeforeStore": true,
+    "revocationDuringClaimPreventsActivation": true,
+    "unverifiedForwardedAuthorRejected": true,
+    "malformedFrameClosesWithoutAcknowledgement": true,
+    "partialTransferTimesOutWithoutAcknowledgement": true
+  },
+  "connectivity": {
+    "dtlsState": "connected",
+    "localCandidateType": "host",
+    "remoteCandidateType": "host",
+    "frameBytes": 16384,
+    "payloadBytes": 252026
+  },
+  "sessions": 11,
+  "payloadsPersistedByServer": 0,
+  "appDatabasesOpened": 0,
+  "externalIceServers": 0,
+  "pageErrors": []
+}

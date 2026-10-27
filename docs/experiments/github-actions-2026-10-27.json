@@ -1,0 +1,12 @@
+{
+  "scope": "GitHub Actions dispatch status, separate from local test outcomes",
+  "head": "d969ddec00cf91e32486ab5f9b5e0b928e2cafd9",
+  "runs": [40419222773, 40419209872],
+  "jobsStarted": false,
+  "stepsExecuted": 0,
+  "annotation": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings",
+  "exactBillingCauseEstablished": false,
+  "billingOrSpendingSettingsChanged": false,
+  "automaticRerunRequested": false,
+  "previousHeadWithTwoPassingRuns": "cf3a79a47c1ce3b086533495636edcda78d78b90"
+}

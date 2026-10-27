@@ -1,0 +1,18 @@
+{
+  "assetDownloadRequested" : false,
+  "available" : true,
+  "currentRevision" : 1,
+  "dimensions" : 512,
+  "elapsedMs" : 89.276375000000002,
+  "finiteVector" : true,
+  "generatedAt" : "2026-10-27T01:00:17Z",
+  "memoryBoundary" : "Darwin getrusage peak RSS for this one CLI process, not unique model allocation or app\/iPhone RAM acceptance",
+  "os" : "Version 26.6.2 (Build 25G83)",
+  "peakRSSBytes" : 34144256,
+  "realNotesUsed" : false,
+  "revision" : 1,
+  "scope" : "Isolated OS English sentence embedding capability, not app\/iPhone acceptance",
+  "supportedRevisions" : [
+    1
+  ]
+}

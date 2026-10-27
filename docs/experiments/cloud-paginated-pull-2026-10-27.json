@@ -1,0 +1,95 @@
+{
+  "scope": "Isolated paginated Cloud bootstrap/change service and atomic local cursor/head application on Node SQLite and Chrome IndexedDB with synthetic loopback HTTP identity; not app, Cognito, DynamoDB, live push, Safari/iPhone, power-loss or public acceptance",
+  "generatedAt": "2026-10-27T11:13:07.719730+00:00",
+  "environment": {
+    "node": "v26.4.0",
+    "sqlite": "3.53.2",
+    "browser": "156.0.8078.48",
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "verification": {
+    "typeScriptPassed": true,
+    "formattingPassed": true,
+    "sharedTopLevelTestsPassing": 111,
+    "testFiles": 22,
+    "testSummarySHA256": "3b0c0b5fde8dce6094ed83069d339decce383a01333d42b00054ada0c3a54574"
+  },
+  "limits": {
+    "maximumPageRecords": 32,
+    "aggregateHeadBytes": 524288,
+    "serializedPageBytes": 655360,
+    "continuationLifetimeMinutes": 15,
+    "checkpointLifetimeDays": 90
+  },
+  "serverPullTests": [
+    "catches creates, edits and purges during bootstrap and keeps a stable change upper bound",
+    "ends pages at the byte budget without skipping head keys or change sequences",
+    "rejects foreign, tampered, wrong-purpose, expired and rotated-key cursors",
+    "detects physical change gaps without advancing across the missing sequence",
+    "rejects logically expired needed changes even while the checkpoint and physical row remain",
+    "withholds a new round when entitlement is revoked during HMAC signing"
+  ],
+  "loopbackHttpBootstrapAndCheckpointCatchupPassed": true,
+  "browserFixtureSHA256": "103268c2a785a3024717dadfe5aad4aec594b0fac07566a6f71de45339c64c4b",
+  "sqlite": {
+    "checks": {
+      "atomicPageCursorFailureDuplicateAndRestart": true,
+      "unsentAndInFlightDraftsSurviveObservedHeads": true,
+      "pageCASRetryAndScopeIsolation": true,
+      "monotonicHeadsAndRevisionIntegrity": true
+    },
+    "realNotesUsed": false,
+    "applicationDatabasesOpened": 0
+  },
+  "indexedDB": {
+    "checks": {
+      "atomicPageCursorFailureDuplicateAndRestart": true,
+      "unsentAndInFlightDraftsSurviveObservedHeads": true,
+      "pageCASRetryAndScopeIsolation": true,
+      "monotonicHeadsAndRevisionIntegrity": true
+    },
+    "realNotesUsed": false,
+    "applicationDatabasesOpened": 0,
+    "legacyMigrationAndAbortPreserveSource": true,
+    "oldVersionRefusedAfterUpgrade": true
+  },
+  "browserReload": {
+    "currentAndPendingSurviveReload": true,
+    "immutableRetrySurvivesReload": true,
+    "bothConflictBranchesSurviveReload": true,
+    "acceptedHeadAdoptionSurvivesReload": true,
+    "acceptedHeadConflictSurvivesReload": true,
+    "pageCursorAndObservedHeadSurviveReload": true
+  },
+  "localStoreRegressionScenariosPerAdapter": 8,
+  "acceptedHeadRegressionScenariosPerAdapter": 4,
+  "localSQLiteSIGKILLBoundaries": {
+    "draft-committed": true,
+    "prepare-uncommitted": true,
+    "ack-uncommitted": true,
+    "ack-committed": true,
+    "pull-uncommitted": true,
+    "pull-committed": true
+  },
+  "serverSQLiteSIGKILLBoundaries": {
+    "committed": true,
+    "update-uncommitted": true,
+    "purge-uncommitted": true
+  },
+  "serverCrashFixtureSHA256": "c345c476034b83dc406d148b95305e93268d990ea32d777abf790addee6d7449",
+  "externalRequests": 0,
+  "unexpectedLocalRequests": 0,
+  "pageErrors": 0,
+  "hostedWorkflowExecuted": false,
+  "realNotesUsed": false,
+  "applicationDatabasesOpened": 0,
+  "awsResourcesCreated": false,
+  "remainingGates": [
+    "Production cursor keys and authenticated account/session integration",
+    "DynamoDB pagination/conditional transactions and hosting/cost gates",
+    "Native Rust and production IndexedDB repository integration with migrations and immediate body/index deletion",
+    "Live push/reconnect scheduler and truthful sync/conflict UI",
+    "Restored-server absence handling, Safari/iPhone and public performance/security acceptance"
+  ]
+}

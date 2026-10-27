@@ -1,0 +1,17 @@
+{
+  "$schema":"https://schema.tauri.app/config/2",
+  "productName":"Peel",
+  "version":"0.1.0",
+  "identifier":"com.peelnotes.desktop",
+  "build":{
+    "beforeDevCommand":"pnpm --filter @peel/web dev",
+    "devUrl":"http://127.0.0.1:4320",
+    "beforeBuildCommand":"pnpm --filter @peel/web build",
+    "frontendDist":"../../web/dist"
+  },
+  "app":{
+    "windows":[],
+    "security":{"csp":"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; frame-src 'none'"}
+  },
+  "bundle":{"active":true,"targets":["app"],"icon":["icons/icon.png","icons/icon.icns"],"macOS":{"minimumSystemVersion":"14.0"}}
+}

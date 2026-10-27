@@ -1,0 +1,24 @@
+{
+  "scope": "Transcribed fixed metadata from extended synthetic flow fixture diagnostics; not native, relay, app or performance acceptance",
+  "recordedAt": "2026-10-26T23:19:25.429Z",
+  "observations": [
+    {
+      "case": "initial extended flow fixture",
+      "outcome": "stalled",
+      "intervention": "Stopped only its owned temporary browser; launcher exited through cleanup",
+      "failureSubstepEstablished": false
+    },
+    {
+      "case": "fixed-stage diagnostic run",
+      "outcome": "20-second watchdog",
+      "lastCoarseStage": "duplex-newer",
+      "failureSubstepEstablished": false
+    }
+  ],
+  "fixtureCorrection": "Observe guarded connection closure without awaiting the set-description operation cancelled by that closure; add precise fixed stages and bounded waits",
+  "subsequentObservedOutcome": "27 checks pass across 19 host-channel sessions",
+  "underlyingBrowserCauseProven": false,
+  "appDatabasesOpened": 0,
+  "externalIceServers": 0,
+  "liveRelayOrNativeProbeRuns": 0
+}

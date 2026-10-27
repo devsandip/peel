@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Peel app icon">
+  <!-- macOS icon grid: 824px rounded square centred in a 1024px canvas. -->
+  <defs>
+    <clipPath id="peel-p">
+      <path d="M16 10H38A14 14 0 0 1 38 38H30V54H16Z"/>
+    </clipPath>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#363a34"/>
+      <stop offset="1" stop-color="#20231f"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <!-- Mark scaled 10.5x and centred (P bounding box is x 16-52, y 10-54 units). -->
+  <g transform="translate(155 176) scale(10.5)">
+    <path d="M16 10H38A14 14 0 0 1 38 38H30V54H16Z" fill="#efd06b"/>
+    <polygon points="36,10 64,10 64,38" fill="#d4aa3c" clip-path="url(#peel-p)"/>
+    <polygon points="36,10 52,26 36,26" fill="#fff5c7" stroke="#c19a30" stroke-width="0.6" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,53 @@
+name: Checks
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths: ['apps/**', 'packages/**', 'infra/**', 'tests/**', 'scripts/**', 'package.json', 'pnpm-lock.yaml', 'tsconfig.json', '*config.ts', '.github/**']
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  web-and-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm exec prettier --check apps/web/src packages infra tests
+      - run: bash -n infra/relay/bootstrap.sh && python3 -m py_compile infra/relay/lease.py infra/relay/health.py
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/experiment-cloud-durability.mjs
+      - run: node scripts/experiment-cloud-server-crash.mjs
+      - run: node scripts/experiment-peer-durability.mjs
+      - run: node scripts/experiment-bound-channel.mjs
+      - run: node scripts/check-offline-shell.mjs
+      - run: pnpm test:e2e
+  native:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+          cache: pnpm
+      - run: rustup toolchain install 1.99.1 --profile minimal --component rustfmt --component clippy
+      - run: rustup default 1.99.1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cargo fmt --manifest-path apps/native/src-tauri/Cargo.toml --check
+      - run: cargo clippy --locked --manifest-path apps/native/src-tauri/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --locked --manifest-path apps/native/src-tauri/Cargo.toml
+      - run: pnpm mac:build

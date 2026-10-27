@@ -1,0 +1,9 @@
+{
+  "name": "@peel/cloud-protocol",
+  "private": true,
+  "version": "0.0.0-m0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

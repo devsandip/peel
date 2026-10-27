@@ -1,0 +1,19 @@
+{
+  "scope": "Production Chrome offline shell and update checks in isolated synthetic browser context; not Safari/iPhone, eviction or full performance acceptance",
+  "generatedAt": "2026-10-26T19:34:47.988Z",
+  "browser": "155.0.8059.85",
+  "checks": {
+    "initialVerifiedInstallReady": true,
+    "offlineReloadEditAndWorkerSearch": true,
+    "offlineCreateSurvivesReload": true,
+    "onlyPublicShellCachedNoNotesQueriesOrAPI": true,
+    "missingPublicCacheRepairPreservesLocalNotes": true,
+    "failedIntegrityUpdatePreservesOldOfflineShell": true,
+    "waitingUpdateKeepsEditorAndAcceptsDurableEdits": true,
+    "newShellActivatesAfterClientsCloseAndPreservesNotes": true,
+    "unrelatedCachesPreserved": true,
+    "initialInstallFailureKeepsCaptureAndRetryRecovers": true,
+    "missingServiceWorkerAPIShowsTruthfulUnavailableState": true
+  },
+  "errors": []
+}

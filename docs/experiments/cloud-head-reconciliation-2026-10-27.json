@@ -1,0 +1,56 @@
+{
+  "scope": "Isolated durable reconciliation of accepted Cloud operations with newer heads in Node SQLite and Chrome IndexedDB, plus synthetic loopback HTTP client integration; no app UI, production auth, DynamoDB or collection cursor acceptance",
+  "generatedAt": "2026-10-27T08:59:24.596Z",
+  "environment": {
+    "node": "v26.4.0",
+    "sqlite": "3.53.2",
+    "browser": "156.0.8078.48",
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "verification": {
+    "typeScriptPassed": true,
+    "formattingPassed": true,
+    "sharedTopLevelTestsPassing": 103,
+    "testFiles": 20
+  },
+  "browserFixtureSHA256": "4e5552668c8945c10139d49bbeb1afee218dfd0fd7832bbb89cf5e2895e880dd",
+  "sqlite": {
+    "checks": {
+      "cleanHeadAdoptionAndRestart": true,
+      "laterDraftConflictAndAtomicFailure": true,
+      "concurrentSaveChangesAdoptionIntoConflict": true,
+      "remotePurgePreservesOnlyNewerUnsyncedBranch": true
+    },
+    "realNotesUsed": false,
+    "applicationDatabasesOpened": 0
+  },
+  "indexedDB": {
+    "checks": {
+      "cleanHeadAdoptionAndRestart": true,
+      "laterDraftConflictAndAtomicFailure": true,
+      "concurrentSaveChangesAdoptionIntoConflict": true,
+      "remotePurgePreservesOnlyNewerUnsyncedBranch": true
+    },
+    "realNotesUsed": false,
+    "applicationDatabasesOpened": 0
+  },
+  "browserReload": {
+    "acceptedHeadAdoptionSurvivesReload": true,
+    "acceptedHeadConflictSurvivesReload": true
+  },
+  "localStoreRegressionScenariosPerAdapter": 8,
+  "localStoreSIGKILLRegressionBoundaries": {
+    "draft-committed": true,
+    "prepare-uncommitted": true,
+    "ack-uncommitted": true,
+    "ack-committed": true
+  },
+  "loopbackHttpNewerHeadAdoptionPassed": true,
+  "externalRequests": 0,
+  "unexpectedLocalRequests": 0,
+  "pageErrors": 0,
+  "realNotesUsed": false,
+  "applicationDatabasesOpened": 0,
+  "awsResourcesCreated": false
+}

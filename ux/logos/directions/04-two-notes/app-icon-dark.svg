@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Peel two notes app icon, dark</title>
+<rect x="100" y="100" width="824" height="824" rx="185" fill="#30342E"/>
+<g transform="translate(182.4 182.4) scale(5.4933)">
+<defs><mask id="peel-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="120" height="120"><rect width="120" height="120" fill="#fff"/><path transform="rotate(-4 60 60)" d="M32 30H82A14 14 0 0 1 96 44V76L76 96H32A14 14 0 0 1 18 82V44A14 14 0 0 1 32 30Z" fill="#000" stroke="#000" stroke-width="5" stroke-linejoin="round"/></mask></defs>
+<g mask="url(#peel-gap)"><rect transform="rotate(10 60 60)" x="28" y="18" width="74" height="74" rx="14" fill="#B98E22"/></g>
+<g transform="rotate(-4 60 60)"><path d="M32 30H82A14 14 0 0 1 96 44V76L76 96H32A14 14 0 0 1 18 82V44A14 14 0 0 1 32 30Z" fill="#EFD06B"/><path d="M96 76L76 96V82A6 6 0 0 1 82 76Z" fill="#FFF5C7"/></g>
+</g>
+</svg>

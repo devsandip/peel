@@ -1,0 +1,331 @@
+{
+  "applicationDatabasesOpened": 0,
+  "distanceDiagnostic": {
+    "apiDistance": 1.3316261768341064,
+    "boundary": "Observed API distance is compared with both formulas; ranking remains cosine of normalized returned vectors and is unchanged",
+    "cosineDistance": 0.8866141656383858
+  },
+  "filters": {
+    "activeOnly": true,
+    "tag": true,
+    "trashExcluded": true
+  },
+  "fixtureSHA256": "8e04b40da6d95b30925a51b303e7feaed551cf5b90b7ee5f4c8a05dd069f5989",
+  "generatedAt": "2026-10-27T01:10:12Z",
+  "indexing": {
+    "allSourcePassedToAPI": true,
+    "chunks": 92,
+    "chunkScalarLimit": 256,
+    "longNoteChunks": 23,
+    "ms": 621.27925,
+    "notes": 70,
+    "opaqueTokenizerLimitUnresolved": true,
+    "overlapScalarLimit": 48
+  },
+  "initialization": {
+    "boundary": "Fresh CLI process measurement after entry; OS asset/filesystem caches may already be warm, excludes executable startup",
+    "modelAndFirstVectorMs": 55.539459
+  },
+  "memory": {
+    "afterIndex": {
+      "peakPhysicalFootprintBytes": 10388104,
+      "peakRSSBytes": 47431680,
+      "physicalFootprintBytes": 10388104,
+      "residentBytes": 47431680,
+      "taskInfoStatus": 0
+    },
+    "afterReady": {
+      "peakPhysicalFootprintBytes": 4997768,
+      "peakRSSBytes": 32538624,
+      "physicalFootprintBytes": 4997768,
+      "residentBytes": 32538624,
+      "taskInfoStatus": 0
+    },
+    "afterScale": {
+      "peakPhysicalFootprintBytes": 81642192,
+      "peakRSSBytes": 118800384,
+      "physicalFootprintBytes": 81642192,
+      "residentBytes": 118800384,
+      "taskInfoStatus": 0
+    },
+    "beforeModel": {
+      "peakPhysicalFootprintBytes": 2064792,
+      "peakRSSBytes": 6963200,
+      "physicalFootprintBytes": 2064792,
+      "residentBytes": 6963200,
+      "taskInfoStatus": 0
+    },
+    "boundary": "One CLI process Mach task_vm_info resident/physical footprint plus Darwin peak RSS; excludes other processes, system accelerator allocation and full-app/device memory acceptance",
+    "final": {
+      "peakPhysicalFootprintBytes": 82739920,
+      "peakRSSBytes": 120717312,
+      "physicalFootprintBytes": 82739920,
+      "residentBytes": 120700928,
+      "taskInfoStatus": 0
+    }
+  },
+  "model": {
+    "api": "NaturalLanguage.NLEmbedding.sentenceEmbedding",
+    "assetDownloadRequested": false,
+    "dimensions": 512,
+    "language": "en",
+    "revision": 1,
+    "weightHashExposed": false
+  },
+  "os": "Version 26.6.2 (Build 25G83)",
+  "quality": {
+    "cases": [
+      {
+        "caseId": "q01",
+        "semanticRank": 26
+      },
+      {
+        "caseId": "q02",
+        "semanticRank": 7
+      },
+      {
+        "caseId": "q03",
+        "semanticRank": 2
+      },
+      {
+        "caseId": "q04",
+        "semanticRank": 4
+      },
+      {
+        "caseId": "q05",
+        "semanticRank": 10
+      },
+      {
+        "caseId": "q06",
+        "semanticRank": 3
+      },
+      {
+        "caseId": "q07",
+        "semanticRank": 31
+      },
+      {
+        "caseId": "q08",
+        "semanticRank": 52
+      },
+      {
+        "caseId": "q09",
+        "semanticRank": 19
+      },
+      {
+        "caseId": "q10",
+        "semanticRank": 13
+      },
+      {
+        "caseId": "q11",
+        "semanticRank": 16
+      },
+      {
+        "caseId": "q12",
+        "semanticRank": 4
+      },
+      {
+        "caseId": "q13",
+        "semanticRank": 3
+      },
+      {
+        "caseId": "q14",
+        "semanticRank": 9
+      },
+      {
+        "caseId": "q15",
+        "semanticRank": 1
+      },
+      {
+        "caseId": "q16",
+        "semanticRank": 27
+      },
+      {
+        "caseId": "q17",
+        "semanticRank": 27
+      },
+      {
+        "caseId": "q18",
+        "semanticRank": 33
+      },
+      {
+        "caseId": "q19",
+        "semanticRank": 3
+      },
+      {
+        "caseId": "q20",
+        "semanticRank": 22
+      },
+      {
+        "caseId": "q21",
+        "semanticRank": 22
+      },
+      {
+        "caseId": "q22",
+        "semanticRank": 41
+      },
+      {
+        "caseId": "q23",
+        "semanticRank": 57
+      },
+      {
+        "caseId": "q24",
+        "semanticRank": 5
+      },
+      {
+        "caseId": "q25",
+        "semanticRank": 3
+      },
+      {
+        "caseId": "q26",
+        "semanticRank": 3
+      },
+      {
+        "caseId": "q27",
+        "semanticRank": 23
+      },
+      {
+        "caseId": "q28",
+        "semanticRank": 11
+      },
+      {
+        "caseId": "q29",
+        "semanticRank": 3
+      },
+      {
+        "caseId": "q30",
+        "semanticRank": 1
+      }
+    ],
+    "semanticTop3": 9,
+    "syntheticTop3ThresholdMet": false,
+    "total": 30
+  },
+  "realNotesUsed": false,
+  "sanityControls": {
+    "dotImplementationsAgree": true,
+    "exactSourceRanksFirst": true,
+    "frameworkOneMinusCosineAgrees": false,
+    "frameworkSquaredDistanceAgrees": true
+  },
+  "scale": {
+    "independentFirstVectorBuffers": 10000,
+    "rows": 10000,
+    "source": "Copied fixture vectors, not10000 independently embedded bodies"
+  },
+  "scope": "Standalone serial Apple NLEmbedding English revision1, synthetic source; no Tauri/WebKit/iPhone or app acceptance",
+  "warmQueryMs": {
+    "count": 100,
+    "max": 7.915041,
+    "p50": 5.923417,
+    "p95": 6.457375,
+    "samples": [
+      7.915041,
+      5.612583,
+      6.078958,
+      5.869375,
+      6.239917,
+      5.975959,
+      5.781834,
+      5.570792,
+      6.012959,
+      6.216958,
+      5.9645,
+      5.925292,
+      6.50375,
+      5.660791,
+      5.393667,
+      5.730417,
+      6.368208,
+      6.016708,
+      6.017334,
+      5.717542,
+      6.223875,
+      5.877792,
+      6.106917,
+      5.857292,
+      5.597917,
+      6.097791,
+      6.088375,
+      6.593084,
+      5.676042,
+      6.033625,
+      5.643167,
+      5.979583,
+      6.142458,
+      5.989125,
+      6.578042,
+      6.052,
+      5.706542,
+      5.715792,
+      5.7735,
+      5.771875,
+      6.053291,
+      5.497666,
+      6.228791,
+      5.742,
+      5.438625,
+      5.515834,
+      6.457375,
+      6.0035,
+      6.2,
+      5.665959,
+      6.2465,
+      5.739375,
+      5.977667,
+      5.633084,
+      5.521208,
+      6.292666,
+      6.104792,
+      6.409291,
+      5.670917,
+      6.053167,
+      5.608875,
+      5.564917,
+      5.962792,
+      5.724334,
+      6.1405,
+      5.975042,
+      5.923417,
+      5.897875,
+      5.763708,
+      6.000958,
+      6.0545,
+      5.847916,
+      6.803958,
+      5.989791,
+      5.724125,
+      5.608959,
+      6.294291,
+      6.007167,
+      6.145291,
+      5.454042,
+      5.9175,
+      6.111375,
+      6.418667,
+      5.649,
+      6.026792,
+      6.261209,
+      5.980833,
+      5.949042,
+      5.477875,
+      5.617917,
+      5.423417,
+      5.190125,
+      5.790709,
+      5.910375,
+      5.86825,
+      5.894583,
+      5.359583,
+      5.205042,
+      5.323083,
+      5.573917
+    ]
+  },
+  "runner": {
+    "networkPolicy": "Own CLI launched with deny network* sandbox profile; no asset request API in source",
+    "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx26.0",
+    "binarySHA256": "63214bd2e9474ef0a212eb46d0bd085f0793aff3768877e6d2a0c1b5717f102a",
+    "fixtureExportSHA256": "f886cfbdc57424ffe74e63c0230ff3b4ef424bb038c09d3a441f0d5b45b03443",
+    "boundary": "No AppKit/WebView/native app process, OS UI/lock change, real notes or cloud resource"
+  }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 158 64" role="img" aria-label="Peel">
+  <!-- Concept 5 lockup with the concept 3 mark. Text is live; outline it before final export. -->
+  <defs>
+    <clipPath id="peel-p">
+      <path d="M16 10H38A14 14 0 0 1 38 38H30V54H16Z"/>
+    </clipPath>
+  </defs>
+  <g transform="translate(0 4)">
+    <path d="M16 10H38A14 14 0 0 1 38 38H30V54H16Z" fill="#efd06b"/>
+    <polygon points="36,10 64,10 64,38" fill="#d4aa3c" clip-path="url(#peel-p)"/>
+    <polygon points="36,10 52,26 36,26" fill="#fff5c7" stroke="#c19a30" stroke-width="1" stroke-linejoin="round"/>
+  </g>
+  <text x="62" y="50" fill="#292c28" font-family="ui-rounded, 'SF Pro Rounded', Nunito, system-ui, sans-serif" font-size="46" font-weight="600" letter-spacing="-0.5">peel</text>
+</svg>

@@ -1,0 +1,48 @@
+{
+  "scope": "M0 isolated Node SQLite and Chrome IndexedDB durability contract; not native Rust, Safari/iPhone, real pairing, transport or production app acceptance",
+  "generatedAt": "2026-10-26T20:58:47.258Z",
+  "environment": {
+    "node": "v26.4.0",
+    "sqlite": "3.53.2",
+    "browser": "155.0.8059.85",
+    "platform": "darwin",
+    "release": "25.6.0",
+    "cpu": "Apple M4"
+  },
+  "sqlite": {
+    "atomicNoteClockHistoryProjectionAndPendingSurviveReopen": true,
+    "failedEditAndPurgeNeverAcknowledgeOrPartiallyWrite": true,
+    "concurrentWritersSerializeWithoutLostNotesOrClock": true,
+    "oldAcknowledgementsCannotClearNewEditOrPurge": true,
+    "historyExpiryAndPermanentPurgeSurviveStaleRetry": true,
+    "quarantineAndIdentityFailuresNeverAdvanceState": true,
+    "durableChallengeAndClaimCommitTogetherAcrossReopen": true,
+    "clockIndependentDraftCommitReopenAndSafePublication": true,
+    "failedDraftAndPublicationAreAtomicAndCoalesceLatestText": true,
+    "remoteHeadsAndMaintenancePreserveDraftUntilPermanentPurge": true,
+    "concurrentDraftSaveInvalidatesPausedPublication": true
+  },
+  "indexedDB": {
+    "atomicNoteClockHistoryProjectionAndPendingSurviveReopen": true,
+    "failedEditAndPurgeNeverAcknowledgeOrPartiallyWrite": true,
+    "concurrentWritersSerializeWithoutLostNotesOrClock": true,
+    "oldAcknowledgementsCannotClearNewEditOrPurge": true,
+    "historyExpiryAndPermanentPurgeSurviveStaleRetry": true,
+    "quarantineAndIdentityFailuresNeverAdvanceState": true,
+    "durableChallengeAndClaimCommitTogetherAcrossReopen": true,
+    "clockIndependentDraftCommitReopenAndSafePublication": true,
+    "failedDraftAndPublicationAreAtomicAndCoalesceLatestText": true,
+    "remoteHeadsAndMaintenancePreserveDraftUntilPermanentPurge": true,
+    "concurrentDraftSaveInvalidatesPausedPublication": true
+  },
+  "acknowledgedEditSurvivesSIGKILL": true,
+  "SIGKILLDuringTransactionRollsBackAllState": true,
+  "unstampedDraftSurvivesSIGKILL": true,
+  "SIGKILLDuringPublicationKeepsDraftWithoutPartialHead": true,
+  "browserProjectionSurvivesPageReload": true,
+  "browserUnstampedDraftSurvivesPageReload": true,
+  "databases": "Fresh synthetic temporary paths and isolated temporary browser profile only",
+  "appDatabasesOpened": 0,
+  "networkSyncEnabled": false,
+  "errors": []
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Peel sticker app icon, dark</title>
+<rect x="100" y="100" width="824" height="824" rx="185" fill="#30342E"/>
+<g transform="translate(168.67 168.67) scale(5.7222)">
+<path d="M103.8 63.8A44 44 0 1 0 63.8 103.8Z" fill="#EFD06B"/>
+<path d="M103.8 63.8A44 44 0 0 0 63.8 103.8Z" fill="#FFF5C7"/>
+<path d="M103.8 63.8A44 44 0 0 0 63.8 103.8" fill="none" stroke="#B98E22" stroke-width="2.5" stroke-linecap="round"/>
+</g>
+</svg>

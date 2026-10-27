@@ -1,0 +1,44 @@
+{
+  "scope": "Same-page Chrome host-host WebRTC channel with independent installed-description bindings, durable confirmed keys and simulated year-skew clocks; no native, different-network, relay or OS-clock acceptance",
+  "generatedAt": "2026-10-27T02:50:29.834Z",
+  "environment": {
+    "node": "v26.4.0",
+    "browser": "156.0.8078.48",
+    "platform": "darwin",
+    "release": "25.6.0"
+  },
+  "fixtureSHA256": "d98a1e23a787c98a502ec2eb559442a8b9c7427457d31792ae6a93c86fd49ad6",
+  "checks": {
+    "independentInstalledDescriptions": true,
+    "signedYearSkewAcrossOpenedChannel": true,
+    "absoluteSessionExpiryStillRejects": true,
+    "noDurableDiagnosticWrite": true,
+    "consumedProbeReplayRejected": true,
+    "wrongBindingRejected": true,
+    "nonClockPacketRejected": true,
+    "currentRevocationRejectsInFlight": true,
+    "noNoteSessionOrAckRows": true,
+    "changedInstalledDescriptionsRejected": true
+  },
+  "connectivity": {
+    "dtlsState": "connected",
+    "localCandidateType": "host",
+    "remoteCandidateType": "host"
+  },
+  "observation": {
+    "kind": "peer-relative-observation",
+    "assessment": "large-relative-skew",
+    "lowerOffsetMs": 31535999410,
+    "upperOffsetMs": 31536000510,
+    "roundtripMs": 100,
+    "intervalWidthMs": 1100
+  },
+  "confirmedPublicKeysOnly": true,
+  "privateKeysExported": false,
+  "applicationDatabasesOpened": 0,
+  "realNotesUsed": false,
+  "durableDiagnosticWrites": 0,
+  "blockedExternalRequests": 0,
+  "unexpectedLocalRequests": 0,
+  "pageErrors": 0
+}
