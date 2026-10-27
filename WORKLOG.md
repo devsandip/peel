@@ -1226,3 +1226,17 @@
 
 **Next:**
 - Merge the focused source PR only after hosted gates; verify its clean-main command. Then split issue 30's remaining account quota/audit/ownership inspection and owned lifecycle/recovery work before any apply. Keep issue 31 open for actual managed proof and teardown.
+
+## 2026-10-28 — Observe regional Cloud capacity without changing quotas
+
+**Did:**
+- Implemented issue 49's focused read-only capacity collector/command, reusing configured identity verification and rechecking STS after regional Lambda GetAccountSettings.
+- Preserved the final 100 unreserved units: a quota below 101 remains not-ready. No reservation/quota/account/billing/resource changes are performed.
+- Added eight focused cases under development Node and actual Node 24; all 205 shared cases, TypeScript, formatting and web build pass locally.
+
+**State now:**
+- A private live observation matched identity, confirmed capacity and direct cleanup runway, and recorded normalized ignored mode-0600/0700 output without raw identity/credential fields. Refresh stays unproven; later facts require rechecking.
+- Source PR 48 merged as 97992b9fe39f6d2accc637c9a036e6c952961ae8 after all three PR jobs passed. Its command correctly refused still-pending main checks. App Cloud remains disabled; no real note/default database or managed resource was accessed.
+
+**Next:**
+- Finish hosted capacity gates/review, record clean-main source observation after its gates, then separate audit/ownership metadata and atomic owned lifecycle/recovery work under issue 30. Actual managed proof/teardown remains issue 31.
