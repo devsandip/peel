@@ -82,6 +82,8 @@ describe("Cloud audit region registry", () => {
       "<!--" + html + "-->",
       "<script>" + html + "</script>",
       html.replace("</th>", "</th><th>"),
+      html.replace("</table>", "<td>orphan</td></table>"),
+      html.replace("</table>", "<th>orphan</th></table>"),
       html + table(),
       html + "<table>",
       html.replace("Region Name", "Other"),

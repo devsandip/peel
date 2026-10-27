@@ -81,7 +81,11 @@ export function parseCloudAuditRegions(html: string, checkedAt: string) {
   if (
     rows.length !== complete.length + 1 ||
     (table.match(/<tr\b/gi) ?? []).length !== rows.length ||
-    (table.match(/<\/tr\s*>/gi) ?? []).length !== rows.length
+    (table.match(/<\/tr\s*>/gi) ?? []).length !== rows.length ||
+    (table.match(/<td\b/gi) ?? []).length !== complete.length * 2 ||
+    (table.match(/<\/td\s*>/gi) ?? []).length !== complete.length * 2 ||
+    (table.match(/<th\b/gi) ?? []).length !== 2 ||
+    (table.match(/<\/th\s*>/gi) ?? []).length !== 2
   )
     return fail("registry-format");
   const headers = [...rows[0][1].matchAll(/<th\b[^>]*>([^<]*)<\/th\s*>/gi)].map(
