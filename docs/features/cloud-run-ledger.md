@@ -12,6 +12,8 @@ Use the existing operator Node SQLite runtime, verified under actual Node 24, fo
 
 Create only a mode-0700 directory, exclusive mode-0600 ownership marker and precreated mode-0600 operator database. Bind marker format/kind, canonical authorization digest and directory/database device/inode identities. Existing directories/files require that exact ownership before opening SQLite. Refuse links, permissive ownership/modes, unknown files, wrong formats/schemas or oversized/corrupt state; preserve unrecognized data without chmod, reset, repair or deletion. The recognized SQLite rollback journal stays inside the private namespace. No default path points at an installed app's note database.
 
+Initialization is explicit bootstrap. Re-entry must open the existing canonical ledger; a missing ledger is not permission to initialize another for the same window. The future runner must preserve this distinction and never use an open failure as an automatic create/reset fallback.
+
 Use a fixed application ID/schema, strict bounded tables and exact schema/authority validation. Set DELETE journaling, synchronous FULL, fullfsync and foreign keys; verify their readback. SQLite documents [fullfsync behavior](https://www.sqlite.org/pragma.html#pragma_fullfsync) as platform-dependent. Sync initial files/directories before returning initialization. Evidence covers actual process interruption/reopen; physical power-loss guarantees still depend on SQLite, filesystem and storage behavior.
 
 ## Atomic policy and receipts
@@ -27,3 +29,5 @@ Existing-reservation inspection and cleanup-receipt storage do not call the new-
 ## Verification
 
 Use synthetic fixtures and fresh test-owned directories only. Test independent competing processes, acknowledged and lost-ack commit recovery, termination before commit, stale/duplicate/exhausted/unresolved state, expired-authorization cleanup, injected commit failures, private fixed errors, links/permissions/unknown/corrupt state and preservation of foreign files. Exercise actual Node 24 and the development runtime; add focused Node 24 hosted coverage alongside existing checks. All relevant local and hosted gates precede merge. No real operator ledger, AWS run, resource, account setting, billing or note data is created by validation.
+
+Twelve focused cases pass under actual Node 24, including real independent writers and SIGKILL before commit, after commit before acknowledgement, and after acknowledgement. All 247 shared cases, TypeScript, formatting and web build pass locally; combined Node 24 namespace/ledger coverage has 21 cases. Local policy/receipt fixtures do not establish AWS cleanup provenance. Namespace tests remain a separate prerequisite. Hosted gates follow before integration.
