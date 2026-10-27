@@ -1005,3 +1005,17 @@
 
 **Verification:**
 - TypeScript, source formatting, all 134 shared cases, all 22 existing DynamoDB Local cases and the unchanged web build pass. Hosted transport checks are pending. The dependent composition draft is committed on its own unpublished branch, keeping transport validation independent.
+
+
+## 2026-10-27 - Compose verified identity and DynamoDB behind Lambda data routes
+
+**Did:**
+- Added a configured service factory over the separate payload-v2 adapter, selecting pinned Cognito bearer verification or durable session/CSRF verification with explicit client/table/cursor key dependencies.
+- Exercised actual mutation, conflict, owner-isolated reads, signed pagination/checkpoint and purge catch-up routes with synthetic RSA identities and disposable DynamoDB tables. Browser cases cover current paid policy, unsafe origin/CSRF, cookie ambiguity and exact expiry.
+- Passed all 135 shared cases, 24 DynamoDB Local cases, TypeScript, source formatting and the unchanged web build. A private SDK failure returns no details; no real account/token/note or resource was used.
+
+**State now:**
+- Transport PR 22 is undergoing hosted gates. This related composition slice is on its own branch and will have separate PR checks after its transport dependency merges. Login routes, real issuance, hosting, live push and app activation remain open.
+
+**Next:**
+- Merge the transport and composition PRs in order after their gates. Then implement issue 14's composed recovery/account-isolation evidence before closing M2.1.
