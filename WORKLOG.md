@@ -1176,3 +1176,21 @@
 
 **Verification:**
 - 169 shared cases, TypeScript, formatting, web build, five provider-schema templates and Node 24 focused/packaged checks pass locally. Six public offer bodies total 1,342,298 bytes and reproduce the USD 1.488729 forecast. Lambda ZIP/hash is unchanged; the browser warning remains. Hosted checks are pending.
+
+
+## 2026-10-28 - Collect bounded public Cloud price observations
+
+**Did:**
+- Merged PR 43 after all three jobs passed in run 40576765140 and confirmed all three main jobs passed in run 40578202408. Issue 42 has linked evidence, with HTTP acceptance kept separate until this follow-up.
+- Added issue 41's six fixed-origin public HTTPS requests, credential omission, redirect rejection, streamed body bounds, shared deadline and cancellation on any failure.
+- Bound the actual parser's immutable source provenance and twelve normalized rates into the existing deployment-plan quote shape, without cached or hardcoded fallback.
+- Added a read-only no-argument command that writes public observations to unique ignored restricted files and reports cost/source facts without inspecting an AWS account.
+
+**State now:**
+- The actual Node 24 command collects all six current public offers and reproduces the conservative USD 1.488729 forecast. No authenticated AWS operation, hosted resource, customer billing or app Cloud activation occurred. Account/source preflight and lifecycle/apply remain open.
+
+**Next:**
+- Merge this focused HTTP-collection PR after hosted gates and review, then plan a separately tracked private account/source/quota/audit/credential preflight boundary. Issue 30 and actual managed proof in issue 31 remain open.
+
+**Verification:**
+- 176 shared cases, TypeScript, formatting, web build, five provider-schema templates and Node 24 focused/packaged checks pass locally. The public-only command observes 1,342,298 bytes from six sources, with no account/resource operations. Lambda ZIP/hash is unchanged; the existing browser warning remains. Hosted checks are pending.
