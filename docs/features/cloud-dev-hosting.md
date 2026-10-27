@@ -16,12 +16,15 @@ Keep one purpose per subsequent PR:
 | [28](https://github.com/devsandip/peel/issues/28) | Disposable table and identity IaC | Synthetic-only identity, scopes and callbacks; no provisioning |
 | [29](https://github.com/devsandip/peel/issues/29) | Private Lambda hosting/artifact/key IaC | Exact-table runtime role, stable secret and separate artifact bootstrap; no public ingress |
 | [36](https://github.com/devsandip/peel/issues/36) | Independent cleanup and sentinel IaC | Separate expiry/deletion permission graph before deployment tooling; no provisioning |
+| [39](https://github.com/devsandip/peel/issues/39) | Pure deployment-plan guards | Identity/source/quote/lease/run-slot policy contract; no AWS calls or apply command |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
 The initial API-hosting issue is refined to private Lambda hosting because an unattended public endpoint does not fit this experiment's exposure budget. The milestone tracks this smaller hosting prerequisite, not completion of the production architecture. No later milestone is broken into speculative issues here.
 
 The cleanup permission graph was split from issue 29 into issue 36 before implementation for focused review. Both must merge before deployment tooling or a managed run. See the [private hosting plan](cloud-private-hosting.md) and [independent cleanup plan](cloud-dev-cleanup.md); no cleanup gate was removed.
+
+Issue 30's tooling is further separated into the [pure plan policy](cloud-deployment-guards.md), a later read-only preflight adapter, owned lifecycle/recovery and explicit apply/cleanup orchestration. Each boundary gets its own focused issue/PR before implementation. This decomposition preserves every managed-run and teardown gate.
 
 ## Runtime, identity and data
 
