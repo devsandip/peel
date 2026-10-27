@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { cloudExpectedInventory } from "../../infra/cloud/expected-inventory.ts";
 import {
   cloudSourceCommandArgs,
   collectCloudSourceObservation,
@@ -116,6 +117,19 @@ describe("Cloud source observations", () => {
     });
     expect(o.ci).toEqual({ runId: 123, attempt: 2, workflowId: 456 });
     expect(Object.keys(JSON.parse(result.templates))).toHaveLength(5);
+    expect(
+      cloudExpectedInventory(
+        {
+          accountId: "111122223333",
+          region: "us-east-1",
+          runId,
+          lease: o.lease,
+          artifact: { sha256: o.source.zipSha256, bytes: o.source.zipBytes },
+          templatesSha256: o.source.templatesSha256,
+        },
+        result.templates,
+      ).stacks.flatMap((stack) => stack.resources),
+    ).toHaveLength(17);
     expect(result.templates).toContain(runId);
     expect(f.build).toHaveBeenCalledTimes(2);
     expect(f.read.mock.calls.find(([c]) => c.kind === "jobs")?.[0]).toEqual({
