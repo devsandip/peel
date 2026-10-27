@@ -336,6 +336,8 @@ The isolated [Lambda payload-v2 adapter](features/cloud-lambda-event.md) bounds 
 
 The [configured Lambda sync service](features/cloud-lambda-http.md) composes that adapter with explicit DynamoDB mutation/pull stores and either pinned Cognito access-token verification or durable browser-session/CSRF verification. Mixed credential modes and event-supplied identities cannot select an owner. Synthetic RSA and local-engine tests exercise the actual routes; managed login, deployment policy, live delivery and app integration remain open. The entry point exposes data routes only, with no session-issuance shortcut.
 
+The [composed foundation evidence](features/cloud-foundations-evidence.md) connects those routes to durable Node SQLite clients: interrupted download/cursor commits, lost acknowledgements, later drafts, explicit conflict resolution, stale purge rejection and private authorization/storage failures. These synthetic local-engine cases are M2.1 exit evidence, with production authentication-context dispatch, managed hosting, live delivery and app/platform acceptance still required.
+
 Initial single-table layout:
 
 | Partition key | Sort key | Purpose |
