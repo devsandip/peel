@@ -1212,3 +1212,17 @@
 
 **Verification:**
 - 186 shared cases, TypeScript, formatting, web build, five provider-schema templates and Node 24 focused/packaged checks pass locally. A private output-mode/redaction check passed; no account identifiers or credential values enter this log. Lambda ZIP/hash and browser warning are unchanged. Hosted checks are pending.
+
+## 2026-10-28 — Bind Cloud inputs to reviewed public main
+
+**Did:**
+- Implemented issue 47's read-only source observation: clean main/origin/remote identity, latest exact workflow attempt and all three successful jobs, with drift rechecks.
+- Reused the deterministic in-memory builder twice; bound ZIP, lock and all five run-specific templates to a fresh 90-minute lease. Added a Node 24 command that only creates new ignored restricted artifacts.
+- Added eleven focused cases. All 197 shared cases, TypeScript, formatting, web build, five template checks and Node 24 packaged checks pass locally; feature-branch command safely reports not-ready. Hosted review/gates follow before integration.
+
+**State now:**
+- PR 46 merged as a8c28266a6ac8e09957dce7f9413718121442098; both its PR and main runs passed all three hosted jobs. A private live identity observation matched configured SSO/account/role, with active direct cleanup runway at collection, no refresh claim and zero resource writes.
+- Source observations remain prerequisites, not managed acceptance. App Cloud stays disabled; product v0.7 is unchanged. No AWS resource/configuration, real note/default database or billing access occurred.
+
+**Next:**
+- Merge the focused source PR only after hosted gates; verify its clean-main command. Then split issue 30's remaining account quota/audit/ownership inspection and owned lifecycle/recovery work before any apply. Keep issue 31 open for actual managed proof and teardown.
