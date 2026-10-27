@@ -1158,3 +1158,21 @@
 
 **Verification:**
 - 161 shared cases, TypeScript, formatting, web build, five provider-schema templates and actual Node 24 packaged checks pass locally. The Lambda artifact is unchanged; the browser bundle warning remains. Hosted checks for this new PR are pending.
+
+
+## 2026-10-28 - Verify official Cloud offer dimensions and marginal paid tiers
+
+**Did:**
+- Confirmed PR 40's postmerge main run 40572347468 passed all three hosted jobs. Issue 39 has linked integration evidence; account readiness remains unclaimed.
+- Inspected the six current official regional offers and separated issue 42's pure parser from issue 41's HTTP collection before opening a PR, with the canonical feature plan and tracker updated.
+- Added exact service/region/family/operation/storage/unit/SKU/term/rate validation, continuous paid-tier selection, exact decimal ordering and normalized source/selection provenance using small synthetic identities.
+- Verified all six current public inputs through the actual parser under Node 24, including marginal Scheduler and DynamoDB storage rates beyond their leading free ranges.
+
+**State now:**
+- Parser checks pass locally. HTTP deadline/cancellation/aggregate collection and its command remain issue 41; private account/source preflight and owned lifecycle/apply remain issue 30. No authenticated AWS operation, hosted resource or app Cloud feature was created.
+
+**Next:**
+- Merge the focused parser PR after hosted gates and review, then finish issue 41's separately reviewed HTTP collector. Keep actual managed proof in issue 31.
+
+**Verification:**
+- 169 shared cases, TypeScript, formatting, web build, five provider-schema templates and Node 24 focused/packaged checks pass locally. Six public offer bodies total 1,342,298 bytes and reproduce the USD 1.488729 forecast. Lambda ZIP/hash is unchanged; the browser warning remains. Hosted checks are pending.
