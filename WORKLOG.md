@@ -1104,3 +1104,21 @@
 
 **Verification:**
 - 142 shared cases, TypeScript, formatting, Node 24 rendering and packaged checks, provider-schema lint and web build pass locally. A malformed table-class control is rejected. The existing browser-size warning remains; the Lambda ZIP/hash is unchanged. Hosted checks are pending.
+
+
+## 2026-10-28 - Define private Lambda hosting and its artifact dependencies
+
+**Did:**
+- Confirmed PR 35's postmerge main run 40559095214 passed all three jobs. The data/identity definitions remain unprovisioned.
+- Added issue 29's pre-code plan and pure templates for an owned private encrypted artifact bootstrap and the main data/identity/function stack, avoiding a not-yet-uploaded code dependency in one stack.
+- Defined exact-table reads and transaction-only Put/Delete/ConditionCheck permissions, a required NoEcho cursor key stored through Secrets Manager and dynamic environment reference, fixed lease, 30-second/256-MiB limits and reserved concurrency one.
+- Kept public ingress, log-write/admin permissions and deployment tooling absent. Updated the canonical hosting breakdown to put independent cleanup/rehearsal in issue 36 before any provision/cleanup runner.
+
+**State now:**
+- Hosting/configuration definitions pass local checks. No AWS account operation, resource, user, key, note or public endpoint was created. Actual IAM/reservation/secret/lease/deletion evidence and app Cloud activation remain open.
+
+**Next:**
+- Merge this focused definition PR after hosted gates, then implement issue 36's separate outside-stack deletion role, Scheduler and sentinel definitions before issue 30's guarded runner.
+
+**Verification:**
+- 146 shared cases, TypeScript, source/script formatting, three provider-schema templates, existing Node 24 packaged checks and web build pass locally. Lambda ZIP/hash is unchanged; the existing browser warning remains. Hosted checks are pending, not claimed passing.

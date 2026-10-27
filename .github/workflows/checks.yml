@@ -52,9 +52,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: python -m venv .venv/cloud-iac
       - run: .venv/cloud-iac/bin/python -m pip install --requirement requirements-cloud-iac.txt
+      - run: pnpm cloud:build
       - run: pnpm cloud:iac:render
       - run: pnpm cloud:iac:check
-      - run: pnpm cloud:build
       - run: pnpm cloud:check
   native:
     runs-on: macos-latest
