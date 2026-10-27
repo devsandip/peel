@@ -334,6 +334,8 @@ Clients call an authenticated HTTPS API implemented with API Gateway and Lambda.
 
 The isolated [Lambda payload-v2 adapter](features/cloud-lambda-event.md) bounds event/response conversion, pins the configured origin and preserves raw query/cookie ambiguity for the trusted Fetch service. It supplies no authentication policy, listener or infrastructure by itself. Verified service composition, real gateway/proxy configuration and hosted acceptance remain separate gates.
 
+The [configured Lambda sync service](features/cloud-lambda-http.md) composes that adapter with explicit DynamoDB mutation/pull stores and either pinned Cognito access-token verification or durable browser-session/CSRF verification. Mixed credential modes and event-supplied identities cannot select an owner. Synthetic RSA and local-engine tests exercise the actual routes; managed login, deployment policy, live delivery and app integration remain open. The entry point exposes data routes only, with no session-issuance shortcut.
+
 Initial single-table layout:
 
 | Partition key | Sort key | Purpose |
