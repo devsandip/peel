@@ -56,6 +56,7 @@ jobs:
       - run: pnpm cloud:iac:render
       - run: pnpm cloud:iac:check
       - run: pnpm cloud:check
+      - run: pnpm exec vitest run tests/unit/cloud-ledger-store.test.ts
   native:
     runs-on: macos-latest
     timeout-minutes: 25

@@ -1281,3 +1281,17 @@
 
 **Next:**
 - Integrate the tested observer foundation after hosted gates, preserve the unresolved live gate in issue 51, and continue offline target-ownership/run-ledger/lifecycle prerequisites under issue 30. Do not enable regions or change permissions/audit to force readiness.
+
+## 2026-10-28 - Separate private ledger namespace from run booking
+
+**Did:**
+- Split issue 55 before opening a broad PR: issue 56 owns filesystem/SQLite recognition; issue 55 retains atomic run/receipt mutation and process-crash evidence.
+- Added an explicit private operator store with ownership/inode/scope binding, restrictive files, known schema/durability settings and rejection of foreign/link/corrupt state.
+- Verified nine focused actual Node 24 cases and all 235 shared cases, TypeScript, formatting and web build. Added focused hosted Node 24 coverage; no runtime dependency was added.
+
+**State now:**
+- PR 54's main run 40596452313 passed all three jobs. Live audit issue 51 remains unresolved/stopped; app Cloud stays disabled and v0.7 is unchanged.
+- Namespace validation used synthetic temporary directories only. No actual operator ledger, AWS resource/settings, real note/default database or billing data was accessed.
+
+**Next:**
+- Merge the namespace PR after focused review/hosted gates, then finish issue 55's separately reviewed transactional reservation/receipt layer and independent-process interruption cases. Keep actual inventory/teardown proof separate.
