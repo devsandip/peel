@@ -1140,3 +1140,21 @@
 
 **Verification:**
 - 151 shared cases, TypeScript, formatting, five provider-schema templates and actual Node 24 packaged checks pass locally. The Lambda ZIP/hash is unchanged. Hosted jobs are pending, not claimed passing.
+
+
+## 2026-10-28 - Validate controlled Cloud deployment plans
+
+**Did:**
+- Merged PR 38 after all three jobs passed in run 40566248104; confirmed all three postmerge main jobs passed in run 40568105384. Updated issue 36's evidence and closed status without claiming an actual cleanup rehearsal.
+- Split issue 39's pure plan policy from issue 30's preflight/lifecycle/CLI tooling before implementation and wrote its requirement-linked feature plan.
+- Added exact-data validation for separately pinned account/profile/region, merged source/artifact/template bindings, successful CI, fresh observations, quota/audit safety, fixed lease, authorization and refreshable credential cleanup runway.
+- Bound normalized official-rate observations to a conservative integer-microdollar forecast and a two-run/USD 5 operational envelope. Reject duplicate/unresolved/exhausted run slots, extra sensitive fields, coercion and stale/unsafe inputs with private fixed errors.
+
+**State now:**
+- Offline policy validation is implemented; no AWS account operation, resource, key or apply command exists in this slice. Collection, atomic run reservation, owned lifecycle, actual rehearsal and managed acceptance remain open. App Cloud stays disabled.
+
+**Next:**
+- Merge this focused policy PR after hosted gates and review. Then create the read-only preflight-adapter issue and collect trusted account/source/price/quota/credential observations without provisioning. Keep issue 30 open for its full lifecycle/cleanup acceptance.
+
+**Verification:**
+- 161 shared cases, TypeScript, formatting, web build, five provider-schema templates and actual Node 24 packaged checks pass locally. The Lambda artifact is unchanged; the browser bundle warning remains. Hosted checks for this new PR are pending.
