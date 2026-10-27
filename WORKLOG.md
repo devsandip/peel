@@ -940,3 +940,17 @@
 
 **Decisions:**
 - Separate the cookie/request contract from persistence and identity-provider integration. Its synthetic stores/authentication are partial evidence, not production account acceptance.
+
+
+## 2026-10-27 - Preserve the full DynamoDB retry-retention deadline
+
+**Did:**
+- Added issue 16 for a separately scoped retention bug. Whole-second TTL values now round up instead of down; logical service deadlines remain unchanged.
+- Reproduced early loss of a stable receipt at a subsecond deadline with simulated eligible physical cleanup. The regression fails before the fix and passes afterward, including logical expiry with delayed physical cleanup.
+- Passed all 16 actual DynamoDB Local cases, all 123 shared cases, TypeScript and changed-source formatting. Permanent markers remain TTL-free.
+
+**State now:**
+- The fix is ready for its own PR and hosted checks. No deployed table/user migration or AWS timing behavior is claimed.
+
+**Next:**
+- Merge after its dependency and hosted gates, then implement issue 11 for durable browser sessions. Continue the current Cloud foundations milestone one small issue/PR at a time.

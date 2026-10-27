@@ -33,7 +33,7 @@ function encode(owner: string, sort: string, record: object): Item {
   if ("expiresAt" in record) {
     const expiry = record.expiresAt as number;
     item.expiresAt = { N: String(expiry) };
-    item.ttl = { N: String(Math.floor(expiry / 1000)) };
+    item.ttl = { N: String(Math.ceil(expiry / 1000)) };
   }
   const bytes = Object.entries(item).reduce(
     (sum, [name, value]) =>
