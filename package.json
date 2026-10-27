@@ -12,9 +12,11 @@
     "test:e2e": "playwright test",
     "mac:dev": "cd apps/native && tauri dev",
     "mac:build": "cd apps/native && tauri build --bundles app",
-    "format": "prettier --write apps/web/src packages tests package.json tsconfig.json"
+    "format": "prettier --write apps/web/src packages tests package.json tsconfig.json",
+    "test:dynamodb": "node scripts/test-dynamodb-local.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1157.0",
     "@codemirror/commands": "6.11.1",
     "@codemirror/state": "6.7.6",
     "@codemirror/view": "6.43.15",
