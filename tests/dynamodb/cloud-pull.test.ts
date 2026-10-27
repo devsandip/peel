@@ -213,8 +213,8 @@ it("follows actual engine byte-limited continuation and public byte limits witho
         await mutation(`large-${id}`, id, 0, "x".repeat(200000)),
       );
     queries.length = 0;
-    // Local 3.3.2 caps projected results rather than pre-projection items.
-    // Remove projection only in this test transport to force the engine's real byte cap.
+    // Unresolved: Local did not return a byte-limited page for this fixture.
+    // This projection-removal attempt also fails the continuation assertion below.
     hooks.beforeQuery = (input) => {
       delete input.ProjectionExpression;
     };
