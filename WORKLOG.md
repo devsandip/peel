@@ -906,3 +906,20 @@
 
 **Decisions:**
 - Use the same mutation service and invariants on both backends. Keep transactional correctness testable locally without provisioning billable infrastructure. Managed-service costs, IAM, backup and rollout still need hosting evidence.
+
+
+## 2026-10-27 - Complete DynamoDB paginated Cloud download
+
+**Did:**
+- Added bounded, account-scoped base-table Query support to the existing signed bootstrap/change service, with metadata-bound validation, real continuation handling and post-query paid-policy checks.
+- Resolved the large-page fixture: DynamoDB Local includes its size-crossover record, so six notes exhausted the data before a continuation was needed. Seven real notes now force a genuine byte-limited second request; completeness assertions and ordinary projections remain intact.
+- Passed all 15 actual DynamoDB Local cases, including six pull cases and durable SQLite page application during creates/edits/purges, resumed catch-up, history gaps, policy revocation and empty/non-progressing continuation guards.
+
+**State now:**
+- PR 5 is merged after hosted Linux/Mac success; its main integration rerun also passed. This separate pagination branch is undergoing final checks. Hosted DynamoDB and app Cloud activation remain open.
+
+**Next:**
+- Merge this focused PR after hosted checks pass, then implement the browser session/CSRF boundary or native authorization handshake in another small PR. Keep login, hosting and live delivery separate.
+
+**Decisions:**
+- Fix the evidence rather than relax the pagination contract. Local engine tests remain distinct from managed-service consistency, cost, IAM and restore acceptance.

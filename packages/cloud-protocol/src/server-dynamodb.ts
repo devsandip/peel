@@ -19,14 +19,14 @@ import { validateCloudServerTransition } from "./server-transition";
 
 type Item = Record<string, AttributeValue>;
 const id = (value: string) => /^[a-zA-Z0-9-]{1,128}$/.test(value);
-const key = (owner: string, sort: string): Item => ({
+export const cloudDynamoKey = (owner: string, sort: string): Item => ({
   PK: { S: `USER#${owner}` },
   SK: { S: sort },
 });
 /** Flat scalars only; numbers use a conservative 38-byte upper bound. */
 function encode(owner: string, sort: string, record: object): Item {
   const item: Item = {
-    ...key(owner, sort),
+    ...cloudDynamoKey(owner, sort),
     record: { S: JSON.stringify(record) },
   };
   if ("revision" in record) item.revision = { N: String(record.revision) };
@@ -46,7 +46,7 @@ function encode(owner: string, sort: string, record: object): Item {
     throw new CloudServerError("serialized-item-too-large", 400);
   return item;
 }
-function decode<T extends object>(
+export function decodeCloudDynamoRecord<T extends object>(
   item: Item | undefined,
   owner: string,
   sort: string,
@@ -71,8 +71,8 @@ function decode<T extends object>(
 /** Server-only adapter. The caller owns the explicitly supplied client and table. */
 export class DynamoDBCloudServerStore implements CloudServerStore {
   constructor(
-    private client: DynamoDBClient,
-    private tableName: string,
+    protected readonly client: DynamoDBClient,
+    protected readonly tableName: string,
   ) {
     if (!/^[a-zA-Z0-9_.-]{3,255}$/.test(tableName))
       throw Error("Invalid Cloud table name");
@@ -94,25 +94,25 @@ export class DynamoDBCloudServerStore implements CloudServerStore {
     const result = await this.client.send(
       new TransactGetItemsCommand({
         TransactItems: sorts.map((sort) => ({
-          Get: { TableName: this.tableName, Key: key(owner, sort) },
+          Get: { TableName: this.tableName, Key: cloudDynamoKey(owner, sort) },
         })),
       }),
     );
     if (result.Responses?.length !== sorts.length)
       throw new CloudServerError("incomplete-store-read", 503);
-    const account = decode(
+    const account = decodeCloudDynamoRecord(
       result.Responses[0]?.Item,
       owner,
       "META",
       validateCloudAccount,
     );
-    const note = decode(
+    const note = decodeCloudDynamoRecord(
       result.Responses[1]?.Item,
       owner,
       sorts[1],
       validateCloudHead,
     );
-    const tomb = decode(
+    const tomb = decodeCloudDynamoRecord(
       result.Responses[2]?.Item,
       owner,
       sorts[2],
@@ -121,7 +121,7 @@ export class DynamoDBCloudServerStore implements CloudServerStore {
     const receipt =
       opId === undefined
         ? null
-        : decode(
+        : decodeCloudDynamoRecord(
             result.Responses[3]?.Item,
             owner,
             sorts[3],
@@ -171,7 +171,7 @@ export class DynamoDBCloudServerStore implements CloudServerStore {
     });
     const guard = (sort: string, condition: string, values?: Item) => ({
       TableName: this.tableName,
-      Key: key(owner, sort),
+      Key: cloudDynamoKey(owner, sort),
       ConditionExpression: condition,
       ...(values ? { ExpressionAttributeValues: values } : {}),
     });
