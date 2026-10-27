@@ -847,3 +847,19 @@
 
 **Decisions:**
 - The packaged CPU runtime is sufficient for current checks. GPU/platform extras need a separate reviewed decision.
+
+
+## 2026-10-27 - Run Cloud recovery fixtures from a clean checkout
+
+**Did:**
+- Added idempotent scratch-parent creation before the two Cloud scripts allocate owned temporary directories. Assertions, cleanup and application storage are unchanged.
+- Reproduced hosted Linux's ENOENT and passed both corrected scripts starting without scratch, including SQLite/IndexedDB recovery and nine total process-kill boundaries. Formatting passes.
+
+**State now:**
+- The dependency-policy parent PR has a passing full hosted Mac build/native suite. Its Linux job passed install/tests/build and revealed this independent fixture setup issue.
+
+**Next:**
+- Verify the stacked fix in hosted CI, merge the dependency and fixture PRs in order, then deduplicate CI triggers separately.
+
+**Decisions:**
+- Fix clean-checkout setup without suppressing recovery experiments or reducing their coverage.
