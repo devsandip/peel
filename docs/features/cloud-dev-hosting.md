@@ -17,6 +17,8 @@ Keep one purpose per subsequent PR:
 | [29](https://github.com/devsandip/peel/issues/29) | Private Lambda hosting/artifact/key IaC | Exact-table runtime role, stable secret and separate artifact bootstrap; no public ingress |
 | [36](https://github.com/devsandip/peel/issues/36) | Independent cleanup and sentinel IaC | Separate expiry/deletion permission graph before deployment tooling; no provisioning |
 | [39](https://github.com/devsandip/peel/issues/39) | Pure deployment-plan guards | Identity/source/quote/lease/run-slot policy contract; no AWS calls or apply command |
+| [42](https://github.com/devsandip/peel/issues/42) | Official offer parser | Verify service/unit/paid-tier identity and normalized rate provenance; pure input parsing |
+| [41](https://github.com/devsandip/peel/issues/41) | Bounded public price collection | Fixed-origin HTTPS, deadline/cancellation and aggregate quote after the parser merges |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
@@ -25,6 +27,8 @@ The initial API-hosting issue is refined to private Lambda hosting because an un
 The cleanup permission graph was split from issue 29 into issue 36 before implementation for focused review. Both must merge before deployment tooling or a managed run. See the [private hosting plan](cloud-private-hosting.md) and [independent cleanup plan](cloud-dev-cleanup.md); no cleanup gate was removed.
 
 Issue 30's tooling is further separated into the [pure plan policy](cloud-deployment-guards.md), a later read-only preflight adapter, owned lifecycle/recovery and explicit apply/cleanup orchestration. Each boundary gets its own focused issue/PR before implementation. This decomposition preserves every managed-run and teardown gate.
+
+The [price-observation plan](cloud-price-observations.md) separates provider parsing from HTTP collection before opening a PR, so cost-selection review and transport/cancellation review each have a standalone purpose. Both precede authenticated account preflight and cannot establish account readiness.
 
 ## Runtime, identity and data
 
