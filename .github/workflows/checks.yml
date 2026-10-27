@@ -2,7 +2,7 @@ name: Checks
 on:
   push:
     branches: [main]
-    paths: ['apps/**', 'packages/**', 'infra/**', 'tests/**', 'scripts/**', 'package.json', 'pnpm-lock.yaml', 'tsconfig.json', '*config.ts', '.github/**']
+    paths: ['apps/**', 'packages/**', 'infra/**', 'tests/**', 'scripts/**', 'package.json', 'pnpm-lock.yaml', 'requirements-cloud-iac.txt', 'tsconfig.json', '*config.ts', '.github/**']
   pull_request:
 permissions:
   contents: read
@@ -44,7 +44,16 @@ jobs:
         with:
           node-version: '24.22.1'
           cache: pnpm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: requirements-cloud-iac.txt
       - run: pnpm install --frozen-lockfile
+      - run: python -m venv .venv/cloud-iac
+      - run: .venv/cloud-iac/bin/python -m pip install --requirement requirements-cloud-iac.txt
+      - run: pnpm cloud:iac:render
+      - run: pnpm cloud:iac:check
       - run: pnpm cloud:build
       - run: pnpm cloud:check
   native:
