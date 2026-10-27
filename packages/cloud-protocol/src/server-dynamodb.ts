@@ -101,19 +101,19 @@ export class DynamoDBCloudServerStore implements CloudServerStore {
     if (result.Responses?.length !== sorts.length)
       throw new CloudServerError("incomplete-store-read", 503);
     const account = decode(
-      result.Responses[0].Item,
+      result.Responses[0]?.Item,
       owner,
       "META",
       validateCloudAccount,
     );
     const note = decode(
-      result.Responses[1].Item,
+      result.Responses[1]?.Item,
       owner,
       sorts[1],
       validateCloudHead,
     );
     const tomb = decode(
-      result.Responses[2].Item,
+      result.Responses[2]?.Item,
       owner,
       sorts[2],
       validateCloudHead,
@@ -122,7 +122,7 @@ export class DynamoDBCloudServerStore implements CloudServerStore {
       opId === undefined
         ? null
         : decode(
-            result.Responses[3].Item,
+            result.Responses[3]?.Item,
             owner,
             sorts[3],
             validateCloudReceipt,
