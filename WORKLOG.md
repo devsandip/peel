@@ -1068,3 +1068,21 @@
 
 **Verification:**
 - Reviewed official runtime, regional price-list, Cognito callback/scope/suppression and Scheduler/CloudFormation deletion sources; arithmetic and git diff whitespace checks pass. No runtime change or new runtime test; hosted repository checks remain pending.
+
+
+## 2026-10-27 - Package the private development Cloud service
+
+**Did:**
+- Merged PR 33's bounded hosting plan after both hosted jobs passed (40550678688); issue 26 closed at merge c396538 with no-reply attribution. M2.2 now has two completed planning/documentation items, not completed hosting.
+- Added issue 27's development-only server entry with explicit configuration, fixed lease, fail-closed warm expiry, private errors, nonextractable cursor key and bounded SDK retries/timeouts without configured endpoint overrides.
+- Added a pinned esbuild 0.28.2 deterministic ZIP build, dependency notices, input/external-module/size checks and artifact hashes. No app or client database enters the bundle.
+- Added three actual unpacked-artifact smoke modes under verified Node 24 with synthetic environment, temporary-only filesystem permissions and blocked network entry points, plus a focused hosted artifact job.
+
+**State now:**
+- No AWS resource, real identity, public endpoint or app Cloud capability is enabled. The artifact remains a development prerequisite; managed identity/data/IAM/cleanup evidence is open.
+
+**Next:**
+- Merge this single-purpose artifact PR after focused review and all three hosted jobs, then issue 28's disposable data/identity IaC. Preserve the private-invoke/no-public-ingress plan and all provisioning gates.
+
+**Verification:**
+- 139 shared cases, 27 DynamoDB Local cases, TypeScript, formatting and web build pass locally. Actual Node v24.22.1 packaged smoke passes all three modes with zero network attempts; the 336,713-byte ZIP reproduces across repeated builds and UTC/Asia-Kolkata. Browser bundle-size warning remains. Hosted gates are pending, not claimed passing.

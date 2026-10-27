@@ -13,7 +13,9 @@
     "mac:dev": "cd apps/native && tauri dev",
     "mac:build": "cd apps/native && tauri build --bundles app",
     "format": "prettier --write apps/web/src packages tests package.json tsconfig.json",
-    "test:dynamodb": "node scripts/test-dynamodb-local.mjs"
+    "test:dynamodb": "node scripts/test-dynamodb-local.mjs",
+    "cloud:build": "node scripts/build-cloud-lambda.mjs",
+    "cloud:check": "node scripts/check-cloud-lambda.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.1157.0",
@@ -36,6 +38,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "esbuild": "0.28.2",
     "prettier": "3.9.10",
     "typescript": "7.0.2",
     "vite": "8.3.5",
