@@ -831,3 +831,19 @@
 
 **Decisions:**
 - A fresh history avoids retaining private email in old PR copies. Existing local/private work stays preserved in the original checkout.
+
+
+## 2026-10-27 - Make dependency installation reproducible on pnpm 11
+
+**Did:**
+- Replaced the old build-script allowlist with explicit allow/deny decisions. esbuild remains allowed; the two reviewed transitive postinstall scripts are denied at their pinned versions.
+- Verified frozen installation, TypeScript, 116 shared tests, formatting, web build and the packaged native CPU binding on the fresh checkout.
+
+**State now:**
+- Clean installs proceed without permitting optional binary downloads or weakening strict script review. Hosted PR checks still need to run; existing bundle-size warning remains.
+
+**Next:**
+- Review and merge this standalone policy fix, then remove duplicate feature-push CI triggers in a separate PR.
+
+**Decisions:**
+- The packaged CPU runtime is sufficient for current checks. GPU/platform extras need a separate reviewed decision.
