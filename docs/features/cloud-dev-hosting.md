@@ -14,11 +14,14 @@ Keep one purpose per subsequent PR:
 | --- | --- | --- |
 | [27](https://github.com/devsandip/peel/issues/27) | Reproducible server artifact and validated configuration | Offline packaged checks; no IaC or deployment |
 | [28](https://github.com/devsandip/peel/issues/28) | Disposable table and identity IaC | Synthetic-only identity, scopes and callbacks; no provisioning |
-| [29](https://github.com/devsandip/peel/issues/29) | Private Lambda hosting and independent expiry IaC | Least-privilege roles, secret, artifact storage and cleanup lease; no public ingress |
+| [29](https://github.com/devsandip/peel/issues/29) | Private Lambda hosting/artifact/key IaC | Exact-table runtime role, stable secret and separate artifact bootstrap; no public ingress |
+| [36](https://github.com/devsandip/peel/issues/36) | Independent cleanup and sentinel IaC | Separate expiry/deletion permission graph before deployment tooling; no provisioning |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
 The initial API-hosting issue is refined to private Lambda hosting because an unattended public endpoint does not fit this experiment's exposure budget. The milestone tracks this smaller hosting prerequisite, not completion of the production architecture. No later milestone is broken into speculative issues here.
+
+The cleanup permission graph was split from issue 29 into issue 36 before implementation for focused review. Both must merge before deployment tooling or a managed run. See the [private hosting plan](cloud-private-hosting.md); no cleanup gate was removed.
 
 ## Runtime, identity and data
 

@@ -16,8 +16,8 @@
     "test:dynamodb": "node scripts/test-dynamodb-local.mjs",
     "cloud:build": "node scripts/build-cloud-lambda.mjs",
     "cloud:check": "node scripts/check-cloud-lambda.mjs",
-    "cloud:iac:render": "node scripts/render-cloud-data-identity.mjs",
-    "cloud:iac:check": ".venv/cloud-iac/bin/cfn-lint --config-file infra/cloud/cfn-lint.json --template artifacts/cloud-iac/data-identity.json"
+    "cloud:iac:render": "node scripts/render-cloud-iac.mjs",
+    "cloud:iac:check": ".venv/cloud-iac/bin/cfn-lint --config-file infra/cloud/cfn-lint.json --template artifacts/cloud-iac/data-identity.json artifacts/cloud-iac/artifact-bootstrap.json artifacts/cloud-iac/private-hosting.json"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.1157.0",
