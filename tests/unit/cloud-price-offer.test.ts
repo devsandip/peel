@@ -207,6 +207,13 @@ it("requires the actual unit, unqualified OnDemand terms and one numeric USD wir
 it("rejects range gaps, overlap, missing coverage, nonmonotone paid tiers and free-only quotes", () => {
   for (const mutate of [
     (d: PriceFixture) => {
+      fixtureProduct(d, "Lambda-GB-Second").dimensions[0].beginRange = "0\n";
+    },
+    (d: PriceFixture) => {
+      fixtureProduct(d, "Lambda-GB-Second").dimensions[0].endRange =
+        "6000000000\n";
+    },
+    (d: PriceFixture) => {
       fixtureProduct(d, "Lambda-GB-Second").dimensions[1].beginRange =
         "6000000001";
     },

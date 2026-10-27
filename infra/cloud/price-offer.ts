@@ -196,7 +196,7 @@ function range(value: unknown): number {
   if (
     typeof value !== "string" ||
     value.length > 16 ||
-    !/^(0|[1-9]\d*)$/.test(value)
+    /^(0|[1-9]\d*)$/.exec(value)?.[0] !== value
   )
     return unavailable();
   const number = Number(value);
