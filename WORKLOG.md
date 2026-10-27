@@ -1036,3 +1036,17 @@
 
 **Verification:**
 - All 135 shared cases, 27 DynamoDB Local cases, TypeScript, source formatting and the unchanged web build pass locally. The existing bundle-size warning remains; hosted checks are pending.
+
+
+## 2026-10-27 - Align canonical repository references after public migration
+
+**Did:**
+- Corrected SPEC's stale private-repository/workspace paragraph to the clean public peel checkout, retaining the private archive boundary and deployment/beta/license distinction.
+- Confirmed M2.1's ten deliverables closed after PR 25 passed both hosted jobs and merged. Its main integration also passed; the foundation evidence is 135 shared and 27 local DynamoDB cases, not complete app/M2 acceptance.
+- Opened the next controlled-dev-hosting milestone with seven PR-sized issues before implementation. No AWS resource or app feature was enabled.
+
+**State now:**
+- This issue 24 change is documentation only. Runtime checks remain unchanged; its PR gates are pending.
+
+**Next:**
+- Merge after documentation review/repository gates, then issue 26: verify current official runtime/pricing/permission sources and write the hosting/cost/lease plan before infrastructure code or provisioning.

@@ -439,7 +439,7 @@ Show model download size before consent, pause/cancel controls, and an indexing 
 
 ### AWS and GitHub
 
-Version the canonical docs, mockups, code, and infrastructure in Sandip's private GitHub repository. The product name is Peel; the local workspace path may retain its existing stickies directory name. Public launch does not imply open-source licensing.
+Version the canonical docs, mockups, code, and infrastructure in the clean public [devsandip/peel repository](https://github.com/devsandip/peel), using `~/Developer/peel` as the active checkout. The preserved stickies checkout remains a private archive; never import its history or refs into the public repository. Source publication does not authorize a production deployment, public beta or new license grant.
 
 Use the existing AWS account, initially us-east-1. Host the static browser shell from a private S3 origin behind CloudFront. Use API Gateway, Lambda, Cognito, and DynamoDB for cloud sync and web sessions. S3 is for application artifacts, not the primary note store. Define infrastructure as code, keep dev and production isolated, and use GitHub OIDC with a narrowly scoped deployment role rather than long-lived keys.
 
