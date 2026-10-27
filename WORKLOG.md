@@ -1254,3 +1254,17 @@
 
 **Next:**
 - Merge the focused registry PR after all hosted gates, then implement issue 51's private hook/audit observer. Treat denied, disabled-region, organization or partial coverage as unknown; preserve every existing account setting. Keep ownership and durable lifecycle/apply separate under issue 30.
+
+## 2026-10-28 - Inspect hook and audit configuration without changing it
+
+**Did:**
+- Implemented issue 51 on a dependent branch after PR 53's registry boundary, keeping the two purposes separate.
+- Added pinned read-only organization, hook, shadow-trail and regional Lake presence checks, with four-reader bounds, identity recheck, fixed failures and private normalized output.
+- Tested complete absence, present/partial/member/denied coverage, privacy and cancellation. Twelve focused cases pass under actual Node 24; all 225 shared cases, TypeScript, formatting and web build pass locally.
+
+**State now:**
+- Parent PR 53 has passed all three hosted jobs and can merge first. Private live audit metadata and this branch's hosted gates remain unclaimed at this checkpoint.
+- No AWS resources/settings, audit payloads, real notes/default database or customer billing were accessed. Cloud remains disabled; v0.7 is unchanged.
+
+**Next:**
+- Integrate PR 53, run one bounded private metadata observation, record any coverage blocker honestly, and finish the focused audit PR gates. Keep target ownership and durable lifecycle/apply/recovery as separate issue 30 work.
