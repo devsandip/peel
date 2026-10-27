@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import { createHash, randomBytes } from "node:crypto";
 import os from "node:os";
 
+await mkdir("scratch", { recursive: true });
 const folder = await mkdtemp("scratch/cloud-durability-build-");
 let browser, context, server;
 let stage = "build",

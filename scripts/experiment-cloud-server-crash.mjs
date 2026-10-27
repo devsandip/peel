@@ -1,11 +1,12 @@
 import { build } from "vite";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import os from "node:os";
+await mkdir("scratch", { recursive: true });
 const folder = await mkdtemp("scratch/cloud-server-crash-build-");
 let stage = "build";
 async function killAtBoundary(modulePath, path, scenario) {
