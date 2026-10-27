@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   CreateTableCommand,
   DeleteTableCommand,
+  DeleteItemCommand,
   DynamoDBClient,
   PutItemCommand,
   QueryCommand,
@@ -249,7 +250,7 @@ describe("actual DynamoDB Local conditional mutations, FR-04/14 partial", () => 
     expect(bookkeeping).toHaveLength(4);
     for (const row of bookkeeping) {
       const record = JSON.parse(row.record.S!);
-      expect(row.ttl.N).toBe(String(Math.floor(record.expiresAt / 1000)));
+      expect(row.ttl.N).toBe(String(Math.ceil(record.expiresAt / 1000)));
     }
   });
   it("atomically resolves same-note races and advances different-note sequences once", async () => {
@@ -414,6 +415,37 @@ describe("actual DynamoDB Local conditional mutations, FR-04/14 partial", () => 
     await expect(store.read(owner, "synthetic-note")).rejects.toMatchObject({
       code: "unrecognized-stored-record",
     });
+  });
+  it("retains retry receipts through the entire subsecond deadline despite eligible physical TTL cleanup", async () => {
+    now += 321;
+    const op = await request("subsecond-retention");
+    const first = await service.mutate(owner, op);
+    now = first.receipt.expiresAt - 1;
+    // Simulate the earliest cleanup AWS may perform at its whole-second TTL.
+    for (const row of await rows()) {
+      if (row.ttl?.N && Number(row.ttl.N) <= Math.floor(now / 1000)) {
+        await client.send(
+          new DeleteItemCommand({
+            TableName: table,
+            Key: { PK: row.PK, SK: row.SK },
+          }),
+        );
+      }
+    }
+    const beforeDeadline = await service.mutate(owner, op);
+    expect(beforeDeadline.replayed).toBe(true);
+    expect(beforeDeadline.receipt).toEqual(first.receipt);
+    expect(
+      (await rows()).filter((row) => row.SK.S!.startsWith("CHANGE#")),
+    ).toHaveLength(1);
+    // Logical expiry takes effect immediately even when physical deletion lags.
+    now = first.receipt.expiresAt;
+    const atDeadline = await service.mutate(owner, op);
+    expect(atDeadline.replayed).toBe(false);
+    expect(atDeadline.receipt.outcome).toBe("conflict");
+    expect((await store.read(owner, "synthetic-note")).account?.sequence).toBe(
+      1,
+    );
   });
   it("bounds actual encoded item size and submits one action per distinct key", async () => {
     // This head alone fits the service budget. DynamoDB keys and attributes push it over.
