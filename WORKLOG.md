@@ -923,3 +923,20 @@
 
 **Decisions:**
 - Fix the evidence rather than relax the pagination contract. Local engine tests remain distinct from managed-service consistency, cost, IAM and restore acceptance.
+
+
+## 2026-10-27 - Protect browser Cloud requests with sessions and CSRF checks
+
+**Did:**
+- Added a server-only session boundary with opaque random host-only cookies, credential digests, explicit expiry/revocation and independent anti-CSRF tokens. Identity is resolved through a trusted issuer and never JSON owner/paid flags.
+- Enforced HTTPS origin, optional Fetch Metadata and protected unsafe requests before body/note access. Rotation and logout withhold cookie changes when persistence fails.
+- Passed seven focused security/HTTP groups and all 123 shared cases, TypeScript, source formatting and production web build. Two synthetic sessions access isolated SQLite note data and still pass through current paid policy.
+
+**State now:**
+- Issue 10 in Cloud sync foundations is ready for focused PR checks; PR 6 pagination is merged after hosted Linux/Mac success. Hosted checks for this session slice are pending. Managed login, durable sessions and app Cloud activation remain open.
+
+**Next:**
+- Merge after relevant gates, then pick issue 11 for durable DynamoDB sessions. Keep provider login/refresh and hosted routes in their own issues/PRs.
+
+**Decisions:**
+- Separate the cookie/request contract from persistence and identity-provider integration. Its synthetic stores/authentication are partial evidence, not production account acceptance.
