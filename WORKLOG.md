@@ -1240,3 +1240,17 @@
 
 **Next:**
 - Finish hosted capacity gates/review, record clean-main source observation after its gates, then separate audit/ownership metadata and atomic owned lifecycle/recovery work under issue 30. Actual managed proof/teardown remains issue 31.
+
+## 2026-10-28 - Verify complete public audit-region coverage
+
+**Did:**
+- Split issue 51's public Lake coverage prerequisite into issue 52 before private account collection, keeping registry and account review separate.
+- Implemented a complete-table parser and bounded fixed-source HTTPS collector. Changed/partial registry coverage is not-ready; GovCloud is excluded only after validating the full published set.
+- Verified eight focused cases under development Node/actual Node 24, all 213 shared cases, TypeScript, formatting and web build. A live public fetch validated 30 rows and 28 commercial regions with zero account/resource access.
+
+**State now:**
+- Capacity PR 50's main run 40590673768 passed all three jobs. App Cloud remains disabled; no new AWS resources or settings, real notes/default database or customer billing were accessed.
+- This registry helper proves neither private audit absence nor regional/organization visibility. Hosted gates/review follow before integration.
+
+**Next:**
+- Merge the focused registry PR after all hosted gates, then implement issue 51's private hook/audit observer. Treat denied, disabled-region, organization or partial coverage as unknown; preserve every existing account setting. Keep ownership and durable lifecycle/apply separate under issue 30.
