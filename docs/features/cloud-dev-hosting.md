@@ -20,6 +20,7 @@ Keep one purpose per subsequent PR:
 | [42](https://github.com/devsandip/peel/issues/42) | Official offer parser | Verify service/unit/paid-tier identity and normalized rate provenance; pure input parsing |
 | [41](https://github.com/devsandip/peel/issues/41) | Bounded public price collection | Fixed-origin HTTPS, deadline/cancellation and aggregate quote after the parser merges |
 | [45](https://github.com/devsandip/peel/issues/45) | Private identity/session observation | Independent configured pin, metadata-only STS and redacted direct-lifetime evidence; no resource writes |
+| [47](https://github.com/devsandip/peel/issues/47) | Reviewed source/artifact observation | Clean public main, exact latest hosted attempt and reproducible run-specific inputs; no account or resource writes |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
