@@ -9,6 +9,7 @@ import {
   cloudExpectedInventory,
   type CloudInventoryInput,
 } from "./expected-inventory.ts";
+import { readHistoricalCloudInventory } from "./historical-inventory.ts";
 import { collectCloudInspectionIdentity } from "./inspection-identity.ts";
 import { assertCloudIdentityEnvironment } from "./identity-observations.ts";
 
@@ -16,6 +17,23 @@ type Input = {
   profile: string;
   inventory: CloudInventoryInput;
   templates: string;
+};
+type RetainedInput = {
+  json: string;
+  pin: Parameters<typeof readHistoricalCloudInventory>[1];
+};
+type Scope = {
+  profile: string;
+  expected: ReturnType<typeof cloudExpectedInventory>;
+  bucket: string;
+  retainedManifestSha256?: string;
+};
+type Dependencies = {
+  identity?: typeof collectCloudInspectionIdentity;
+  transport?: Transport;
+  credentials?: S3ClientConfig["credentials"];
+  clock?: () => number;
+  signal?: AbortSignal;
 };
 type Transport = Pick<NodeHttpHandler, "handle" | "destroy">;
 type Code =
@@ -33,6 +51,7 @@ class BucketFailure extends Error {
   constructor(code: Code) {
     super("Cloud artifact-bucket metadata unavailable");
     this.code = code;
+    Object.freeze(this);
   }
 }
 const fail = (code: Code): never => {
@@ -71,7 +90,7 @@ function text(
     return fail(code);
   return value;
 }
-function capture(input: Input) {
+function capture(input: Input): Scope {
   const data = record(input, ["profile", "inventory", "templates"]),
     profile = text(
       data.profile,
@@ -80,19 +99,45 @@ function capture(input: Input) {
       "invalid-input",
     );
   try {
-    const expected = cloudExpectedInventory(
+    return scope(
+      profile,
+      cloudExpectedInventory(
         data.inventory as CloudInventoryInput,
         data.templates as string,
       ),
-      bucket = expected.stacks
-        .find((s) => s.kind === "artifacts")
-        ?.resources.find((r) => r.logicalId === "ArtifactBucket");
-    if (
-      bucket?.type !== "AWS::S3::Bucket" ||
-      bucket.identity.name?.property !== "BucketName"
-    )
-      return fail("invalid-input");
-    return { profile, expected, bucket: bucket.identity.name.value };
+    );
+  } catch {
+    return fail("invalid-input");
+  }
+}
+function scope(
+  profile: string,
+  expected: Scope["expected"],
+  retainedManifestSha256?: string,
+): Scope {
+  const bucket = expected.stacks
+    .find((s) => s.kind === "artifacts")
+    ?.resources.find((r) => r.logicalId === "ArtifactBucket");
+  if (
+    bucket?.type !== "AWS::S3::Bucket" ||
+    bucket.identity.name?.property !== "BucketName"
+  )
+    return fail("invalid-input");
+  return {
+    profile,
+    expected,
+    bucket: bucket.identity.name.value,
+    retainedManifestSha256,
+  };
+}
+function captureRetained(input: RetainedInput): Scope {
+  const data = record(input, ["json", "pin"]);
+  try {
+    const retained = readHistoricalCloudInventory(
+      data.json as string,
+      data.pin as RetainedInput["pin"],
+    );
+    return scope(retained.profile, retained.inventory, retained.manifestSha256);
   } catch {
     return fail("invalid-input");
   }
@@ -150,28 +195,33 @@ async function boundedBody(
 }
 
 /** One owner-bound GetBucketTagging request, with redirects/retries and implicit HEAD blocked. */
-export async function collectCloudArtifactBucket(
+export function collectCloudArtifactBucket(
   input: Input,
-  dependencies: {
-    identity?: typeof collectCloudInspectionIdentity;
-    transport?: Transport;
-    credentials?: S3ClientConfig["credentials"];
-    clock?: () => number;
-    signal?: AbortSignal;
-  } = {},
+  dependencies: Dependencies = {},
 ) {
+  return collect(() => capture(input), dependencies);
+}
+/** Original pinned bucket metadata; never creation ownership or physical absence proof. */
+export function collectRetainedCloudArtifactBucket(
+  input: RetainedInput,
+  dependencies: Dependencies = {},
+) {
+  return collect(() => captureRetained(input), dependencies);
+}
+async function collect(captureScope: () => Scope, dependencies: Dependencies) {
   const controller = new AbortController(),
-    clock = dependencies.clock ?? Date.now;
+    clock = dependencies.clock ?? Date.now,
+    signal = dependencies.signal;
   let timer: ReturnType<typeof setTimeout> | undefined,
     listener: (() => void) | undefined,
     timedOut = false,
     aborted = false,
     closeTransport = () => {};
   try {
-    const captured = capture(input),
+    const captured = captureScope(),
       started = clock();
     if (!validClock(started)) return fail("clock-invalid");
-    if (dependencies.signal?.aborted) return fail("aborted");
+    if (signal?.aborted) return fail("aborted");
     try {
       assertCloudIdentityEnvironment(process.env);
     } catch {
@@ -378,6 +428,9 @@ export async function collectCloudArtifactBucket(
         fullTargetAbsence: "unproven" as const,
         ownership: "unproven" as const,
         resourceWrites: 0 as const,
+        ...(captured.retainedManifestSha256 === undefined
+          ? {}
+          : { retainedManifestSha256: captured.retainedManifestSha256 }),
       });
     };
     const cancelled = new Promise<never>((_, reject) => {
@@ -386,8 +439,8 @@ export async function collectCloudArtifactBucket(
         controller.abort();
         reject(new BucketFailure("aborted"));
       };
-      dependencies.signal?.addEventListener("abort", listener, { once: true });
-      if (dependencies.signal?.aborted) listener();
+      signal?.addEventListener("abort", listener, { once: true });
+      if (signal?.aborted) listener();
     });
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
@@ -412,7 +465,7 @@ export async function collectCloudArtifactBucket(
     });
   } finally {
     if (timer !== undefined) clearTimeout(timer);
-    if (listener) dependencies.signal?.removeEventListener("abort", listener);
+    if (listener) signal?.removeEventListener("abort", listener);
     closeTransport();
   }
 }
