@@ -22,3 +22,8 @@ Read the applicable user and Developer-folder instructions, then `docs/PRFAQ.md`
 - The Current milestone view shows deliverable issues only. Keep PR implementation/review in the separate Pull requests view so it does not double-count milestone progress. Use the Issues and Backlog views for repository-wide context and concrete unscheduled bugs.
 - Close an issue only when all its acceptance criteria have evidence. Done cards and closed-item counts do not establish whole-product or public-release acceptance. Break down the next milestone only when it becomes current.
 - Add items with `gh project item-add 12 --owner devsandip --url <issue-or-PR-url>`, then set and verify the Status field using the GitHub Project CLI/API. Inspect existing membership before backfilling; preserve unrelated projects and private archive items.
+
+## Milestone reports
+
+- Follow the shared milestone-completion reporting workflow. Save Peel completion reports under `docs/milestones/`, link them from their completed GitHub milestone, and send Sandip the report plus its file link whenever a milestone completes.
+- Keep dated in-progress status snapshots under `docs/reports/`. These do not close a milestone or replace the canonical PRD/SPEC. Report foundations, enabled app behavior and unmet acceptance gates separately.
