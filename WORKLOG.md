@@ -1323,3 +1323,20 @@
 
 **Next:**
 - Complete hosted gates, then merge this focused contract. Plan a separate bounded target/ownership metadata observer before lifecycle/recovery or managed resources; keep issues 30/31 open.
+
+## 2026-10-28 - Keep existing-run identity inspection independent of new-run runway
+
+**Did:**
+- Verified PR 60's main run 40604784418 passed all three jobs. Planned stack metadata issue 61 and split credential-boundary prerequisite 62 before opening a broad collector PR.
+- Added an explicit current-identity inspection gate using configured SSO account/role, disabled/absent history, unsupported-flow/environment protections and pinned regional STS. It does not export credentials or depend on a new-run cutoff/lease; the existing new-run gate is unchanged.
+- Verified nine focused actual Node 24 cases, all 262 shared cases, TypeScript, formatting and web build, with abort/late-reader, private errors and strict optional-setting exit evidence. Added focused hosted Node 24 coverage.
+
+**State now:**
+- This is a reusable credential boundary for later owned inspection. It establishes no runway, resource ownership or provisioning authority. No live account/audit probe, operator slot, AWS resource/settings or real note/default database was accessed.
+- Audit 51 remains unresolved and live retries stay stopped; app Cloud and v0.7 remain unchanged. The metadata prototype is preserved locally for its separate PR after this prerequisite merges.
+
+**Next:**
+- Complete hosted gates and merge this focused identity PR, then compose it before/after the exact stack metadata collector in issue 61. Actual service collision/ownership, lifecycle/recovery and managed teardown remain open under 30/31.
+
+**Validation refinement before integration:**
+- Direct Node 24 strip-only import caught a TypeScript parameter property that transformed Vitest tests accepted. Replaced it with erasable declarations and added a hosted direct-import gate; no account command is executed by that check. The reviewed PR must pass its final updated head before merging.

@@ -27,6 +27,8 @@ Keep one purpose per subsequent PR:
 | [56](https://github.com/devsandip/peel/issues/56) | Owned local ledger namespace | Private SQLite/filesystem boundary; no reservation or AWS authority |
 | [55](https://github.com/devsandip/peel/issues/55) | Durable run-slot reservations | Atomic allowance and receipt storage with competing-process/crash evidence; no AWS writes |
 | [59](https://github.com/devsandip/peel/issues/59) | Expected owned inventory | Exact reviewed four-stack/17-resource description; no observed ownership or cleanup authority |
+| [62](https://github.com/devsandip/peel/issues/62) | Current inspection identity | Preserve configured pin/history protections without new-run runway requirements; no credential export |
+| [61](https://github.com/devsandip/peel/issues/61) | Private stack metadata | Bounded exact stack/tag/resource observation after the separate identity gate; no service ownership or absence authority |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
