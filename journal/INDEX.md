@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-28 21:13 IST.
+Last refreshed: 2026-10-28 21:25 IST.
 
-Latest entry: [A fixed budget for test workers](entries/2026-10-28-2113-bounded-test-worker-budget.md).
+Latest entry: [Original requests without a secret checkpoint](entries/2026-10-28-2125-original-request-transient-material.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
 
@@ -12,9 +12,11 @@ I have a local Mac development build and browser client. The complete promised s
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
 
-Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. Request feature125 is saved locally and waits for the separate126test-worker budget fix, whose local main-only checks pass. Later request coordination/dispatch/lifecycle and actual managed/independent teardown remain; no local record is a create capability.
+Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. PR 127 integrated the separate test worker budget. Request feature 125 now passes its local configured defaults and awaits its own final review/checks/merge. Its complete unsigned input and transient NoEcho value stay behind private active handles; safe metadata cannot reconstruct them. Fresh session coordination, durable preparation, dispatch, lifecycle and actual managed/independent teardown remain. No local record is a create capability.
 
 ## Recent entries
+
+- [2026-10-28 21:25 IST: original requests without a secret checkpoint](entries/2026-10-28-2125-original-request-transient-material.md)
 
 - [2026-10-28 21:13 IST: a fixed budget for test workers](entries/2026-10-28-2113-bounded-test-worker-budget.md)
 - [2026-10-28 19:59 IST: acknowledged original genesis sources](entries/2026-10-28-1959-acknowledged-genesis-sources.md)
