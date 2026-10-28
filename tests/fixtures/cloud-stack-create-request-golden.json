@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "unsignedSha256": "057de030d09ee96a9981bbfe414273a933ca661af136c2efbe6c6824ebfe74c9",
+    "sha256": "796d1e63da1cb171873edbc91532df4d168de59f7057ed5b00bc7b859e024b7c",
+    "templateBytes": 1575,
+    "frameBytes": 3508,
+    "projectionBytes": 1920
+  },
+  "guard": {
+    "unsignedSha256": "f458bb7e0dfa6e3de96d5241504d078d04672a9b5bcc082b2c55e83624d97bca",
+    "sha256": "d546a782337fecdc8b6ddf6c8db9b4914ccb094e29fc77e44e01f056700b28b2",
+    "templateBytes": 6553,
+    "frameBytes": 8972,
+    "projectionBytes": 1928
+  },
+  "sentinel": {
+    "unsignedSha256": "97485408e45bea4c5e8ca4077797dc3e4c0229458d72a02c49b278d0955a82bd",
+    "sha256": "5688ca393d38e09e7891c8db2690fd75b0e32740e85d3703d0c0f780708f32f4",
+    "templateBytes": 1166,
+    "frameBytes": 3052,
+    "projectionBytes": 1917
+  },
+  "data": {
+    "unsignedSha256": "4b21a788417321cf144b965c5eef92f06d10b49f12e1cd12b55efa78775478f8",
+    "sha256": "e81f4120df047f06d2a40944e76862eca899c7b8fb8ac586f7115bd696bb56a5",
+    "templateBytes": 7196,
+    "frameBytes": 9907,
+    "projectionBytes": 2074
+  }
+}

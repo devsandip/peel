@@ -37,3 +37,9 @@ ActualNode24 direct/focused/Cloud consumers, then shared tests sequentially, typ
 ## Current primary references
 
 Rechecked28October2026: [CreateStack](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html), [DeploymentConfig](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_DeploymentConfig.html), [NoEcho](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html). The fixed constraints above are our reviewed policy over that API. They are not managed-service or actual SDK evidence.
+
+## Validation checkpoint before worker-budget dependency
+
+Thirteen focused cases and actualNode24 direct construction pass. Independent Python serialization of the frozen original pins all four unsigned/projection digests; template bytes are1575/6553/1166/7196 and safe projections1920/1928/1917/2074bytes for artifacts/guard/sentinel/data. Omitting the transient value from the commitment fails the intended changed-key assertion; exact source is restored. Type checks pass.
+
+The first311case actualNode24 consumer run has310passes and one unchanged context-storage5000ms timeout (5604ms observed). The same test passes alone in1.15seconds total. An explicit four-worker consumer run passes311/27files, followed by a four-worker shared run526/65files. The precise first timeout's external CPU/I/O contributor is unproven; its failed log is retained, not relabeled. No test timeout, legacy source test or production storage module changed. A separate current-milestone worker-budget fix will standardize file scheduling before this request branch resumes final validation/review/hosted gates. This source is saved locally, not yet merged or fully validated under the repository default.
