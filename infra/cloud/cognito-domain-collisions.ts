@@ -4,6 +4,7 @@ import {
   cloudExpectedInventory,
   type CloudInventoryInput,
 } from "./expected-inventory.ts";
+import { readHistoricalCloudInventory } from "./historical-inventory.ts";
 import { collectCloudInspectionIdentity } from "./inspection-identity.ts";
 import { assertCloudIdentityEnvironment } from "./identity-observations.ts";
 
@@ -11,6 +12,22 @@ type Input = {
   profile: string;
   inventory: CloudInventoryInput;
   templates: string;
+};
+type RetainedInput = {
+  json: string;
+  pin: Parameters<typeof readHistoricalCloudInventory>[1];
+};
+type Scope = {
+  profile: string;
+  expected: ReturnType<typeof cloudExpectedInventory>;
+  name: string;
+  retainedManifestSha256?: string;
+};
+type Dependencies = {
+  run?: Runner;
+  identity?: typeof collectCloudInspectionIdentity;
+  clock?: () => number;
+  signal?: AbortSignal;
 };
 type Runner = (
   args: readonly string[],
@@ -31,6 +48,7 @@ class DomainFailure extends Error {
   constructor(code: Code) {
     super("Cloud Cognito domain observation unavailable");
     this.code = code;
+    Object.freeze(this);
   }
 }
 const fail = (code: Code): never => {
@@ -68,7 +86,7 @@ function text(
     return fail(code);
   return value;
 }
-function capture(input: Input) {
+function capture(input: Input): Scope {
   const data = record(
       input,
       ["profile", "inventory", "templates"],
@@ -81,26 +99,48 @@ function capture(input: Input) {
       "invalid-input",
     );
   try {
-    const expected = cloudExpectedInventory(
+    return scope(
+      profile,
+      cloudExpectedInventory(
         data.inventory as CloudInventoryInput,
         data.templates as string,
       ),
-      domain = expected.stacks
-        .find((s) => s.kind === "data")
-        ?.resources.find((r) => r.logicalId === "CloudDomain");
-    if (
-      domain?.type !== "AWS::Cognito::UserPoolDomain" ||
-      domain.identity.kind !== "name" ||
-      domain.identity.name?.property !== "Domain"
-    )
-      return fail("invalid-input");
-    const name = text(
-      domain.identity.name.value,
-      /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
-      63,
-      "invalid-input",
     );
-    return { profile, expected, name };
+  } catch {
+    return fail("invalid-input");
+  }
+}
+
+function scope(
+  profile: string,
+  expected: Scope["expected"],
+  retainedManifestSha256?: string,
+): Scope {
+  const domain = expected.stacks
+    .find((s) => s.kind === "data")
+    ?.resources.find((r) => r.logicalId === "CloudDomain");
+  if (
+    domain?.type !== "AWS::Cognito::UserPoolDomain" ||
+    domain.identity.kind !== "name" ||
+    domain.identity.name?.property !== "Domain"
+  )
+    return fail("invalid-input");
+  const name = text(
+    domain.identity.name.value,
+    /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
+    63,
+    "invalid-input",
+  );
+  return { profile, expected, name, retainedManifestSha256 };
+}
+function captureRetained(input: RetainedInput): Scope {
+  const data = record(input, ["json", "pin"], "invalid-input");
+  try {
+    const retained = readHistoricalCloudInventory(
+      data.json as string,
+      data.pin as RetainedInput["pin"],
+    );
+    return scope(retained.profile, retained.inventory, retained.manifestSha256);
   } catch {
     return fail("invalid-input");
   }
@@ -140,6 +180,10 @@ function command(captured: ReturnType<typeof capture>) {
 /** Pure canonical selector and metadata projection; no endpoint or domain override. */
 export function cloudCognitoDomainCommand(input: Input) {
   return command(capture(input));
+}
+/** Fixed original domain selector from independently pinned recipe bytes. */
+export function cloudRetainedCognitoDomainCommand(input: RetainedInput) {
+  return command(captureRetained(input));
 }
 function defaultRunner(): Runner {
   const env = {
@@ -238,26 +282,32 @@ function notFound(error: unknown) {
 }
 
 /** Partial prospective domain metadata, never full absence or creation ownership. */
-export async function collectCloudCognitoDomain(
+export function collectCloudCognitoDomain(
   input: Input,
-  dependencies: {
-    run?: Runner;
-    identity?: typeof collectCloudInspectionIdentity;
-    clock?: () => number;
-    signal?: AbortSignal;
-  } = {},
+  dependencies: Dependencies = {},
 ) {
+  return collect(() => capture(input), dependencies);
+}
+/** Original recipe metadata only; never creation ownership or full absence proof. */
+export function collectRetainedCloudCognitoDomain(
+  input: RetainedInput,
+  dependencies: Dependencies = {},
+) {
+  return collect(() => captureRetained(input), dependencies);
+}
+async function collect(captureScope: () => Scope, dependencies: Dependencies) {
   const controller = new AbortController(),
-    clock = dependencies.clock ?? Date.now;
+    clock = dependencies.clock ?? Date.now,
+    signal = dependencies.signal;
   let timer: ReturnType<typeof setTimeout> | undefined,
     listener: (() => void) | undefined,
     timedOut = false,
     aborted = false;
   try {
-    const captured = capture(input),
+    const captured = captureScope(),
       started = clock();
     if (!validClock(started)) return fail("clock-invalid");
-    if (dependencies.signal?.aborted) return fail("aborted");
+    if (signal?.aborted) return fail("aborted");
     try {
       assertCloudIdentityEnvironment(process.env);
     } catch {
@@ -360,6 +410,9 @@ export async function collectCloudCognitoDomain(
         fullTargetAbsence: "unproven" as const,
         ownership: "unproven" as const,
         resourceWrites: 0 as const,
+        ...(captured.retainedManifestSha256 === undefined
+          ? {}
+          : { retainedManifestSha256: captured.retainedManifestSha256 }),
       });
     };
     const cancelled = new Promise<never>((_, reject) => {
@@ -368,8 +421,8 @@ export async function collectCloudCognitoDomain(
         controller.abort();
         reject(new DomainFailure("aborted"));
       };
-      dependencies.signal?.addEventListener("abort", listener, { once: true });
-      if (dependencies.signal?.aborted) listener();
+      signal?.addEventListener("abort", listener, { once: true });
+      if (signal?.aborted) listener();
     });
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
@@ -394,6 +447,6 @@ export async function collectCloudCognitoDomain(
     });
   } finally {
     if (timer !== undefined) clearTimeout(timer);
-    if (listener) dependencies.signal?.removeEventListener("abort", listener);
+    if (listener) signal?.removeEventListener("abort", listener);
   }
 }

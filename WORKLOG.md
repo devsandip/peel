@@ -1558,3 +1558,18 @@
 
 **Next:**
 - Merge the focused pool PR after exact-head gates/review, update Project and verify main separately. Continue a separately scoped domain/lifecycle prerequisite. Save/send the milestone report only after actual exit criteria pass.
+
+## 2026-10-28 - Inspect original Cognito domain-prefix recipes without current factories
+
+**Did:**
+- Verified all three main jobs40646809615 for PR91 merge5bc139d pass. No open PR remained before issue92's requirement-linked plan and In progress transition.
+- Added strict original recipe/pin domain command/observation capture through private shared extraction/collection, preserving original profile/prefix/digests and current prospective validation/output.
+- Kept exact CLI command/projection, structured error classifier, collision/not-described/not-found semantics and independent identity/role intact. Shared synthetic process fixtures and retained original signal for cleanup.
+- Passed13retained+11prospective cases/direct import under actual Node24.22.1, all410shared cases/56files, TypeScript, formatting and browser build. Existing chunk warning remains.
+
+**State now:**
+- This completes another read-only adapter foundation, with ownership/full-target absence still unproven. No actual account/default database/resource/app/billing change or stopped-component retry. Hosted gates/review precede merge; no managed acceptance from fixtures.
+- M2.2 remains open. Original-manifest-linked creation intents/provider-ID receipts and budget linkage, ownership/absence composition, owned lifecycle/recovery/apply and actual managed/teardown evidence remain. Audit51/managed31/native72 stay blocked.
+
+**Next:**
+- Merge the focused domain PR after exact-head checks/review, synchronize Project and verify main separately. Plan one creation-journal/lifecycle prerequisite before implementation. Save/send the milestone report only when its actual exit criteria have evidence.
