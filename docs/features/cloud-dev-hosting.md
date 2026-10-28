@@ -34,6 +34,7 @@ Keep one purpose per subsequent PR:
 | [69](https://github.com/devsandip/peel/issues/69) | Cognito pool-name collision | Complete bounded native-page scan with private projections; not-listed is not full absence or ownership |
 | [71](https://github.com/devsandip/peel/issues/71) | Cognito domain-prefix collision | One bounded shape-aware prefix observation; empty descriptions and not-found never establish complete absence or ownership |
 | [78](https://github.com/devsandip/peel/issues/78) | Retained run recipe codec | Exact original reviewed bytes and independently persistable pins; not durability, historical selector interpretation or owned cleanup |
+| [80](https://github.com/devsandip/peel/issues/80) | Private immutable recipe persistence | Owned file/inode namespace, synchronized acknowledgement and process-crash recovery; not a reservation, provider creation receipt or cleanup authority |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 

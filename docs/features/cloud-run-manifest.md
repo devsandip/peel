@@ -19,3 +19,5 @@ Use the actual inventory/template factories and synthetic selectors. Verify dete
 ## Local implementation evidence, 28 October
 
 Eight focused cases and direct import pass under actual Node 24.22.1. They exercise deterministic capture and detached immutable pins, original-byte restoration with the current factory disabled and clock throwing, every pinned identity/hash drift, extra/version/malformed/noncanonical data, full opaque-snapshot digest binding, byte limits, getters and private frozen errors. All 324 shared cases in 49 files, TypeScript, formatting and web build pass locally. The existing browser chunk-size warning remains. Hosted Node 24 import/focused coverage is included; all three exact-head gates and focused review still precede merge. No dependency, artifact, IaC factory, account, database, journal, provider/resource or app behavior changed.
+
+The [private storage slice](cloud-manifest-storage.md) consumes the narrow exported pin normalizer so persistence captures detached expected pins before filesystem access. The codec bytes, format and opaque-graph/ownership boundary are unchanged.
