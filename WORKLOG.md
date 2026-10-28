@@ -1498,3 +1498,18 @@
 
 **Next:**
 - Merge the focused historical-reader PR after all exact-head gates, update issue/PR cards and separately verify mainCI. Continue one retained-recipe metadata adapter slice before any owned lifecycle/AWS write. Save/send the milestone report only when actual exit criteria pass.
+
+## 2026-10-28 - Observe original Cloud stack recipes independently of current factories
+
+**Did:**
+- Verified all three postmerge main jobs40638248654 pass for PR83 merge5a83c7a. No open PR remained before starting issue84, whose Project card moved to In progress after its requirement-linked plan.
+- Added a strict retained-recipe stack observer and pure command helper. Both default commands and ARN validation use privately captured original names instead of today's name factory; current prospective factory checks, command bytes and result shape remain compatible.
+- Added whole-observation external cancellation, including ignored first/final identity and metadata readers, with prompt private failure, no late reads/publication and timer/listener cleanup.
+- Passed13retained+12prospective cases/direct import under actual Node24.22.1, all359shared cases/52files, TypeScript, formatting and build. Frozen expired synthetic recipe/factory-unavailable checks preserve original digests; existing browser chunk warning remains.
+
+**State now:**
+- This read-only adapter binds synthetic observations to the original manifest/inventory. Ownership and complete absence remain unproven. No account probe, resource/default database/app/billing change or stopped-component retry occurred. Hosted gates/review precede merge.
+- M2.2 stays open; fixed-target/S3/Cognito retained adapters, creation intent/provider-ID provenance, owned lifecycle/recovery/apply and actual managed/teardown evidence remain. Audit51, managed31 and native72 isolation remain blocked.
+
+**Next:**
+- Merge this focused observer PR only after all current-commit gates and review, then synchronize Project state and verify main CI separately. Continue one separately scoped current-milestone deliverable; write/send its milestone report only when actual exit criteria pass.

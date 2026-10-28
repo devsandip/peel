@@ -5,6 +5,7 @@ import {
   cloudExpectedInventory,
   type CloudInventoryInput,
 } from "./expected-inventory.ts";
+import { readHistoricalCloudInventory } from "./historical-inventory.ts";
 import { assertCloudIdentityEnvironment } from "./identity-observations.ts";
 import { collectCloudInspectionIdentity } from "./inspection-identity.ts";
 
@@ -24,6 +25,22 @@ type Input = {
   inventory: CloudInventoryInput;
   templates: string;
 };
+type RetainedInput = {
+  json: string;
+  pin: Parameters<typeof readHistoricalCloudInventory>[1];
+};
+type Dependencies = {
+  read?: Reader;
+  clock?: () => number;
+  identity?: typeof collectCloudInspectionIdentity;
+  signal?: AbortSignal;
+};
+type Scope = {
+  profile: string;
+  expected: ReturnType<typeof cloudExpectedInventory>;
+  names: readonly string[];
+  retainedManifestSha256?: string;
+};
 type Code =
   | "invalid-input"
   | "unsupported-environment"
@@ -36,12 +53,14 @@ type Code =
   | "metadata-changed"
   | "read-unavailable"
   | "clock-invalid"
-  | "deadline";
+  | "deadline"
+  | "aborted";
 class StackFailure extends Error {
   readonly code: Code;
   constructor(code: Code) {
     super("Cloud stack metadata unavailable");
     this.code = code;
+    Object.freeze(this);
   }
 }
 function fail(code: Code): never {
@@ -85,7 +104,7 @@ function text(
 function token(value: unknown): string | null {
   return value === null ? null : text(value, /^[^\x00-\x1f\x7f]+$/, 1024);
 }
-function stackName(id: unknown, accountId: string, runId: string) {
+function stackName(id: unknown, accountId: string, names: readonly string[]) {
   const value = text(id, /^[!-~]+$/, 256, "scope-mismatch"),
     prefix = `arn:aws:cloudformation:us-east-1:${accountId}:stack/`,
     parts = value.startsWith(prefix)
@@ -93,7 +112,7 @@ function stackName(id: unknown, accountId: string, runId: string) {
       : [];
   if (
     parts.length !== 2 ||
-    !Object.values(cloudDevStackNames(runId)).includes(parts[0]) ||
+    !names.includes(parts[0]) ||
     !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
       parts[1],
     )
@@ -110,9 +129,37 @@ export function cloudStackCommandArgs(
   command: CloudStackCommand,
 ): readonly string[] {
   try {
+    return scopedCommandArgs(
+      profile,
+      accountId,
+      Object.values(cloudDevStackNames(runId)),
+      command,
+    );
+  } catch {
+    return fail("invalid-input");
+  }
+}
+/** Original pinned selectors only; no current factory or arbitrary scope override. */
+export function cloudRetainedStackCommandArgs(
+  input: RetainedInput,
+  command: CloudStackCommand,
+): readonly string[] {
+  try {
+    const { profile, expected, names } = retainedScope(input);
+    return scopedCommandArgs(profile, expected.accountId, names, command);
+  } catch {
+    return fail("invalid-input");
+  }
+}
+function scopedCommandArgs(
+  profile: string,
+  accountId: string,
+  names: readonly string[],
+  command: CloudStackCommand,
+): readonly string[] {
+  try {
     text(profile, /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/, 64, "invalid-input");
     text(accountId, /^\d{12}$/, 12, "invalid-input");
-    const names = Object.values(cloudDevStackNames(runId));
     if (!command || typeof command !== "object") return fail("invalid-input");
     const kind = Object.getOwnPropertyDescriptor(command, "kind")?.value;
     const common = [
@@ -155,7 +202,7 @@ export function cloudStackCommandArgs(
       kind === "tags" ? ["kind", "stackId"] : ["kind", "stackId", "nextToken"],
       "invalid-input",
     );
-    stackName(c.stackId, accountId, runId);
+    stackName(c.stackId, accountId, names);
     if (kind === "tags")
       return [
         ...common,
@@ -187,10 +234,7 @@ export function cloudStackCommandArgs(
     return fail("invalid-input");
   }
 }
-function defaultReader(
-  profile: string,
-  expected: ReturnType<typeof cloudExpectedInventory>,
-): Reader {
+function defaultReader({ profile, expected, names }: Scope): Reader {
   try {
     assertCloudIdentityEnvironment(process.env);
   } catch {
@@ -208,14 +252,7 @@ function defaultReader(
   return async (command, signal) => {
     const { stdout } = await execute(
       "aws",
-      [
-        ...cloudStackCommandArgs(
-          profile,
-          expected.accountId,
-          expected.runId,
-          command,
-        ),
-      ],
+      [...scopedCommandArgs(profile, expected.accountId, names, command)],
       {
         signal,
         timeout: 15000,
@@ -282,43 +319,89 @@ type CollectedStack = {
   missingLogicalIds: string[];
 };
 
-/** Point-in-time metadata only, including for expired-run inspection. Never ownership/absence authority. */
-export async function collectCloudStackMetadata(
-  input: Input,
-  dependencies: {
-    read?: Reader;
-    clock?: () => number;
-    identity?: typeof collectCloudInspectionIdentity;
-  } = {},
-) {
-  const controller = new AbortController(),
-    clock = dependencies.clock ?? Date.now;
-  let timer: ReturnType<typeof setTimeout> | undefined,
-    timedOut = false;
+function scope(
+  profile: string,
+  expected: Scope["expected"],
+  retainedManifestSha256?: string,
+): Scope {
+  // Keep the existing CLI query's name order, independent of current factories.
+  const names = ["guard", "artifacts", "sentinel", "data"].map((kind) => {
+    const found = expected.stacks.find((stack) => stack.kind === kind);
+    if (!found) return fail("invalid-input");
+    return found.name;
+  });
+  return {
+    profile,
+    expected,
+    names: Object.freeze(names),
+    retainedManifestSha256,
+  };
+}
+function currentScope(input: Input): Scope {
+  const captured = record(
+      input,
+      ["profile", "inventory", "templates"],
+      "invalid-input",
+    ),
+    profile = text(
+      captured.profile,
+      /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/,
+      64,
+      "invalid-input",
+    );
   try {
-    const captured = record(
-        input,
-        ["profile", "inventory", "templates"],
-        "invalid-input",
-      ),
-      profile = text(
-        captured.profile,
-        /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/,
-        64,
-        "invalid-input",
-      );
-    let expected: ReturnType<typeof cloudExpectedInventory>;
-    try {
-      expected = cloudExpectedInventory(
+    return scope(
+      profile,
+      cloudExpectedInventory(
         captured.inventory as CloudInventoryInput,
         captured.templates as string,
-      );
-    } catch {
-      return fail("invalid-input");
-    }
+      ),
+    );
+  } catch {
+    return fail("invalid-input");
+  }
+}
+function retainedScope(input: RetainedInput): Scope {
+  const captured = record(input, ["json", "pin"], "invalid-input");
+  try {
+    const retained = readHistoricalCloudInventory(
+      captured.json as string,
+      captured.pin as RetainedInput["pin"],
+    );
+    return scope(retained.profile, retained.inventory, retained.manifestSha256);
+  } catch {
+    return fail("invalid-input");
+  }
+}
+/** Point-in-time metadata only, including for expired-run inspection. Never ownership/absence authority. */
+export function collectCloudStackMetadata(
+  input: Input,
+  dependencies: Dependencies = {},
+) {
+  return collect(() => currentScope(input), dependencies);
+}
+/** Observe original pinned expectations even after the current factories change. */
+export function collectRetainedCloudStackMetadata(
+  input: RetainedInput,
+  dependencies: Dependencies = {},
+) {
+  return collect(() => retainedScope(input), dependencies);
+}
+async function collect(capture: () => Scope, dependencies: Dependencies) {
+  const controller = new AbortController(),
+    clock = dependencies.clock ?? Date.now,
+    signal = dependencies.signal;
+  let timer: ReturnType<typeof setTimeout> | undefined,
+    onAbort: (() => void) | undefined,
+    aborted = false,
+    timedOut = false;
+  try {
+    if (signal?.aborted) return fail("aborted");
+    const captured = capture(),
+      { profile, expected, names, retainedManifestSha256 } = captured;
     const started = clock();
     if (!validClock(started)) return fail("clock-invalid");
-    const reader = dependencies.read ?? defaultReader(profile, expected);
+    const reader = dependencies.read ?? defaultReader(captured);
     const read = async (command: CloudStackCommand) => {
       controller.signal.throwIfAborted();
       const raw = await reader(command, controller.signal);
@@ -379,7 +462,7 @@ export async function collectCloudStackMetadata(
             return fail("page-incomplete");
           for (const value of data.Stacks) {
             const row = record(value, ["StackId", "StackName", "Status"]),
-              name = stackName(row.StackId, expected.accountId, expected.runId);
+              name = stackName(row.StackId, expected.accountId, names);
             if (
               row.StackName !== name ||
               found.some((s) => s.name === name || s.stackId === row.StackId)
@@ -568,8 +651,20 @@ export async function collectCloudStackMetadata(
         ownership: "unproven" as const,
         targetAbsence: "unproven" as const,
         resourceWrites: 0 as const,
+        ...(retainedManifestSha256 === undefined
+          ? {}
+          : { retainedManifestSha256 }),
       });
     };
+    const cancelled = new Promise<never>((_, reject) => {
+      onAbort = () => {
+        aborted = true;
+        controller.abort();
+        reject(new StackFailure("aborted"));
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+      if (signal?.aborted) onAbort();
+    });
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
         timedOut = true;
@@ -577,19 +672,22 @@ export async function collectCloudStackMetadata(
         reject(new StackFailure("deadline"));
       }, deadlineMs);
     });
-    return await Promise.race([work(), timeout]);
+    return await Promise.race([cancelled, timeout, work()]);
   } catch (error) {
     controller.abort();
     return Object.freeze({
       kind: "unavailable" as const,
-      code: timedOut
-        ? "deadline"
-        : error instanceof StackFailure
-          ? error.code
-          : "read-unavailable",
+      code: aborted
+        ? "aborted"
+        : timedOut
+          ? "deadline"
+          : error instanceof StackFailure
+            ? error.code
+            : "read-unavailable",
       resourceWrites: 0 as const,
     });
   } finally {
     if (timer !== undefined) clearTimeout(timer);
+    if (onAbort) signal?.removeEventListener("abort", onAbort);
   }
 }
