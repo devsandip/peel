@@ -1340,3 +1340,17 @@
 
 **Validation refinement before integration:**
 - Direct Node 24 strip-only import caught a TypeScript parameter property that transformed Vitest tests accepted. Replaced it with erasable declarations and added a hosted direct-import gate; no account command is executed by that check. The reviewed PR must pass its final updated head before merging.
+
+## 2026-10-28 - Collect scoped stack metadata without treating it as ownership
+
+**Did:**
+- Kept the identity prerequisite and metadata adapter in separate branches/PR boundaries. Planned ListStacks plus exact-ARN tag and resource metadata to avoid DescribeStacks parameters/outputs.
+- Added bounded native pagination, exact reviewed inventory/type checks, tag-before-resource gating, typed physical-ID uniqueness, explicit incomplete/deleted/not-listed states, two stack scans and current-identity checks before/after reads.
+- Verified 12 focused actual Node 24 cases and direct module import, all 274 shared cases, TypeScript, formatting and web build. Installed CLI input-model/projection diagnostics pass for all three commands with synthetic IDs/empty configuration and zero API requests.
+
+**State now:**
+- PR 63's final direct-runtime-compatible identity head must pass hosted gates and merge first. This collector stays local until then. Hosted collector gates follow separately; no live account/audit probe, operator slot, resource/settings or real note/default database was accessed.
+- Stack metadata is explicitly unproven ownership/target absence. Issues 30/31 and unresolved audit 51 remain open; app Cloud and v0.7 remain unchanged.
+
+**Next:**
+- Integrate the focused identity prerequisite and then this collector after their respective gates. Plan exact service collision/ownership reconciliation and durable owned lifecycle/recovery before any managed run.
