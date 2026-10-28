@@ -51,3 +51,7 @@ The implementation changes no existing store/schema/error contract or app behavi
 The final input boundary explicitly closes nested plan, source, identity, lease, observation, checks, credential, safety and price/rate record shapes before any application path access. Their semantic policy still runs against the actual recognized ledger projection, preserving the prohibition on a fabricated prior ledger. Extra synthetic token/refund fields in nested policy data now fail before a path is touched. Omitting this structural check fails the zero-path-access assertion; exact source was restored.
 
 After this review fix, actual Node 24 direct/334 Cloud cases and 549 shared cases, type/format/build pass again under the configured defaults. Logs are `issue129-revised-*`, separately from the earlier runs and retained failures. This changes only the new initializer and its own test coverage. The new final head requires a fresh focused review and all three hosted checks before merge; the earlier head's checks do not authorize it.
+
+## Integration follow-up
+
+PR 130 merged revised source 70b5645950ada6e25c1b521145871d4c3165cd2d as 2b4a76105b48da748e3e753e884cf96057f1d6b1 after all three exact-source checks 40728464433 passed. All three merged-main checks 40729915232 passed separately; issue 129 and its PR Project cards are Done. Current phase/provenance behavior remains the separate [reserved-run design](cloud-reserved-phase-gates.md), not an execution capability supplied by this session.
