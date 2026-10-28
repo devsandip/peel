@@ -1483,3 +1483,18 @@
 
 **Next:**
 - Merge the focused storage PR only after exact-head gates, verify main CI separately and synchronize Project state. Continue a separately planned historical inventory/creation-journal slice before any AWS write. Save/send the milestone report only when actual exit criteria pass.
+
+## 2026-10-28 - Decode the original version-one inventory after source changes
+
+**Did:**
+- Confirmed all three main jobs40635124866 passed for PR81's exact merge310e7a9 and appended issue80 evidence6461151278. No open PR remained before the next slice.
+- Planned issue82 before code, moved its Project card to In progress and captured a frozen synthetic recipe before extracting the existing catalog into an immutable version-one module. Current factory/template/recipe bytes and hashes remain unchanged.
+- Added pure historical schema interpretation for the original four stacks/seventeen resources and exact original names/tags/relationships/lease/artifact wiring. Expected selectors retain unproven ownership. No current factory, clock, account, file or policy lookup is performed during decoding.
+- Passed eight actual Node24 cases/direct import,22combined with current writer/codec, all346shared cases, TypeScript, formatting and build. A graph-comparison negative control fails without the required check and passes after restoration. Existing browser chunk warning remains.
+
+**State now:**
+- This reader produces typed original expectations. Existing metadata collectors still regenerate current factories; wiring their retained-recipe boundary, creation intents/provider IDs, ownership/absence and lifecycle remain separate30work. Hosted gates/review precede merge.
+- No dependency/artifact/IaC factory/app behavior or physical AWS resource changed. Audit51, native72 and stopped relay/peer-WebKit gates were not retried. M2.2 and managed31 remain open.
+
+**Next:**
+- Merge the focused historical-reader PR after all exact-head gates, update issue/PR cards and separately verify mainCI. Continue one retained-recipe metadata adapter slice before any owned lifecycle/AWS write. Save/send the milestone report only when actual exit criteria pass.
