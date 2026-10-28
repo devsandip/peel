@@ -280,6 +280,27 @@ it("rejects accessors, callbacks, extras, prototypes, bounds and mismatched orig
   for (const value of [
     null,
     { ...f.input, approved: true },
+    {
+      ...f.input,
+      observed: { ...f.input.observed, token: "synthetic private extra" },
+    },
+    {
+      ...f.input,
+      observed: {
+        ...f.input.observed,
+        credentials: {
+          ...f.input.observed.credentials,
+          token: "synthetic private extra",
+        },
+      },
+    },
+    {
+      ...f.input,
+      plan: {
+        ...f.input.plan,
+        source: { ...f.input.plan.source, refunded: true },
+      },
+    },
     { ...f.input, hooks: { clock: () => now } },
     Object.defineProperty({ ...f.input }, "observed", { get: getter }),
     { ...f.input, observed: deep },

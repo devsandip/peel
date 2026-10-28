@@ -128,6 +128,71 @@ function path(value: unknown) {
     return fail("invalid-input");
   return s;
 }
+/** Closed structure only. Semantic policy still uses the actual ledger, never a fabricated prior. */
+function policyShape(plan: any, observed: any) {
+  record(plan, [
+    "format",
+    "runId",
+    "createdAt",
+    "identity",
+    "lease",
+    "source",
+    "quoteSha256",
+  ]);
+  record(observed, [
+    "checkedAt",
+    "identity",
+    "source",
+    "mainCommit",
+    "testedCommit",
+    "checks",
+    "worktree",
+    "credentials",
+    "unreservedConcurrency",
+    "safety",
+    "prices",
+  ]);
+  for (const value of [plan.identity, observed.identity])
+    record(value, ["profile", "accountId", "region"]);
+  for (const value of [plan.source, observed.source])
+    record(value, [
+      "commit",
+      "tree",
+      "lockSha256",
+      "zipSha256",
+      "zipBytes",
+      "templatesSha256",
+    ]);
+  record(plan.lease, ["startedAt", "expiresAt"]);
+  record(observed.checks, ["cloud-artifact", "web-and-core", "native"]);
+  record(observed.credentials, [
+    "sessionExpiresAt",
+    "refreshExpiresAt",
+    "refreshProven",
+  ]);
+  record(observed.safety, ["targetNames", "hooks", "targetDataEvents"]);
+  record(observed.prices, [
+    "checkedAt",
+    "region",
+    "currency",
+    "sourceSha256",
+    "rates",
+  ]);
+  record(observed.prices.rates, [
+    "lambdaRequestsPerMillion",
+    "lambdaGbSecond",
+    "cognitoMau",
+    "dynamoWritesPerMillion",
+    "dynamoReadsPerMillion",
+    "dynamoGbMonth",
+    "secretMonth",
+    "secretPerTenThousand",
+    "s3GbMonth",
+    "s3PutsPerThousand",
+    "s3GetsPerThousand",
+    "schedulerPerMillion",
+  ]);
+}
 function captured(value: unknown) {
   const r = record(data(value), [
     "workspaceDirectory",
@@ -139,6 +204,7 @@ function captured(value: unknown) {
     "original",
   ]);
   text(JSON.stringify(r), 1024 * 1024);
+  policyShape(r.plan, r.observed);
   const o = record(r.original, ["contextJson", "contextSha256", "manifest"]),
     m = record(o.manifest, ["json", "pin"]),
     manifest = {

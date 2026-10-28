@@ -1856,3 +1856,16 @@
 
 **Next:**
 - Finish issue 129 focused review, exact-head gates and normal merge; verify actual closure/Project and merged main separately. Plan already-reserved current safety/collector-provenance requirements before trusted immutable preparation; no existing row, source snapshot or caller boolean supplies approval. Keep journal and immutable ignored resumes current.
+
+
+## 2026-10-28 - Close nested policy input before preparation path access
+
+**Did:**
+- During PR 130 review, moved closed nested policy-field shape checks ahead of application path access. Semantic policy remains validated against the actual existing ledger, never a fabricated prior. Added synthetic nested token/refund refusal cases with zero path-access assertions.
+- Omitting the new structural check fails the intended zero-access assertion; exact source restored. Revised actual Node 24 direct/334 Cloud cases, 549 shared cases, type/format/build pass under unchanged configured defaults. Older failures remain recorded separately.
+
+**State now:**
+- Only the new initializer and its own tests changed. PR 130 needs focused review and all three checks on the revised final head; previous-head checks are not merge authority. No current/provider permission, app or operational change.
+
+**Next:**
+- Finish revised PR 130 review/gates, normal integration and actual GitHub/Project/main proof. Plan already-reserved policy and collector provenance before trusted preparation; stopped gates remain stopped.
