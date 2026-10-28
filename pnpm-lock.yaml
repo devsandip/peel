@@ -42,12 +42,21 @@ importers:
         specifier: 19.3.1
         version: 19.3.1(react@19.3.1)
     devDependencies:
+      '@aws-sdk/client-s3':
+        specifier: 3.1157.0
+        version: 3.1157.0
+      '@aws-sdk/credential-provider-sso':
+        specifier: 3.973.21
+        version: 3.973.21
       '@huggingface/transformers':
         specifier: 4.3.1
         version: 4.3.1(@types/node@26.6.5)
       '@playwright/test':
         specifier: 1.64.1
         version: 1.64.1
+      '@smithy/node-http-handler':
+        specifier: 4.13.0
+        version: 4.13.0
       '@tauri-apps/cli':
         specifier: 2.12.4
         version: 2.12.4
@@ -95,8 +104,16 @@ importers:
 
 packages:
 
+  '@aws-sdk/checksums@3.1001.6':
+    resolution: {integrity: sha512-DSo+EqLq2PkS8gjit311LliRrYzydneP6vRhxMzDh9c8P3wWGzHf4fjmQN3d8sl4qh+aMqzn9+o+gZZo4+uqIQ==}
+    engines: {node: '>=20.0.0'}
+
   '@aws-sdk/client-dynamodb@3.1157.0':
     resolution: {integrity: sha512-QZ85AGwkByXEuWjUFSoe52RXCF1Pu3HZgfruZVmcl4w726UQCDObYQ6vzTwvTXDjr7dfJfN2hP64dc5rhWFcTw==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/client-s3@3.1157.0':
+    resolution: {integrity: sha512-fbZIxqZVzK/PMLj9az3+ieAcYdZhzpTrfIVAnrE4PnRc1C6SokMDnaxAJycKTNmzLlY1fvmlItZWBDPUEFlGLQ==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.978.6':
@@ -145,6 +162,10 @@ packages:
 
   '@aws-sdk/middleware-endpoint-discovery@3.972.35':
     resolution: {integrity: sha512-1lGkWlzNhU+5HwNJqvwrGhnLJMwEQe0NErYKT+NvsMNIzZ68bz6fLi1e0QkLfmaUk7mLyXmiHkpIFTV/wJYkgw==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/middleware-sdk-s3@3.972.82':
+    resolution: {integrity: sha512-MTW3FIYs3yFuSuBKCrm3nWLWzHyz454SPxKQjhY2pcpV4ijKBXselC7wh9VdDstVKJn5ESWx5s1OGvB+p6XUzA==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/nested-clients@3.997.51':
@@ -1373,12 +1394,34 @@ packages:
 
 snapshots:
 
+  '@aws-sdk/checksums@3.1001.6':
+    dependencies:
+      '@aws-sdk/core': 3.978.6
+      '@aws-sdk/types': 3.975.0
+      '@smithy/core': 3.37.0
+      '@smithy/types': 4.19.0
+      tslib: 2.8.1
+
   '@aws-sdk/client-dynamodb@3.1157.0':
     dependencies:
       '@aws-sdk/core': 3.978.6
       '@aws-sdk/credential-provider-node': 3.972.89
       '@aws-sdk/dynamodb-codec': 3.973.51
       '@aws-sdk/middleware-endpoint-discovery': 3.972.35
+      '@aws-sdk/types': 3.975.0
+      '@smithy/core': 3.37.0
+      '@smithy/fetch-http-handler': 5.8.0
+      '@smithy/node-http-handler': 4.13.0
+      '@smithy/types': 4.19.0
+      tslib: 2.8.1
+
+  '@aws-sdk/client-s3@3.1157.0':
+    dependencies:
+      '@aws-sdk/checksums': 3.1001.6
+      '@aws-sdk/core': 3.978.6
+      '@aws-sdk/credential-provider-node': 3.972.89
+      '@aws-sdk/middleware-sdk-s3': 3.972.82
+      '@aws-sdk/signature-v4-multi-region': 3.996.49
       '@aws-sdk/types': 3.975.0
       '@smithy/core': 3.37.0
       '@smithy/fetch-http-handler': 5.8.0
@@ -1496,6 +1539,15 @@ snapshots:
   '@aws-sdk/middleware-endpoint-discovery@3.972.35':
     dependencies:
       '@aws-sdk/endpoint-cache': 3.972.11
+      '@aws-sdk/types': 3.975.0
+      '@smithy/core': 3.37.0
+      '@smithy/types': 4.19.0
+      tslib: 2.8.1
+
+  '@aws-sdk/middleware-sdk-s3@3.972.82':
+    dependencies:
+      '@aws-sdk/core': 3.978.6
+      '@aws-sdk/signature-v4-multi-region': 3.996.49
       '@aws-sdk/types': 3.975.0
       '@smithy/core': 3.37.0
       '@smithy/types': 4.19.0
