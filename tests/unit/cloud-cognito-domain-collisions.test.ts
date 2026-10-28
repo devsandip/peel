@@ -3,49 +3,19 @@ import {
   cloudCognitoDomainCommand,
   collectCloudCognitoDomain,
 } from "../../infra/cloud/cognito-domain-collisions.ts";
-import { cloudStackFixture } from "../fixtures/cloud-stack-pages.ts";
+import {
+  name,
+  metadata,
+  empty,
+  response,
+  fixture,
+  missing,
+} from "../fixtures/cloud-cognito-domain-response.ts";
 
-const name = "peel-cloud-dev-00000000-0000-4000-8000-000000000001-auth";
-const metadata = () => ({
-  Shape: "object",
-  Domain: name,
-  AccountId: "111122223333",
-  PoolId: "us-east-1_Private1",
-  Status: "ACTIVE",
-});
-const empty = (Shape = "null") => ({
-  Shape,
-  Domain: null,
-  AccountId: null,
-  PoolId: null,
-  Status: null,
-});
-const response = (data: unknown) => ({
-  stdout: JSON.stringify(data),
-  stderr: "",
-});
-function fixture(data: unknown = metadata()) {
-  return {
-    ...cloudStackFixture(),
-    run: vi.fn(async (_args: readonly string[], _signal: AbortSignal) =>
-      response(data),
-    ),
-  };
-}
 const failure = (code: string) => ({
   kind: "unavailable",
   code,
   resourceWrites: 0,
-});
-const missing = () => ({
-  code: 254,
-  stdout: "",
-  stderr: JSON.stringify({
-    Code: "ResourceNotFoundException",
-    Message: "private-message",
-  }),
-  killed: false,
-  signal: null,
 });
 const nativeInput = (args: readonly string[]) =>
   JSON.parse(args[args.indexOf("--cli-input-json") + 1]);
