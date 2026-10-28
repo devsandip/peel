@@ -1727,3 +1727,19 @@
 
 **Next:**
 - Finish this standalone PR after all required exact-head checks, merge normally, update Project and record main checks separately. Then scope only the next fixed journal-genesis/bootstrap deliverable from the canonical protocol; retain independent funding/source anchors and all current provisioning/cleanup gates.
+
+
+## 2026-10-28 - Verify fail-closed ledger contention without a progress assumption
+
+**Did:**
+- Verified PR113's exact main477 all3checks40686197747 passing before starting pure genesis issue115. Saved its plan/code locally after13focused/direct Node24 checks; the259consumer run exposed one unchanged ledger test requiring exactly one successful concurrent writer.
+- Investigated without rerunning away the failure: eight observed unblocked pairs yielded one success/busy, but a controlled real SQLite shared-reader barrier deterministically yielded busy+uncertain, zero stored rows and the original reserve. The original uninstrumented failure's exact interleaving remains unproven.
+- Corrected that verification assumption in standalone issue116. Uncoordinated processes now prove at most one acknowledgement/committed slot, with acknowledgement identity bound to actual row/envelope and uncertain committed slots preserved. Added the real held-reader case proving zero acknowledged/consumed slots under blocked commits.
+- Passed27actualNode24 namespace/ledger cases and247Cloud consumer cases/22files;462shared/60files, type/format/build pass. All production infra/cloud modules are byte-unchanged, with no new timeout/retry/funding behavior. Existing chunk warning remains.
+
+**State now:**
+- This is test verification only, with original real independent writers/SIGKILL cases retained. No actual/default note/operator DB, provider/AWS/budget change or stopped probe. Focused review and all3required exact-head hosted gates precede merge.
+- Issue115 is saved unpublished on its own branch, not fully validated or merged. Issue114's pure format, hardened namespace/bootstrap and actual bound-source persistence remain separate; no milestone/app acceptance follows from this correction.
+
+**Next:**
+- Merge the focused116fix after gates, update Project and verify main separately. Rebase the pure genesis branch, rerun its relevant combined checks and finish that standalone PR before actual journal storage. Keep audit51/managed31 and M2.2 exit gates open.
