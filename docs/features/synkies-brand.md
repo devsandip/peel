@@ -22,3 +22,9 @@ Keep the public devsandip/peel repository, checkout path, package/crate/import n
 Use fresh synthetic browser profiles only, no actual/default note/operator database. Render the selected supplied logo and inspect representative app/mockup views. Generate native icons through the installed Tauri tooling, keep icon families consistent and inspect the built bundle without launching it. Existing hosted native/web-and-core/cloud-artifact checks remain required on every final PR head. Do not confuse a successful bundle build with signing, notarization, native interaction acceptance or an enabled public release. No new tests that merely repeat a renamed literal are necessary; update meaningful existing UI/offline/asset expectations and run them.
 
 This plan/checkpoint is not a milestone completion report. Journal/bootstrap is saved under Sandip's explicit request and continuing small-PR authorization. Current unrecognized analytics/logo drafts remain untouched. The user-provided selected archive assets are the only newly authorized private-archive input.
+
+## Evidence,28 October2026
+
+Checkpoint PR108 and app-brand PR110 are merged. App-brand source247135d passed all3hosted checks40680869302;456shared/11browser/native34tests, type/format/Clippy/web/native builds and production offline-shell checks passed locally. Read-only bundle inspection verified Synkies.app/CFBundle display name, unchanged identifier and exact bundled ICNS. Fresh synthetic light/dark/mobile/compact visuals and offline logo selection passed. No stopped native app-control path was retried.
+
+Issue111 regenerates the110canonical/five-dark mockups, stable inventory and overviews using exact selected SVG copies. Render/navigation/desktop/image-decode checks and visual samples pass. This is presentation evidence; hosted gates/merge still precede acceptance of that slice. Saved issue106 resumes next; M2.2 and actual public-product gates remain open.

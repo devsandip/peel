@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-28 16:53 IST.
+Last refreshed: 2026-10-28 17:10 IST.
 
-Latest entry: [Build checkpoint and brand decision](entries/2026-10-28-1653-bootstrap.md).
+Latest entry: [Synkies and Folded Horizon adopted](entries/2026-10-28-1710-synkies-brand-adopted.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
 
@@ -12,10 +12,11 @@ I have a local Mac development build and browser client. The complete promised s
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
 
-Sandip selected Synkies and Antigravity v2 Folded Horizon today. The visible brand is the immediate work. Issue106's SQLite extraction is saved on its unpublished branch with baseline/post-extraction25 Node24 tests and type checks passing; final review, broader/hosted checks and merge remain. I resume it after branding. Repository and stored identities remain compatible.
+Synkies and Folded Horizon are adopted in the app after PR110, with compatible stored identities preserved. The110 canonical mockups plus five dark exports are regenerated and locally checked in the following focused slice. Issue106's extraction remains saved on its own branch, with final review, broader/hosted checks and merge still pending. I resume it after branding. No native app/controller was launched for this work.
 
 ## Recent entries
 
+- [2026-10-28 17:10 IST: Synkies and Folded Horizon adopted](entries/2026-10-28-1710-synkies-brand-adopted.md)
 - [2026-10-28 16:53 IST: build checkpoint and brand decision](entries/2026-10-28-1653-bootstrap.md)
 
 ## Weekly summaries

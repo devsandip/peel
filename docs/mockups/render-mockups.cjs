@@ -1,5 +1,5 @@
-/* Optional design-export tooling. Requires Node.js and Playwright (validated with 1.62.1). */
-const { chromium } = require('playwright');
+/* Optional design-export tooling. Requires Node.js and Playwright (validated with 1.64.1). */
+const { chromium } = require('@playwright/test');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const { pathToFileURL } = require('node:url');
@@ -21,6 +21,7 @@ const { pathToFileURL } = require('node:url');
   for (const screen of screens) {
     await page.evaluate(id => window.showPeelScreen(id), screen.id);
     await page.evaluate(() => document.fonts.ready);
+    await page.locator('#artboard img').evaluateAll(images => Promise.all(images.map(image => image.decode())));
     const info = await page.locator('#artboard').evaluate(root => {
       const rect = root.getBoundingClientRect();
       const broken = [...root.querySelectorAll('[data-screen]')].map(el => el.dataset.screen).filter(id => !window.PEEL_SCREENS.some(s => s.id === id));
@@ -44,8 +45,8 @@ const { pathToFileURL } = require('node:url');
     if (info.noteChrome.some(bar => bar.buttons !== 1 || !/close/i.test(bar.close) || bar.traffic)) throw new Error('Floating note must have only one Close control: ' + screen.id);
     if (info.noteChrome.some(bar => bar.glyph !== 'M6 12h12' || bar.color !== 'rgb(98, 197, 107)')) throw new Error('Floating note must use a green minus: ' + screen.id);
     if (screen.group==='Mac capture'&&(!info.desktop.scene||info.desktop.dock!==1||info.desktop.formatting)) throw new Error('Mac capture must use the shared desktop design: ' + screen.id);
-    if (/Default destination|Where should this note live|Choose a destination for|This note will leave Peel Cloud/.test(info.body)) throw new Error('Stale per-note mode choice: '+screen.id);
-    if (/Google|Stickies|STICKIES|your Drive|Drive storage/.test(info.body)) throw new Error('Stale provider or branding: ' + screen.id);
+    if (/Default destination|Where should this note live|Choose a destination for|This note will leave (?:Peel|Synkies) Cloud/.test(info.body)) throw new Error('Stale per-note mode choice: '+screen.id);
+    if (/Google|Stickies|STICKIES|your Drive|Drive storage|\bPeel\b/.test(info.body)) throw new Error('Stale provider or branding: ' + screen.id);
     await page.locator('#artboard').screenshot({path:path.join(directory,'screens',screen.id+'.png')});
     report.push({id:screen.id,width:info.width,height:info.height});
   }
@@ -178,5 +179,8 @@ const { pathToFileURL } = require('node:url');
   await fs.writeFile(path.join(directory,'inventory.json'),JSON.stringify(screens,null,2)+'\n');
   await fs.writeFile(path.join(directory,'render-report.json'),JSON.stringify({screenCount:screens.length,additionalDarkScreens:5,browserErrors:errors,checks:['free/paid whole-library modes','remote peer pairing routes','automatic latest-edit recovery','paid activation and downgrade routes','no stale per-note destination flows','green minus Put away control','all screens render','all mockup routes resolve','all dialogs inside artboard','branding/provider check','one Close control per floating note','all six Mac capture screens use shared desktop design','capture navigation','account navigation','appearance switch','desktop titlebar drag','quick capture/formatted/source titlebar drag','empty capture dismisses its draft','capture right-click actions and Keep on top','resident menu bar capture with all windows closed','library drag-out pin','cancel drag','right-click pin','no duplicate window','notes outside library hierarchy','library Close preserves existing note windows and positions','note Close affects only its window and retains library entry','standalone note Close','failed-save Close keeps note open','four keyboard edge arrangements','undo arrangement','390px gallery width'],screens:report},null,2)+'\n');
   console.log(JSON.stringify({screens:screens.length,pngs:screens.length+5,errors}));
+  const logoPage = await browser.newPage({viewport:{width:737,height:256},deviceScaleFactor:1});
+  await logoPage.goto(pathToFileURL(path.join(directory,'brand','logo-light.svg')).href);
+  await logoPage.screenshot({path:path.join(directory,'brand','logo-light.png'),omitBackground:true});
   await browser.close();
 })().catch(error => {console.error(error);process.exit(1);});
