@@ -1398,3 +1398,17 @@
 
 **Next:**
 - Merge the focused pool-name PR only after all hosted gates, then continue the next separately scoped prerequisite within the 09:00 IST handoff boundary. New AWS-run headroom has already expired; no managed run tonight.
+
+## 2026-10-28 - Add a linked GitHub Project for visible delivery tracking
+
+**Did:**
+- Confirmed existing tracking used Issues/Milestones with no linked Project. Created private Peel Project 12 and linked it to the clean public repository.
+- Backfilled all 38 existing issues and 35 PRs, verified all 73 unique memberships/statuses and configured current-milestone, issues, PR and backlog views. Deliverable issues and implementation PRs stay separate for progress counts.
+- Added the board link/upkeep requirements to AGENTS.md and README. Kept the separately committed Cognito-domain feature plan on its own local branch.
+
+**State now:**
+- Board metadata and contents are verified through GitHub's API. Visual browser verification is unavailable after a timeout/unattached debugger; no visual pass is claimed. Issue 73's focused documentation PR follows with required gates.
+- App code, v0.7 scope, AWS resources and note databases are unchanged. Audit/remote/native gates remain open. Domain 71 is Ready; its plan-only branch is preserved.
+
+**Next:**
+- Merge the tracking PR after its checks, synchronize its issue/PR cards to Done, then resume domain 71 within the 09:00 IST handoff boundary.

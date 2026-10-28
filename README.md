@@ -14,6 +14,8 @@ Implementation has started on a local Mac development build. Peer sync, paid Clo
 
 ## Development approach
 
+Track current work in the [Peel GitHub Project](https://github.com/users/devsandip/projects/12). Its current-milestone view shows deliverable issues, with separate issue, pull-request and backlog views. Repository Issues and Milestones retain acceptance criteria and completion evidence; board card counts are not product-completion percentages.
+
 Use spec driven development. Start each milestone with a requirement-linked plan in `docs/features/`. Resolve the feasibility gates in the SPEC, implement a small vertical slice, and attach verification evidence to the matching acceptance criteria. Update the canonical specification when product behavior changes.
 
 The first implementation target is local Mac capture and durable automatic saving. Peel Remote peer sync, paid live Cloud and the web app follow, then the iPhone app and search by meaning. All are required for the intended public release.
