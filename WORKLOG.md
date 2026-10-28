@@ -1775,3 +1775,19 @@
 
 **Next:**
 - Merge only this file-boundary PR after review/exact-head gates, update Project and verify main separately. Then plan fixed transactional journal header/schema/genesis bootstrap before actual source-bound storage; parent114 closes only with its original evidence. Keep immutable resumes current and write the milestone report only after actual exit.
+
+
+## 2026-10-28 - Persist fixed original genesis without source or execution authority
+
+**Did:**
+- Verified PR120sourcef620734 all3checks40697495282, merged normally ascdd4537 and confirmed119closed/ProjectbothDone. All3actual merged-main40698773476 separately pass; issue119proof6470793422. Reused the clean owned worktree for121 and committed its requirement-linked plane3cefee before code.
+- Added a fixed appID0x53594a31/version1/one STRICT genesis table with atomic schema+original-byte commit, held-descriptor header checks before SQLite, fixed durability settings/readback,512pages/2MiB and4MiB rollback bounds. Exclusive bootstrap never adopts an existing path; open/recovery never initializes or returns a capability. No generic SQL/callback/schema API or future tables.
+- Passed10focused storage cases and14file cases, actual independent creators and SIGKILL before/after commit, lost-ack/failed-sync recovery and closed handle observations. Omitting application-ID checking fails the intended refusal assertion; restored exact source passes. Actual capacity verifies a1536KiB deliberately nonsemantic payload and bounded rollback, with actual SQLITE_FULL on excess growth; it is not semantic/source acceptance.
+- Passed actualNode24.22.1 direct imports/284Cloud consumers25files. Initial simultaneous shared run498/499 with unchanged peer-inventory5000ms timeout is preserved; isolated unchanged test passes299ms and separate full run without competing consumer suite passes499/63files. Precise timeout cause unproven, with no peer or timeout changes. Type/format/build pass; existing chunk warning. Corrected initial busy_timeout column readback and fixture literal types before final checks.
+
+**State now:**
+- This internal persistence primitive validates supplied anchors/original bytes, not actual funding/source provenance or separate recipe/context synchronization acknowledgements. Returned authority stays unproven. Required exact-head hosted gates and focused review precede merge.
+- Parent114/M2.2 stay open; no actual/default operator/note DB, provider/account/budget/billing/app activation, private history or stopped probe. Native72/audit51/managed31/relay/peer-WebKit stay stopped.
+
+**Next:**
+- Merge the focused persistence PR after all3exact-head gates/review, update Project and verify main separately. Then implement actual canonical funding/original source selection and distinct acknowledged source opens in one small requirement-linked slice. Do not close114 until all original criteria have evidence, or report M2.2 complete without managed/teardown proof.

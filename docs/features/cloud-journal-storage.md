@@ -28,3 +28,11 @@ Update issue/Project, WORKLOG, journal and immutable ignored resumes. Parent114 
 ## Primary references checked
 
 [Node24.22.1 SQLite API](https://github.com/nodejs/node/blob/v24.22.1/doc/api/sqlite.md) and [SQLite PRAGMAs](https://www.sqlite.org/pragma.html). Actual runtime/settings/capacity tests remain required; API documentation is not durability evidence.
+
+## Local validation
+
+Ten focused storage cases pass under actualNode24.22.1, including literal bytes/header/settings, refused pre-SQL unknown headers, malformed catalog/rows/anchor, separate historical inspection, unavailable current helpers, partial/lost-ack/fsync failures and actual independent creators/SIGKILL before/after commit. All connections/descriptors close in the observed success and failure paths. Removing the application-ID header check fails the intended refusal assertion; exact source is restored before positive checks. Fixed-schema capacity accepts1536KiB of deliberately nonsemantic payload, bounds the actual rollback file below4MiB and refuses excess database growth with actual SQLITE_FULL under512pages/2MiB. This does not authenticate source facts or accept that payload as genesis.
+
+ActualNode24 direct imports and284Cloud consumer cases/25files pass. A concurrently launched499case shared run had498passes and one unchanged peer-inventory5000ms timeout. The unchanged test passes alone in299ms; a separate full run without the competing consumer suite passes all499cases/63files. Its initial timeout is retained as failure evidence; the precise cause is unproven. No peer production/test or timeout setting changed. Type/format/build pass, with the existing browser chunk warning. Initial settings readback used the wrong busy_timeout result-column name (actual SQLite returns timeout), and fixture literal types needed normalization; both were corrected before final passing checks.
+
+All required final-head hosted checks and focused review still precede merge. Actual source acknowledgement, independent actual funding observation, provider execution and app acceptance remain outside this primitive and keep issue114 open.
