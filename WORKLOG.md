@@ -1573,3 +1573,18 @@
 
 **Next:**
 - Merge the focused domain PR after exact-head checks/review, synchronize Project and verify main separately. Plan one creation-journal/lifecycle prerequisite before implementation. Save/send the milestone report only when its actual exit criteria have evidence.
+
+## 2026-10-28 - Retain original normalized Cloud plan bytes and recipe binding
+
+**Did:**
+- Verified all three main jobs40648906480 for PR93 merge345132e pass and appended issue92 evidence6463353787. No open PR remained before issue94's requirement-linked plan and Project In progress transition.
+- Generated a new matched synthetic normalized-plan/manifest fixture with actual validators/factories, preserving legacy opaque-plan evidence. Added a separate pure bounded versioned context codec with exact plan digest and fourteen-field/identity/lease/source/artifact/template/stack/derived-field binding.
+- Kept current manifest/ledger formats and validator untouched. Expired original reads work with all current factories/writer/validator/cost/name helpers and live clock unavailable. Context authority/ownership remain unproven, with no approved/write permission flag.
+- Passed10focused/direct import and38combined legacy cases under actual Node24.22.1, all420shared cases/57files, type/format/build. The direct digest-binding removal control fails and restored source passes; existing browser chunk warning remains.
+
+**State now:**
+- This is a local integrity contract, without filesystem writes, canonical ledger provenance, budget reservation, durable intent/client token/provider receipt, AWS action or app activation. Hosted gates/review precede merge.
+- M2.2 remains open. Canonical reservation/context binding, durable creation journaling, owned lifecycle/recovery/apply and actual managed/teardown evidence remain; audit51/managed31/native72 stay blocked and no stopped probes were retried.
+
+**Next:**
+- Merge the focused context PR after exact-head checks/review, synchronize Project and verify main separately. Plan one canonical-binding/durable-journal slice before code; save/send the milestone report only after actual exit criteria pass.
