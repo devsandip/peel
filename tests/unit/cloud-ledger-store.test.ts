@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import {
@@ -397,6 +397,30 @@ describe("Ledger extraction compatibility", () => {
           (db) => db.prepare("SELECT count(*) AS n FROM reservations").get()?.n,
         ),
       ).toBe(0);
+    }
+  });
+  it("closes the actual SQLite handle when connection metadata validation refuses", () => {
+    const f = fixture(),
+      store = CloudLedgerStore.create(f.directory, f.authority);
+    store.use(true, (db) =>
+      db.exec(
+        "UPDATE ledger_meta SET authorization='synthetic changed authority'",
+      ),
+    );
+    const handles: DatabaseSync[] = [],
+      close = DatabaseSync.prototype.close;
+    const observer = vi
+      .spyOn(DatabaseSync.prototype, "close")
+      .mockImplementation(function (this: DatabaseSync) {
+        close.call(this);
+        handles.push(this);
+      });
+    try {
+      refusal(() => CloudLedgerStore.open(f.directory, f.authority));
+      expect(handles).toHaveLength(1);
+      expect(handles[0].isOpen).toBe(false);
+    } finally {
+      observer.mockRestore();
     }
   });
 });

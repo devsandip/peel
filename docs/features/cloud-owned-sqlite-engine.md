@@ -34,4 +34,8 @@ All tests use fresh synthetic temporary namespaces. No real/default note or oper
 
 ## Validation status
 
-Plan committed before implementation. New compatibility assertions, extraction review and validation are pending; no journal or app acceptance is claimed.
+Plan committed before implementation. The fixed wrapper now uses `infra/cloud/owned-sqlite-storage.ts`; run-ledger.ts policy/transactions and the wrapper error/authority APIs are unchanged. Five filesystem helpers compare whitespace-identical with the original; marker/header/schema/settings/sync order and constructor/create/open/use paths were reviewed for compatibility rather than hardening.
+
+Five compatibility cases cover literal disk/public contracts, path-before-authority refusal ordering, existing BOM decoding, callback result/error/closed-handle behavior and actual handle closure on connection metadata refusal. All26 namespace/real process ledger cases pass under actual Node24 against the original wrapper before extraction, including the added closure assertion. Removing delegated metadata validation makes the intended changed-authority refusal test fail; the exact source is restored before positive checks. The earlier four-case baseline and post-extraction runs also passed.
+
+Actual Node24.22.1 direct imports and all246 cases across22 focused Cloud consumer files pass. All461 shared cases/60files, TypeScript, formatting and web build pass locally. Existing chunk warning remains. No local native/browser rerun was needed for this internal Node-only refactor; required hosted native/web-and-core/cloud-artifact gates must still pass on the final PR head before merge. No journal genesis, new AWS operation, same-UID/physical power-loss guarantee or app acceptance is established.
