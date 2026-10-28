@@ -111,6 +111,8 @@ The new-run validator's fresh-plan/start checks and unused-slot calculation do n
 
 Before the first guard, complete target absence is required. Later phases expect exact independently proven-owned guard/sentinel/artifact resources, with complete absence of not-yet-created targets. Repeating global targetNames=absent after guard creation is not a valid phase gate. Require original operation correlation, settlement, schedule/role/target readback, the actual scheduled sentinel rehearsal and still-armed data schedule at their proper boundaries. Existing unproven metadata/collision adapters remain unproven; a name, tag, ID, not-found or manual deletion never supplies those proofs.
 
+Before preparation, current evidence binds the original run/kind/source/genesis and actual journal revision. The request digest is captured only by the later winning preparation transaction. After its acknowledgement, refresh/recheck current evidence against the exact immutable kind/token/request digest before the fence. Keep network collection outside journal transactions. A pre-preparation assessment cannot be treated as a request-bound fence grant.
+
 Unknown, stale, partial, denied, changed or late evidence stops new preparation/fencing. Recovery never restores creation from pending rows, a copied session or lost ephemeral material. Current permission and independent ownership can still permit cleanup without new-run source/price approval; unresolved ownership or permission remains a reported blocker. This design adds no provider call, current permission or executable gate. Start implementation only with a separately scoped issue and preserve the stopped audit/managed gates.
 
 ## Phase ordering and cleanup bootstrap

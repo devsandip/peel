@@ -1884,3 +1884,16 @@
 
 **Next:**
 - Finish issue131 focused review/all required source checks and normal integration, actual GitHub/Project verification and honest main-path-filter evidence. Then scope only the next non-executable initial-guard policy contract, keeping actual private collector provenance and later phase proofs separate.
+
+
+## 2026-10-28 - Separate preparation assessment from request-bound fencing
+
+**Did:**
+- Clarified issue131's protocol ordering during PR132 review. Before preparation, actual private current evidence binds original run/kind/source/genesis and journal revision. The winning transaction then captures token/request digest; only after its acknowledgement can a refreshed fence assessment bind that exact tuple. Network collection stays outside journal transactions.
+- Removed the ambiguous dependency on a request digest before the request exists. Runtime code/tests remain unchanged; revised documentation and exact-head checks require fresh review before merge.
+
+**State now:**
+- Documentation only. Neither assessment is implemented or supplied by caller flags, copied metadata or the local session alone. No token/key generation or provider action.
+
+**Next:**
+- Verify revised PR132 documentation/gates and normal integration, then scope the non-executable initial-guard facts contract separately from actual private provenance and fencing.
