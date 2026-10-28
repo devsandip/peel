@@ -27,12 +27,37 @@ import {
   CloudManifestStorageError,
 } from "../../infra/cloud/manifest-storage.ts";
 
-const sync = vi.hoisted(() => ({ failAt: 0, calls: 0 }));
+const sync = vi.hoisted(() => ({
+  failAt: 0,
+  calls: 0,
+  closeFailure: false,
+  live: new Map<number, string>(),
+  trace: [] as { kind: "open" | "sync" | "close"; fd: number; name: string }[],
+}));
 vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs")>();
   return {
     ...actual,
+    openSync: (...args: Parameters<typeof actual.openSync>) => {
+      const fd = actual.openSync(...args),
+        name = String(args[0]);
+      sync.live.set(fd, name);
+      sync.trace.push({ kind: "open", fd, name });
+      return fd;
+    },
+    closeSync: (fd: number) => {
+      const name = sync.live.get(fd) ?? "unknown";
+      actual.closeSync(fd);
+      sync.live.delete(fd);
+      sync.trace.push({ kind: "close", fd, name });
+      if (sync.closeFailure) throw Error("private close failure");
+    },
     fsyncSync: (fd: number) => {
+      sync.trace.push({
+        kind: "sync",
+        fd,
+        name: sync.live.get(fd) ?? "unknown",
+      });
       if (++sync.calls >= sync.failAt && sync.failAt > 0)
         throw Error("private sync failure");
       actual.fsyncSync(fd);
@@ -138,6 +163,9 @@ function worker(
 afterEach(async () => {
   sync.failAt = 0;
   sync.calls = 0;
+  sync.closeFailure = false;
+  sync.trace = [];
+  expect(sync.live.size).toBe(0);
   vi.restoreAllMocks();
   for (const child of children.splice(0)) {
     if (child.exitCode === null && child.signalCode === null)
@@ -523,4 +551,87 @@ it("does not discard a leading UTF-8 BOM before verifying exact stored bytes", (
     refused(() => CloudRunManifestStore.open(f.directory, f.captured.pin));
     expect(hash(file)).toBe(before);
   }
+});
+
+it("keeps the original marker bytes, public instance/snapshot shape and four-descriptor sync order", () => {
+  const f = fixture();
+  let before = false,
+    after = false;
+  const store = CloudRunManifestStore.create(f.directory, f.captured, {
+    beforeCommit: () => {
+      before = true;
+      expect(sync.calls).toBe(1);
+      expect(readFileSync(join(f.directory, "owner.json"), "utf8")).toBe("");
+    },
+    afterCommit: () => {
+      after = true;
+      expect(before).toBe(true);
+      expect(sync.calls).toBe(4);
+    },
+  });
+  expect(after).toBe(true);
+  expect(store).toBeInstanceOf(CloudRunManifestStore);
+  expect(Reflect.ownKeys(store).sort()).toEqual(["directory", "pin"]);
+  expect(Object.keys(store.read())).toEqual(["json", "pin", "recipe"]);
+  const directory = store.directory;
+  // Original format1 bytes, independently fixed before the engine extraction.
+  const id = (name: string) => {
+    const s = statSync(name, { bigint: true });
+    return `{"device":"${s.dev}","inode":"${s.ino}"}`;
+  };
+  const originalMarker = `{"format":1,"kind":"peel-cloud-run-manifest-store","pin":${JSON.stringify(f.captured.pin)},"directory":${id(directory)},"manifest":${id(join(directory, "manifest.json"))},"marker":${id(join(directory, "owner.json"))}}\n`;
+  expect(readFileSync(join(directory, "owner.json"), "utf8")).toBe(
+    originalMarker,
+  );
+  const order = [
+    join(directory, "manifest.json"),
+    join(directory, "owner.json"),
+    directory,
+    directory.slice(0, directory.lastIndexOf("/")),
+  ];
+  expect(
+    sync.trace.filter((e) => e.kind === "sync").map((e) => e.name),
+  ).toEqual(order);
+  sync.trace = [];
+  expect(CloudRunManifestStore.open(directory, f.captured.pin).read()).toEqual(
+    store.read(),
+  );
+  expect(
+    sync.trace.filter((e) => e.kind === "sync").map((e) => e.name),
+  ).toEqual(order);
+  expect(sync.live.size).toBe(0);
+});
+
+it("closes every owned descriptor on publication/read/close failure and preserves post-commit changes", () => {
+  for (const change of ["manifest.json", "owner.json", "extra"]) {
+    const f = fixture(),
+      target = join(f.directory, change);
+    refused(
+      () =>
+        CloudRunManifestStore.create(f.directory, f.captured, {
+          afterCommit: () =>
+            writeFileSync(target, "synthetic retained change", { mode: 0o600 }),
+        }),
+      "unrecognized",
+    );
+    expect(sync.live.size).toBe(0);
+    expect(readFileSync(target, "utf8")).toBe("synthetic retained change");
+    refused(
+      () => CloudRunManifestStore.inspect(f.directory, f.captured.pin),
+      "unrecognized",
+    );
+    expect(sync.live.size).toBe(0);
+  }
+  const f = fixture();
+  sync.closeFailure = true;
+  refused(
+    () => CloudRunManifestStore.create(f.directory, f.captured),
+    "unavailable",
+  );
+  expect(sync.live.size).toBe(0);
+  sync.closeFailure = false;
+  expect(
+    CloudRunManifestStore.open(f.directory, f.captured.pin).read().json,
+  ).toBe(f.captured.json);
+  expect(sync.live.size).toBe(0);
 });
