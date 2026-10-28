@@ -1663,3 +1663,22 @@
 
 **Next:**
 - Merge the focused protocol PR after its hosted gates/review, update Project and record docs-only main CI filtering honestly. Start only the next ready shared SQLite mechanics extraction with a requirement-linked plan and original compatibility/process evidence; do not bundle journal features. Save/send the milestone report only after actual exit criteria pass.
+
+
+## 2026-10-28 - Checkpoint work and select Synkies Folded Horizon identity
+
+**Did:**
+- Paused issue106 at Sandip's explicit request. Committed its plan5ba230b, baseline compatibility tests19852f7 and unpushed mechanics extraction1b90de0 on the isolated feature branch. The same25 actualNode24 namespace/ledger cases pass before and after extraction; type checks pass. Final review, broader checks and hosted gates remain pending.
+- Saved an immutable ignored resume and preserved all primary unknown drafts/assets. Read only the explicitly requested private-archive logo directory, found Antigravity v2 Folded Horizon and inspected its supplied light lockup and SVG/token source.
+- Bootstrapped the curated project journal from README/canonical docs/public history/WORKLOG and recorded the Synkies name/selected logo decision. Added the requirement-linked branding plan before app changes.
+
+**State now:**
+- Main still has the existing app identity until the separate branding slice. No WIP extraction is pushed/merged, no journal runtime is implemented and no product milestone is newly accepted. M2.2 and its audit/managed/teardown gates stay open; stopped probes remain stopped.
+- Synkies is the authorized app name. Persistent repository/storage/protocol/Cloud identities remain compatible to protect existing data and reviewed resource bindings. Historical evidence remains unchanged.
+
+**Next:**
+- Merge the focused checkpoint after review/required checks. Adopt only Folded Horizon across current app/native icons/docs and canonical mockups in small PRs, then resume issue106's unfinished validation and gated merge. Continue without waiting for routine input.
+
+**Decisions:**
+- Use Antigravity v2 directions/01-folded-horizon exactly as supplied. No new logo generation or unrelated design work.
+- Keep name/logo adoption distinct from SQLite refactoring and actual milestone/release acceptance.
