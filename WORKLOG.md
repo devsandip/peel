@@ -1869,3 +1869,18 @@
 
 **Next:**
 - Finish revised PR 130 review/gates, normal integration and actual GitHub/Project/main proof. Plan already-reserved policy and collector provenance before trusted preparation; stopped gates remain stopped.
+
+
+## 2026-10-28 - Define current phase evidence for a consumed run
+
+**Did:**
+- Confirmed PR 130 revised source70b5645 / run40728464433 all three PASS, normal merge2b4a761, actual129closure/ProjectDone and safe primary advancement. All three merged-main checks40729915232 pass separately. Old owned source/merge/remote branches were cleaned only after actual closure.
+- Created issue131 / ProjectInprogress and committed plan8e11189 before canonical protocol refinement. Distinguished local lineage/integrity/source sync from actual current collector and phase-specific provider evidence. Initial absence cannot repeat once expected owned guard/sentinel/artifact resources exist.
+- Defined original operation/ownership/settlement, actual scheduled rehearsal, quote/provenance and original absolute deadline requirements. Fresh-reservation 30-second start/15-minute plan age cannot be replayed after reserve. Unknown or late current evidence stops creation and preserves independently proven-owned cleanup. No scalar verified flag or copied DTO becomes permission.
+- Checked changed Markdown formatting and relative links; runtime, tests, workflow and dependencies compare byte-identical with base. No new runtime tests or local full-suite rerun for prose. Exact-head hosted PR checks and focused review precede merge; a docs-only main path filter must be reported as not run, never passing.
+
+**State now:**
+- Documentation only, no current gate implementation, key/token generation, preparation/fence/transport or provider call. Product v0.7 unchanged. M2.2/managed/teardown/app gates remain open; actual budget/window is not renewed and stopped probes remain stopped.
+
+**Next:**
+- Finish issue131 focused review/all required source checks and normal integration, actual GitHub/Project verification and honest main-path-filter evidence. Then scope only the next non-executable initial-guard policy contract, keeping actual private collector provenance and later phase proofs separate.
