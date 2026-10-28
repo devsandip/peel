@@ -1743,3 +1743,19 @@
 
 **Next:**
 - Merge the focused116fix after gates, update Project and verify main separately. Rebase the pure genesis branch, rerun its relevant combined checks and finish that standalone PR before actual journal storage. Keep audit51/managed31 and M2.2 exit gates open.
+
+
+## 2026-10-28 - Define the original journal genesis data contract
+
+**Did:**
+- Split parent114 into independently reviewable pure format/binding, hardened namespace/bootstrap and actual source-acknowledged persistence boundaries; committed the plan before code. Only the pure first slice is in this PR.
+- Added a fixed canonical genesis envelope and independent workspace/global-funding reservation anchor. It derives one journal location, binds original authority/run/slot/plan/time/recipe/context/pins, keeps source namespaces separate and returns detached frozen unproven data. No physical path lookup, source acknowledgement, storage, RNG, current policy or provider call.
+- Tested independently serialized golden original bytes, closed-schema/UTF8/bounds/paths, altered/rehashed semantic bindings, original expiry with current factories/clock/stores unavailable, and private errors. Omitting the independent plan comparison fails the intended coherent-rehash assertion; exact source restored before positive checks.
+- Isolated the initial broader-run ledger assertion failure in separate issue116/PR117. Its required source checks40691759603 and reviews passed; merged9f22776 before this PR. The exact locally tested combined tree survives the post-dependency rebase. All260actualNode24 consumers/23files,475shared/61files, type/format/build and actualNode24direct roundtrip pass. Existing chunk warning remains.
+
+**State now:**
+- This is pure data integrity, not an authenticated journal, actual funding observation, durable bootstrap, source-sync proof, spending or execution capability. Unknown self-consistent JSON is not provenance. All required exact-head hosted gates and focused review precede integration. No actual/default notes/operator DB, account/resource/billing, stopped probe or product-v0.7 change.
+- Parent114/M2.2/audit51/managed31/native72 remain open/blocked as applicable. Synkies branding and compatible existing storage/protocol identities are preserved.
+
+**Next:**
+- Finish the standalone pure-codec PR after gates and update Project; keep114open. Then scope only the next hardened namespace/bootstrap deliverable, preserving legacy ledger semantics and the later actual-source-acknowledgement/persistence boundary. Record exact main checks separately before any future provisioning gate.
