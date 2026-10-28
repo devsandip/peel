@@ -249,7 +249,7 @@ it("preserves foreign/missing directories and invalid paths without fallback or 
   expect(readdirSync(f.directory)).toEqual(["notes.sqlite3"]);
 });
 
-it("refuses permissive root/files/parent without changing their modes", () => {
+it("refuses mismatched ownership and permissive modes without changing stored state", () => {
   for (const name of [".", "manifest.json", "owner.json", "parent"]) {
     const f = fixture();
     CloudRunManifestStore.create(f.directory, f.captured);
@@ -259,6 +259,20 @@ it("refuses permissive root/files/parent without changing their modes", () => {
     refused(() => CloudRunManifestStore.open(f.directory, f.captured.pin));
     expect(lstatSync(target).mode & 0o7777).toBe(mode);
   }
+  const f = fixture();
+  CloudRunManifestStore.create(f.directory, f.captured);
+  const before = hash(join(f.directory, "manifest.json")),
+    uid = process.getuid!(),
+    caller = vi.spyOn(process, "getuid").mockReturnValue(uid + 1);
+  try {
+    refused(() => CloudRunManifestStore.open(f.directory, f.captured.pin));
+  } finally {
+    caller.mockRestore();
+  }
+  expect(hash(join(f.directory, "manifest.json"))).toBe(before);
+  expect(
+    CloudRunManifestStore.open(f.directory, f.captured.pin).read().json,
+  ).toBe(f.captured.json);
 });
 
 it("rejects namespace/file links and preserves every referenced target", () => {
@@ -333,7 +347,13 @@ it("preserves unknown/corrupt/oversize/invalid UTF-8 contents without interpreti
 });
 
 it("checks path identities again before commit and never overwrites substituted data", () => {
-  for (const replace of ["manifest.json", "owner.json", "directory"]) {
+  for (const replace of [
+    "manifest.json",
+    "owner.json",
+    "directory",
+    "manifest-in-place",
+    "owner-in-place",
+  ]) {
     const f = fixture();
     let foreign = "";
     refused(
@@ -344,6 +364,11 @@ it("checks path identities again before commit and never overwrites substituted 
               renameSync(f.directory, join(f.parent, "original"));
               mkdirSync(f.directory, { mode: 0o700 });
               foreign = join(f.directory, "keep");
+            } else if (replace.endsWith("-in-place")) {
+              foreign = join(
+                f.directory,
+                replace === "owner-in-place" ? "owner.json" : "manifest.json",
+              );
             } else {
               foreign = join(f.directory, replace);
               renameSync(foreign, join(f.parent, "original"));
