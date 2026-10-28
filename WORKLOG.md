@@ -1759,3 +1759,19 @@
 
 **Next:**
 - Finish the standalone pure-codec PR after gates and update Project; keep114open. Then scope only the next hardened namespace/bootstrap deliverable, preserving legacy ledger semantics and the later actual-source-acknowledgement/persistence boundary. Record exact main checks separately before any future provisioning gate.
+
+
+## 2026-10-28 - Verify pure genesis integration and guard strict journal files
+
+**Did:**
+- Resumed the public checkout from the immutable1848/1846 handoff, preserved unrelated primary drafts unread and reused the owned worktree. Verified PR118 unchanged49835b9 with all3source checks40694109991, merged normally as95d11ba and confirmed115closed/ProjectDone. All3merged-main checks40695742833 separately pass; issue115 proof6470345891. Parent114 remains open.
+- Created issue119/ProjectInprogress and committed its requirement-linked plan before code. Added a fixed internal canonical/private file boundary with no-follow held descriptors, workspace/directory/database identity binding, strict marker/modes/links/bounds and exclusive creation that always refuses existing paths. Partial state is preserved; open is file inspection only. Existing ledger/immutable production mechanics remain byte-unchanged.
+- Passed14focused cases including real independent creators, copied/replaced paths, alias/UID/mode/link/header/size refusal, failed synchronization/descriptor closure and partial creation. Removing the inode comparison fails the intended assertion; exact restored source passes.
+- Passed actualNode24.22.1 direct import/274Cloud consumers across24files and489shared/62files, TypeScript, formatting and web build. Initial library-target type mismatch was corrected without changing configuration; existing chunk warning remains.
+
+**State now:**
+- Files and namespace synchronization only, with an empty database explicitly incomplete. No SQL/schema/genesis commit, actual funding/source acknowledgement or execution capability is added. All3required final-head hosted checks and focused review precede merge.
+- No actual/default operator/note DB, AWS/account/resource/budget/billing, app activation, private history or stopped probe changed. M2.2/audit51/managed31/native72 retain their open/stopped gates.
+
+**Next:**
+- Merge only this file-boundary PR after review/exact-head gates, update Project and verify main separately. Then plan fixed transactional journal header/schema/genesis bootstrap before actual source-bound storage; parent114 closes only with its original evidence. Keep immutable resumes current and write the milestone report only after actual exit.

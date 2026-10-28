@@ -26,6 +26,12 @@ Node's path-based filesystem and future SQLite calls are not a same-UID sandbox.
 
 Issue114 stays open for fixed SQLite header/schema/bootstrap and actual canonical funding/source-store validation, separate recipe/context acknowledgements, genesis transactions/readback and SIGKILL/lost-ack recovery. No public storage API, provider call, run permit, intent/token/fence/receipt, lease/budget, app activation or stopped-probe retry belongs here. M2.2/audit51/managed31 and app/release gates remain open.
 
+## Local validation
+
+Fourteen focused cases pass, including actual independent creators with one exclusive namespace winner, exact marker/mode/sync ordering, copied workspace/directory/database and live descriptor replacement, parent aliases, UID/mode/link refusal, rollback limits/header checks, extra-file inspection, preserved partial files and descriptor closure after each failed sync stage. Removing the device/inode comparison makes the intended copy-refusal assertion fail; the exact original source is restored before passing checks.
+
+ActualNode24.22.1 direct import and274Cloud consumer cases/24files pass, retaining the actual ledger independent-writer/SIGKILL cases. All489shared cases/62files, TypeScript, formatting and web build pass. The initial type check caught use of an array method outside the existing configured library target; replacing it with a compatible reverse fixes that check without configuration changes. Existing browser chunk warning remains. Legacy production ledger/immutable mechanics are byte-unchanged. Required final-head hosted checks and focused review still precede merge. No SQL schema/genesis, source-acknowledgement, physical-power-loss or app evidence is inferred.
+
 ## Sources checked
 
 The [Node24 filesystem API](https://nodejs.org/docs/latest-v24.x/api/fs.html) defines descriptor operations and no-follow flags. [SQLite PRAGMAs](https://www.sqlite.org/pragma.html) remain later SQL-layer concerns. This slice uses actual file/process tests for its own contract, not documentation as acceptance evidence.
