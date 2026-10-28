@@ -47,6 +47,8 @@ Issue 30's tooling is further separated into the [pure plan policy](cloud-deploy
 
 The [price-observation plan](cloud-price-observations.md) separates provider parsing from HTTP collection before opening a PR, so cost-selection review and transport/cancellation review each have a standalone purpose. Both precede authenticated account preflight and cannot establish account readiness.
 
+The [creation-journal protocol](cloud-creation-journal.md) specifies the chosen restart trust root, token/request/receipt boundaries and small implementation sequence. It is a design, not a durable journal or permission to provision. In particular, recovered pending intents never create a new execution permit, and NoEcho secret values are not journal checkpoints. Every existing hosting, source, current-account, cost, audit, lease and cleanup gate remains.
+
 ## Runtime, identity and data
 
 - Package a deterministic ZIP with an explicit exported handler, bundled pinned SDK/verifier dependencies and no source maps, fixture tokens, environment files, credentials or note databases. Select **nodejs24.x**, x86_64, 256 MiB, 30-second function timeout and 512 MiB temporary storage. AWS lists Node 24 as supported and Node 26 as preview; [include the SDK dependencies](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html) rather than relying on the runtime's changing copy. Check the actual bundle under Node 24 separately from existing Node 26 development CI.
