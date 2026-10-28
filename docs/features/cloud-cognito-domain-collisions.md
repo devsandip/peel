@@ -14,7 +14,7 @@ Only the precise documented ResourceNotFoundException from a bounded ordinary CL
 
 Use native input JSON, no automatic pagination/retries/history/pager/prompt/debug, 64 KiB captured output, a 15-second read and 90-second overall limit. Capture selectors before awaits, reject unsupported environment/credential overrides and late responses, and verify the same independently configured identity/role before and after. Inspection does not require a new-run lease or cutoff. Results and fixed private failures are immutable.
 
-No user/client/secret enumeration, tag lookup, domain changes, resource write, slot booking, default note database or real account probe belongs here. Complete ownership/absence composition and retained original-manifest lifecycle/recovery remain under 30/31. Audit 51 stays unresolved and stopped; no new AWS run fits the remaining overnight runway. App Cloud and canonical v0.7 requirements/mockups stay unchanged.
+No user/client/secret enumeration, tag lookup, domain changes, resource write, slot booking, default note database or real account probe belongs here. Complete ownership/absence composition and retained original-manifest lifecycle/recovery remain under 30/31. Audit 51 stays unresolved and stopped. The previous overnight run window expired; renewed implementation authorization does not reuse an expired run lease or waive any deployment gate. App Cloud and canonical v0.7 requirements/mockups stay unchanged.
 
 ## Verification plan
 
@@ -27,3 +27,13 @@ The [offline protocol record](../experiments/cognito-domain-input-projection-202
 The first diagnostic incorrectly expected HTTP 400 to be encoded in the installed exception shape. That control failed: these AWS JSON exception traits contain only the exception marker. The corrected check records the missing HTTP metadata and verifies the modeled name; HTTP 400 remains an independent API-documentation fact. No vendor, SDK sample or provider setting was changed.
 
 The ignored scratch/check-cognito-domain-model.mjs uses the canonical synthetic inventory, empty configuration, no signing, input-skeleton mode and bundled model/JMESPath checks. It makes zero account calls. No collector, live identity/visibility, full absence, creation ownership, timeout or native/app acceptance is established. Issue 71 stays Ready for implementation after this plan/protocol preparation.
+
+## Implementation resumption
+
+Sandip renewed autonomous implementation on 28 October after the overnight handoff. Implement the single-domain collector under issue 71 using the verified projection and existing current-inspection boundary. Keep runtime identity, timeout and raw-process evidence distinct from the already completed input/model preparation. No live account probe is needed to implement or verify this slice.
+
+## Implementation evidence, 28 October
+
+The collector now derives its single command from the canonical inventory, validates projected shape/metadata and returns only collision, not-described or precise point-in-time not-found. Eleven focused raw-process cases pass under actual Node 24.22.1, including all five states and foreign ownership, optional/invalid descriptions, private error classification, accessor rejection, mutated inputs, before/after account/role drift, byte limits, cancellation and late process/identity responses. Direct Node 24 import passes. The empty-config unsigned installed CLI/Botocore/JMESPath diagnostic now consumes the actual exported command and passes with zero account calls. The earlier protocol record remains an honest pre-implementation snapshot.
+
+All 316 shared cases in 48 files, TypeScript, formatting and web build pass locally. The existing browser chunk-size warning remains. No dependency, Lambda artifact or IaC factory changed. The hosted cloud-artifact job now directly imports this collector and runs its focused cases on Node 24. All three exact-head hosted gates and focused review are still required before merging. No live account visibility, managed-resource, complete absence, ownership, teardown or app acceptance is claimed.
