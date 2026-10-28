@@ -201,10 +201,10 @@
   },
   {
     "id": "cloud-signin",
-    "title": "Connect Peel Cloud",
+    "title": "Connect Synkies Cloud",
     "group": "Storage",
     "kind": "dialog",
-    "description": "Sign in to Peel to open the account’s cloud collection.",
+    "description": "Sign in to Synkies to open the account’s cloud collection.",
     "requirements": "FR-04 · FR-14",
     "platform": "mac",
     "variant": "cloud-signin"
@@ -251,7 +251,7 @@
   },
   {
     "id": "signout-cloud",
-    "title": "Sign out of Peel",
+    "title": "Sign out of Synkies",
     "group": "Storage",
     "kind": "dialog",
     "description": "Choose whether downloaded copies stay. Unsynced edits have a recovery path.",
@@ -261,7 +261,7 @@
   },
   {
     "id": "switch-account",
-    "title": "Change Peel account",
+    "title": "Change Synkies account",
     "group": "Storage",
     "kind": "dialog",
     "description": "Account switching preserves pending work and separates collections.",
@@ -584,7 +584,7 @@
     "title": "Browser first use",
     "group": "Browser",
     "kind": "library",
-    "description": "Start locally or sign in to Peel, without implying access to a Mac local folder.",
+    "description": "Start locally or sign in to Synkies, without implying access to a Mac local folder.",
     "requirements": "FR-03 · FR-05",
     "platform": "web",
     "variant": "welcome"
@@ -631,7 +631,7 @@
   },
   {
     "id": "cloud-signup",
-    "title": "Create a Peel account",
+    "title": "Create a Synkies account",
     "group": "Account",
     "kind": "auth",
     "description": "An account is needed for paid Cloud. Signing in alone does not activate Cloud or upload the On-device library.",
@@ -661,7 +661,7 @@
   },
   {
     "id": "account-delete",
-    "title": "Delete Peel account",
+    "title": "Delete Synkies account",
     "group": "Account",
     "kind": "auth",
     "description": "Account deletion requires an explicit confirmation and explains retention.",

@@ -1698,3 +1698,17 @@
 
 **Next:**
 - Finish the native bundle/asset checks and exact-head hosted gates, merge this app-brand PR, align canonical mockups in their own focused PR, then resume issue106. Keep Project/issues and immutable resumes current.
+
+
+## 2026-10-28 - Align Synkies presentation gallery and resume build checkpoint
+
+**Did:**
+- Regenerated all110canonical mockups and five dark variants, inventory and three summary images using the selected Folded Horizon icon/outlined light-dark logo. Updated visible naming including Mac menu/Dock and mock browser domains; preserved stable IDs/platforms/kinds/variants/requirement mappings.
+- Used exact canonical SVG copies in the self-contained gallery and generated the overview logo from that source. All existing render/navigation/green-minus/drag/pinning/arrangement/Undo checks pass with no browser errors; added actual image decoding before capture. Visually inspected representative Mac library/desktop, dark web, iPhone and overview exports.
+- Updated the journal with the adopted identity and explicit remaining106/M2.2 work. App-brand PR110 is merged at0013803 with all3source checks40680869302 passing; actual main checks are tracked separately.
+
+**State now:**
+- This is presentation alignment, not functional sync, native interaction, managed-service or release acceptance. No product scope/behavior or stopped gates changed. The gallery remains110canonical screens plus five dark exports. Focused review and final-head hosted gates precede integration.
+
+**Next:**
+- Merge the focused mockup PR after gates, then resume issue106 from codex/cloud-owned-sqlite-engine. Preserve its original compatibility baseline and finish remaining code review/local/hosted validation before a separate merge. No user input is required for routine work.

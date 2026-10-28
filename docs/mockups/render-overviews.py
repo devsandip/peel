@@ -23,24 +23,27 @@ def paste(canvas, name, xy, size=None):
 
 def heading(canvas, title, subtitle):
     draw = ImageDraw.Draw(canvas)
-    draw.rounded_rectangle((40, 35, 71, 70), radius=6, fill="#efd06b")
-    draw.text((85, 29), title, font=font(40, True), fill="#292c28")
-    draw.text((40, 91), subtitle, font=font(18), fill="#777a70")
+    logo = Image.open(ROOT / "brand" / "logo-light.png").convert("RGBA")
+    logo.thumbnail((245, 85), Image.Resampling.LANCZOS)
+    canvas.paste(logo, (30, 10), logo)
+    if "desktop" in title:
+        draw.text((290, 29), "Desktop", font=font(30, True), fill="#292c28")
+    draw.text((40, 105), subtitle, font=font(18), fill="#777a70")
     return draw
 
 
 overview = Image.new("RGB", (1700, 1080), "#eeede8")
-draw = heading(overview, "peel", "Floating Mac notes, with iPhone and browser access")
+draw = heading(overview, "Synkies", "Floating Mac notes, with iPhone and browser access")
 draw.text((40, 140), "MAC DESKTOP", font=font(13, True), fill="#777a70")
 draw.text((1220, 140), "IPHONE EDITOR", font=font(13, True), fill="#777a70")
 paste(overview, "mac-desktop", (40, 166))
 paste(overview, "iphone-editor", (1220, 166))
 draw.text((40, 923), f"{len(SCREENS)} screen mockups", font=font(30, True), fill="#292c28")
-draw.text((40, 974), "Free remote device sync + paid live Peel Cloud. Mockups only.", font=font(17), fill="#777a70")
+draw.text((40, 974), "Free remote device sync + paid live Synkies Cloud. Mockups only.", font=font(17), fill="#777a70")
 overview.save(ROOT / "overview.png", optimize=True)
 
 desktop = Image.new("RGB", (1700, 1050), "#eeede8")
-draw = heading(desktop, "peel desktop", "Independent desktop windows. One green minus saves and puts a note away.")
+draw = heading(desktop, "Synkies desktop", "Independent desktop windows. One green minus saves and puts a note away.")
 draw.text((40, 140), "DRAG OUT OR RIGHT-CLICK TO PIN", font=font(13, True), fill="#777a70")
 draw.text((1180, 140), "ARRANGE LEFT", font=font(13, True), fill="#777a70")
 paste(desktop, "mac-library-desktop", (40, 166))
@@ -51,11 +54,13 @@ draw.text((40, 932), "Control + Option + Command + Arrow", font=font(26, True), 
 draw.text((40, 980), "Arrange left, right, top or bottom. Command + Shift + L opens Notes Library.", font=font(18), fill="#777a70")
 desktop.save(ROOT / "desktop-overview.png", optimize=True)
 
-cols, cellw, cellh, margin, top = 5, 324, 260, 36, 100
+cols, cellw, cellh, margin, top = 5, 324, 260, 36, 140
 sheet = Image.new("RGB", (cols * cellw + margin * 2, math.ceil(len(SCREENS) / cols) * cellh + top + margin), "#eeede8")
 draw = ImageDraw.Draw(sheet)
-draw.text((margin, 27), "Peel screen index", font=font(30, True), fill="#292c28")
-draw.text((margin, 66), f"{len(SCREENS)} canonical screens · macOS, iPhone and browser · 26 October 2026", font=font(15), fill="#777a70")
+logo = Image.open(ROOT / "brand" / "logo-light.png").convert("RGBA")
+logo.thumbnail((225, 78), Image.Resampling.LANCZOS)
+sheet.paste(logo, (margin - 10, 5), logo)
+draw.text((margin, 96), f"{len(SCREENS)} canonical screens · macOS, iPhone and browser · 28 October 2026", font=font(15), fill="#777a70")
 for i, screen in enumerate(SCREENS):
     x, y = margin + (i % cols) * cellw, top + (i // cols) * cellh
     im = Image.open(ROOT / "screens" / f"{screen['id']}.png").convert("RGB")
