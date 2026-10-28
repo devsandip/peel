@@ -1648,3 +1648,18 @@
 
 **Next:**
 - Merge the focused identity PR after exact-head gates/review, update Project and verify main separately. Plan recoverable creation journaling, including trusted pin/bootstrap and lost-ack token recovery, before implementing persistence. Save/send the milestone report only after actual exit criteria pass.
+
+## 2026-10-28 - Specify durable journal trust and restart behavior before persistence
+
+**Did:**
+- Verified all3main jobs40669051542 for PR103 mergef6b65f3 pass; appended issue102 evidence6466562508. Isolated work in a public-only worktree, preserving unrelated primary drafts/assets unread.
+- Compared immutable directories with an owned transactional journal, chose a separate bounded SQLite store and defined independently anchored genesis/pin recovery, immutable tokens, one-use dispatch fencing, uncertainty and cleanup receipt boundaries.
+- Resolved a concrete NoEcho constraint: complete secret-bearing wire requests stay transient; persist only a safe projection/commitment, never a key/value checkpoint or replacement-secret replay after process loss. Recovery cannot mint create permission.
+- Rechecked primary Node/SQLite/CloudFormation sources and actual ledger/hosting/cleanup contracts, documented pending failure vectors and small implementation boundaries, and linked the protocol from the hosting plan.
+
+**State now:**
+- Documentation only. No journal/schema/API/runtime behavior, new test, actual database, secret, account/resource/billing, app or stopped-probe action. Existing ledger/create/inspection compatibility is explicitly retained for a later extraction.
+- Relative links, explicit Markdown formatting and diff/scans are checked; all required exact-head hosted jobs and focused review precede merge. Acceptance vectors are unrun, not evidence. M2.2/audit51/managed31/native72 remain open/blocked as applicable.
+
+**Next:**
+- Merge the focused protocol PR after its hosted gates/review, update Project and record docs-only main CI filtering honestly. Start only the next ready shared SQLite mechanics extraction with a requirement-linked plan and original compatibility/process evidence; do not bundle journal features. Save/send the milestone report only after actual exit criteria pass.
