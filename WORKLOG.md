@@ -1823,3 +1823,19 @@
 
 **Next:**
 - Merge this small fix after exact-head gates/review, update126/Project and verify main. Rebase/resume125, rerun its actual defaults and remaining validation/review, then finish its separate request PR. Preserve failed runs and actual process evidence. Keep immutable resumes current; no milestone report until actual exit.
+
+
+## 2026-10-28 - Bind complete original requests and transient material
+
+**Did:**
+- Confirmed PR 127 merged as ec1cbca after all three source checks 40719525523 passed, issue 126 closed and both Project cards Done. Rebased saved issue 125 plan/source onto that main and resumed its Project status. Preserved the earlier failed run and separate prospective CLI-worker evidence.
+- Added a pure complete unsigned CreateStack contract for all four original stack kinds, canonical safe projection and opaque full-input digest. Strict original template/graph/tag/capability/role/parameter/NoEcho bounds, fixed standard rollback policy and original deadlines remain non-authoritative. No key/token generation, storage, network or SDK evidence claim.
+- Kept transient data material in a private active-handle map with explicit sensitive retrieval/discard. Enumeration, JSON, readback, copies and actual process loss cannot reconstruct it. Independent Python commitments and omitted-secret negative control validate exact binding; no secret checkpoint was written.
+- Passed configured-default actual Node 24 direct import and 311 Cloud cases / 27 files, then 526 shared cases / 65 files, type/format/build sequentially. No concurrency CLI override, timeout increase, retry, skip or legacy test change. Existing browser chunk warning remains.
+
+**State now:**
+- Pure request contract implemented locally; final-head hosted gates and focused review precede merge. Provider ownership/run authority remain unproven and resourceWrites is zero. All funding/source/genesis stores and app behavior are unchanged.
+- No actual/default operator/note DB, AWS/account/resource/budget/billing/app activation, private history or stopped probe. M2.2/managed/teardown/app acceptance remain open.
+
+**Next:**
+- Finish request issue 125 review, all three exact-head checks and normal integration; update issue/Project and verify main separately. Scope the next fresh same-process reserve/bootstrap preparation-session proof before immutable preparation. Existing rows or recovered genesis cannot substitute for the same coordinator's actual acknowledgements. Keep journal and immutable ignored resumes current.
