@@ -1633,3 +1633,18 @@
 
 **Next:**
 - Merge the focused context-store PR after exact-head gates/review, update Project and verify main separately. Scope a durable creation-intent/client-token deliverable before code, retaining every execution/cleanup gate. Save/send the milestone report only after actual exit criteria pass.
+
+## 2026-10-28 - Define original stack and client-token creation identity
+
+**Did:**
+- Verified all3main jobs40663584712 for PR101 merge6436731 pass; appended issue100 evidence6465531322. Isolated work in a public-only Git worktree, preserving unrelated primary-checkout drafts unread. Rechecked primary AWS CreateStack token/error semantics and committed issue102's plan before code.
+- Added one pure bounded original descriptor codec/pin normalizer, binding original context/recipe/plan/inventory identity, one original stack/name/template SHA and a supplied scoped v4 nonce token. Current factories/policy/clock and token generation are not recovery dependencies; all authority stays unproven.
+- Pinned four template hashes independently from the frozen original, tested altered/rehashed identities/bundles/tokens/private inputs and exact recovery. Semantic-comparison omission fails the negative control; restored source passes.
+- Passed11focused/direct import and89combined legacy cases under actualNode24.22.1; all456shared cases/60files, type/format/build. Fixed initial field naming/builtin ESM test harness issues before final checks; existing chunk warning remains.
+
+**State now:**
+- Pure identity bytes only, without filesystem/token generation, complete wire request, durable uniqueness/submission or execution/spending/provider authority. No actual operator/default notes, AWS/account/resource/app/billing or stopped-probe work. Exact-head hosted jobs/focused review precede merge.
+- M2.2 remains open. Recoverable durable intent/request state, provider receipts, current execution/rechecks, ownership/lifecycle and managed/teardown evidence remain; audit51/managed31/native72 stay Blocked.
+
+**Next:**
+- Merge the focused identity PR after exact-head gates/review, update Project and verify main separately. Plan recoverable creation journaling, including trusted pin/bootstrap and lost-ack token recovery, before implementing persistence. Save/send the milestone report only after actual exit criteria pass.
