@@ -1,0 +1,33 @@
+# Private CloudFormation stack metadata
+
+## Purpose and boundary
+
+[Issue 61](https://github.com/devsandip/peel/issues/61) adds one read-only collector under issue 30 in [M2.2](https://github.com/devsandip/peel/milestone/2), supporting SPEC FR-04/14/20 and AC-04/12/13 prerequisites. It composes with the [reviewed expected inventory](cloud-expected-inventory.md). A fixture-tested collector is not observed AWS ownership, target absence, cleanup proof or provisioning permission. App Cloud stays disabled and v0.7 stays unchanged.
+
+## API choice and privacy
+
+Avoid DescribeStacks: its [Stack response](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_Stack.html) includes parameters and outputs. Instead, [ListStacks](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListStacks.html) supplies paginated name/ID/status summaries, including 90 days of deleted-stack history. A fixed CLI projection retains only the four exact expected names, their IDs/statuses, page count and continuation. No status filter silently omits a future/unknown state. Duplicate matching names/IDs fail closed. Not-listed means only not listed in this bounded complete traversal, never resource absence.
+
+For each active matching stack, use [GetResources with its single exact ARN](https://docs.aws.amazon.com/resourcegroupstagging/latest/APIReference/API_GetResources.html) to retrieve only the three Peel run tags through a fixed CLI projection. Untagged/unmapped resources are omitted by that API, so omission is unknown, not absence. ResourceARNList cannot be combined with pagination inputs; unexpected continuation fails rather than issuing an invalid/broadened query. Require all three tags before listing that stack's resources. Deleted summaries are preserved as historical metadata, without assuming tag availability or actual service deletion.
+
+[ListStackResources](https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/API_ListStackResources.html) uses the resolved exact stack ID and complete bounded native pagination. Compare logical IDs/types with all expected resources and retain physical IDs exactly, including explicit missing IDs for incomplete creation. Missing expected logical rows remain explicit incomplete coverage. Reject unknown logical IDs/types/statuses, duplicate logical IDs and duplicate physical IDs within a resource type. Different resource types may legitimately share a physical name. Provider IDs are never generated from display names.
+
+CLI projections are client-side filtering, not server field masks. The CLI transiently receives API metadata, including status reasons; this collector never captures those fields. Disable CLI history and debug output, and retain no raw responses/errors. Never call stack events/templates, DescribeStacks, data-item/key APIs, Lambda configuration or logs. Use the [fixed regional tagging endpoint](https://docs.aws.amazon.com/general/latest/gr/arg.html) and CloudFormation endpoint over verified TLS. Public evidence contains fixed codes/counts, never real account/resource IDs.
+
+## Identity, time and failure policy
+
+Use the existing identity command/environment protections, but do not call the new-run identity/runway collector: its two-hour authorization requirement would incorrectly prevent old-run cleanup inspection. Read disabled/absent CLI history, configured SSO account/role and unsupported-flow settings before STS. Compare with the explicitly expected account from the independently supplied inventory. Authenticate STS before and after metadata collection against that same configured role/account, without exporting credentials or asserting refresh/runway. Expired run leases do not block metadata inspection.
+
+Before opening a PR, split this into two focused reviews: [issue 62's reusable current-identity inspection gate](cloud-inspection-identity.md) with no new-run runway coupling, then this stack/tag/resource collector. The first can be reused by later owned cleanup and keeps the credential boundary separate from the pagination/inventory boundary. Keep this prototype local until that prerequisite merges; do not combine both purposes in one broad PR.
+
+Capture input and canonical expected inventory before awaits. Bound each response to 64 KiB/15 seconds, each stack traversal to 100 pages/10,000 summary rows, each resource traversal to eight pages and the entire collector to 90 seconds. Check cancellation before/after awaits and reject repeated tokens, malformed/truncated pages, clock reversal and overrun. Re-list stack summaries before publication and refuse changed names/IDs/statuses. This is still an observation interval, not an atomic AWS snapshot or service-level ownership proof.
+
+Errors are fixed private codes without rejected values or raw causes. Every API failure, including generic ValidationError, is unavailable. No retries, writes, discovery outside metadata, slot booking, audit probes or real note/default database access. Exact service collisions, ownership reconciliation, durable lifecycle/apply and actual managed teardown remain separate work in issues 30/31; audit 51 stays unresolved.
+
+## Verification
+
+Use synthetic injected readers for pagination, exact scope, tag-before-resource order, complete and partial inventory, deleted/not-listed summaries, unknown/duplicate/truncated metadata, expired-lease inspection, before/after identity drift, caller mutation, errors and cancellation. Verify command projections and native token inputs with installed CLI input-model diagnostics that make no API request. Run actual Node 24, shared tests, TypeScript, formatting, web build and all hosted gates before integration. Do not rerun stopped live probes to validate this adapter.
+
+The installed AWS CLI 2.34.14 validates all three exact command input models and projections with unsigned output-skeleton generation, isolated empty configuration and synthetic IDs. No API request is made by that diagnostic. Native NextToken is supplied through CLI input JSON with automatic pagination disabled, avoiding confusion with the CLI's separate opaque starting-token mechanism. This verifies syntax/model compatibility, not real account visibility or provider behavior.
+
+Twelve focused cases and direct strip-only module import pass under actual Node 24.22.1. All 274 shared cases, TypeScript, formatting and web build pass locally. Complete stack statuses require all expected logical rows and physical IDs; in-progress failures retain explicit partial coverage. Credential rejection and before/after configured-role drift compose the actual inspection gate. Hosted evidence follows before integration. No live account metadata observation was run.
