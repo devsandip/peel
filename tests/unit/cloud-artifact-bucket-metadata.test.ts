@@ -1,45 +1,20 @@
 import { Readable } from "node:stream";
 import { afterEach, expect, it, vi } from "vitest";
 import { collectCloudArtifactBucket } from "../../infra/cloud/artifact-bucket-metadata.ts";
-import { cloudStackFixture } from "../fixtures/cloud-stack-pages.ts";
+import {
+  name,
+  xml,
+  tags,
+  response,
+  fixture,
+  errorResponse,
+} from "../fixtures/cloud-artifact-bucket-wire.ts";
 
-const name = "peel-cloud-dev-00000000-0000-4000-8000-000000000001";
-const xml = (text: string) => new TextEncoder().encode(text);
-const tags =
-  '<Tagging xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><TagSet><Tag><Key>private-key</Key><Value>private-value</Value></Tag></TagSet></Tagging>';
-function response(statusCode = 200, body: unknown = xml(tags), headers = {}) {
-  return {
-    response: {
-      statusCode,
-      headers: { "content-type": "application/xml", ...headers },
-      body,
-    },
-  };
-}
-function fixture() {
-  const handle = vi.fn(async (..._args: any[]) => response());
-  return {
-    ...cloudStackFixture(),
-    credentials: {
-      accessKeyId: "synthetic-access-key",
-      secretAccessKey: "synthetic-secret",
-    },
-    transport: { handle, destroy: vi.fn() },
-  };
-}
 const failure = (code: string) => ({
   kind: "unavailable",
   code,
   resourceWrites: 0,
 });
-const errorResponse = (code: string, status = 404, headers = {}) =>
-  response(
-    status,
-    xml(
-      `<Error><Code>${code}</Code><Message>private-provider-message</Message></Error>`,
-    ),
-    headers,
-  );
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllEnvs();

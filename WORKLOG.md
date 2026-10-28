@@ -1528,3 +1528,18 @@
 
 **Next:**
 - Merge the single-purpose fixed-target PR only after exact-head gates/review, synchronize Project state and verify main separately. Continue one current-milestone slice; save/send the milestone report only when actual exit criteria pass.
+
+## 2026-10-28 - Inspect original Cloud artifact bucket recipes through the guarded SDK
+
+**Did:**
+- Verified all three main jobs40643087539 for PR87 mergef273844 pass and appended issue86 evidence6462361828. No open PR remained before issue88's requirement-linked plan and Project In progress transition.
+- Added strict original recipe/pin capture for the existing owner-bound bucket observer. Private scope/collection reuse preserves original selectors/digests and prospective factory validation/output; no SDK command, endpoint, retry or service-error classification changed.
+- Captured the original cancellation signal for listener cleanup and shared existing synthetic HTTP/XML/fake-credential fixtures across both entry points.
+- Passed13retained+10prospective cases/direct import under actual Node24.22.1, all385shared cases/54files, TypeScript, formatting and browser build. Existing browser chunk warning remains.
+
+**State now:**
+- Retained metadata is bound to original manifest/inventory with ownership/full-target absence unproven. Current identity, private failures, one owner-bound GET/no implicit HEAD/redirect/retry, bounded streams/credentials/requests and late-result suppression remain required. Hosted gates/review precede merge.
+- No actual account/default database/resource/app/billing change or stopped-probe retry. M2.2 remains open with retained Cognito adapters, creation provenance/owned lifecycle and actual managed/teardown evidence still required. Audit51/managed31/native72 remain blocked.
+
+**Next:**
+- Merge the focused bucket PR after exact-head checks/review, update Project and verify main separately. Continue one current-milestone slice and save/send its milestone report only when exit criteria have evidence.
