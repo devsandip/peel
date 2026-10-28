@@ -20,6 +20,7 @@ import { join } from "node:path";
 import {
   CloudLedgerStore,
   CloudRunLedgerError,
+  normalizeCloudLedgerAuthority,
 } from "../../infra/cloud/ledger-store.ts";
 
 const parents: string[] = [];
@@ -239,5 +240,163 @@ describe("Private Cloud ledger namespace", () => {
       expect(error).not.toHaveProperty("cause");
     }
     refusal(() => CloudLedgerStore.create("../synthetic-private", f.authority));
+  });
+});
+
+describe("Ledger extraction compatibility", () => {
+  it("retains literal marker bytes, schema, header/settings and public object shape", () => {
+    const f = fixture(),
+      store = CloudLedgerStore.create(f.directory, f.authority),
+      root = statSync(store.directory, { bigint: true }),
+      file = statSync(join(store.directory, "runs.sqlite"), { bigint: true }),
+      scope = createHash("sha256")
+        .update(JSON.stringify(f.authority))
+        .digest("hex");
+    expect(readFileSync(join(store.directory, "owner.json"), "utf8")).toBe(
+      JSON.stringify({
+        format: 1,
+        kind: "peel-cloud-dev-ledger",
+        scopeSha256: scope,
+        directoryDevice: String(root.dev),
+        directoryInode: String(root.ino),
+        databaseDevice: String(file.dev),
+        databaseInode: String(file.ino),
+      }) + "\n",
+    );
+    const bytes = readFileSync(join(store.directory, "runs.sqlite"));
+    expect(bytes.subarray(0, 16).toString()).toBe("SQLite format 3\0");
+    expect([
+      bytes[18],
+      bytes[19],
+      bytes.readUInt32BE(68),
+      bytes.readUInt32BE(60),
+    ]).toEqual([1, 1, 0x504c524c, 1]);
+    expect(
+      store.use(true, (db) => ({
+        schema: db
+          .prepare(
+            "SELECT name,sql FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*' ORDER BY name",
+          )
+          .all(),
+        meta: db.prepare("SELECT id,authorization FROM ledger_meta").all(),
+        busy: db.prepare("PRAGMA busy_timeout").get()?.timeout,
+        trusted: db.prepare("PRAGMA trusted_schema").get()?.trusted_schema,
+      })),
+    ).toEqual({
+      schema: [
+        {
+          name: "cleanup_receipts",
+          sql: "CREATE TABLE cleanup_receipts(run_id TEXT PRIMARY KEY REFERENCES reservations(run_id), plan_sha256 TEXT NOT NULL, inventory_sha256 TEXT NOT NULL, checked_at TEXT NOT NULL) STRICT",
+        },
+        {
+          name: "ledger_meta",
+          sql: "CREATE TABLE ledger_meta(id INTEGER PRIMARY KEY CHECK(id=1), authorization TEXT NOT NULL) STRICT",
+        },
+        {
+          name: "reservations",
+          sql: "CREATE TABLE reservations(slot INTEGER PRIMARY KEY CHECK(slot BETWEEN 1 AND 2), run_id TEXT NOT NULL UNIQUE, plan_sha256 TEXT NOT NULL, reserved_at TEXT NOT NULL) STRICT",
+        },
+      ],
+      meta: [{ id: 1, authorization: JSON.stringify(f.authority) }],
+      busy: 0,
+      trusted: 0,
+    });
+    expect(Object.keys(store)).toEqual([
+      "directory",
+      "authority",
+      "scopeSha256",
+    ]);
+    expect(Object.getPrototypeOf(store)).toBe(CloudLedgerStore.prototype);
+    expect(Object.isFrozen(store)).toBe(false);
+    for (const key of Object.keys(store))
+      expect(Object.getOwnPropertyDescriptor(store, key)).toMatchObject({
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
+    expect(Object.isFrozen(store.authority)).toBe(true);
+    expect(normalizeCloudLedgerAuthority(f.authority)).toEqual(store.authority);
+    const error = new CloudRunLedgerError("stale");
+    expect(Object.isFrozen(error)).toBe(false);
+    expect(Object.getOwnPropertyDescriptor(error, "code")).toMatchObject({
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
+  });
+  it("keeps path-before-authority error ordering and never initializes on open failure", () => {
+    const f = fixture();
+    function failure(path: string, expected: string) {
+      for (const method of [CloudLedgerStore.create, CloudLedgerStore.open]) {
+        try {
+          method(path, {});
+          throw Error("not refused");
+        } catch (error) {
+          expect(error).toBeInstanceOf(CloudRunLedgerError);
+          expect((error as CloudRunLedgerError).code).toBe(expected);
+        }
+      }
+    }
+    failure(join(f.parent, "missing", "ledger"), "unavailable");
+    failure(f.directory, "invalid-input");
+    expect(() => CloudLedgerStore.open(f.directory, f.authority)).toThrow(
+      CloudRunLedgerError,
+    );
+    expect(readdirSync(f.parent)).toEqual([]);
+  });
+  it("retains BOM marker decoding without rewriting recognized bytes", () => {
+    const f = fixture();
+    CloudLedgerStore.create(f.directory, f.authority);
+    const marker = join(f.directory, "owner.json"),
+      bytes = Buffer.concat([
+        Buffer.from([0xef, 0xbb, 0xbf]),
+        readFileSync(marker),
+      ]);
+    writeFileSync(marker, bytes);
+    const before = hash(marker);
+    CloudLedgerStore.open(f.directory, f.authority).use(true, () => undefined);
+    CloudLedgerStore.create(f.directory, f.authority);
+    expect(hash(marker)).toBe(before);
+  });
+  it("preserves callback results/error identity and closes handles after success or failure", () => {
+    const f = fixture(),
+      store = CloudLedgerStore.create(f.directory, f.authority),
+      result = { synthetic: true };
+    let handle: DatabaseSync | undefined;
+    expect(
+      store.use(true, (db) => {
+        handle = db;
+        return result;
+      }),
+    ).toBe(result);
+    expect(handle!.isOpen).toBe(false);
+    const original = new CloudRunLedgerError("stale");
+    for (const [cause, expected] of [
+      [original, "stale"],
+      [{ errcode: 5 }, "busy"],
+      [Error("synthetic private cause"), "unavailable"],
+      ["synthetic private cause", "unavailable"],
+    ] as const) {
+      try {
+        store.use(true, (db) => {
+          handle = db;
+          throw cause;
+        });
+        throw Error("not refused");
+      } catch (error) {
+        expect(error).toBeInstanceOf(CloudRunLedgerError);
+        expect((error as CloudRunLedgerError).code).toBe(expected);
+        expect((error as Error).message).toBe("Cloud run ledger unavailable");
+        expect(error).not.toHaveProperty("cause");
+        if (cause === original) expect(error).toBe(original);
+      }
+      expect(handle!.isOpen).toBe(false);
+      expect(
+        store.use(
+          true,
+          (db) => db.prepare("SELECT count(*) AS n FROM reservations").get()?.n,
+        ),
+      ).toBe(0);
+    }
   });
 });
