@@ -115,24 +115,24 @@ Reserve local journal observation capacity for cleanup. If disk/commit failure s
 
 Every row below is pending journal implementation. Existing ledger/context tests prove their own contracts only.
 
-| Vector                                                           | Required outcome                                                                                                                 |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Crash before valid genesis / after commit before ack             | Preserve incomplete state or recover exact recognized genesis; neither path recreates a fresh-process permit                     |
-| Token committed but acknowledgement lost                         | Recover the exact stored token from the anchored journal without a caller's lost random-token digest                             |
-| Two preparers / conflicting request                              | One original token/request wins; no second mutable identity or lost first request                                                |
-| Dispatch-fence commit failure / ack loss                         | No send capability; recovered state cannot mint one                                                                              |
-| Kill before send / after send before receipt                     | Treat possible submission conservatively, retain token and reconcile; no blind retry                                             |
-| Old journal snapshot / cloned namespace / switched root          | No new run grant, refunded slot or recovered create capability                                                                   |
-| Missing fresh reservation acknowledgement / source-open sync failure | No fresh-process permit, replacement bootstrap or provider send; an existing row is recovery data only |
-| Changed funding authority/run/plan or genesis/source pins        | Refuse before mutation/dispatch; no fallback to another store                                                                    |
-| Partial/schema/ownership/link/inode/foreign-file damage          | Preserve unknown data, refuse writes; any explicit recovery reader touches only recognized files and grants no create capability |
-| Busy/stale revision / file or row limit                          | No unacknowledged mutation/permit; cleanup reserve and observation limits remain enforced                                        |
-| Ephemeral secret lost / masked parameter / raw response          | No value checkpoint/replacement replay; private refusal and inspection/proven-owned cleanup only                                 |
-| Expired original / current factories unavailable                 | Historical inspection remains possible; no current create approval is inferred                                                   |
-| Timeout/conflict ID/tag/not-found only                           | Uncertainty remains until complete operation/ownership/settlement evidence                                                       |
-| Guard not ready / sentinel manual deletion / wrong data schedule | No data creation or smoke; original lease is not extended                                                                        |
-| Teardown proof committed but ledger receipt ack lost             | Reconcile exact immutable proof/receipt, no slot deletion/refund or automatic new run                                            |
-| Default note DB path / arbitrary codec/owned flag                | Reject; no note, credential or unrecognized operator data is opened or adopted                                                   |
+| Vector                                                               | Required outcome                                                                                                                 |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Crash before valid genesis / after commit before ack                 | Preserve incomplete state or recover exact recognized genesis; neither path recreates a fresh-process permit                     |
+| Token committed but acknowledgement lost                             | Recover the exact stored token from the anchored journal without a caller's lost random-token digest                             |
+| Two preparers / conflicting request                                  | One original token/request wins; no second mutable identity or lost first request                                                |
+| Dispatch-fence commit failure / ack loss                             | No send capability; recovered state cannot mint one                                                                              |
+| Kill before send / after send before receipt                         | Treat possible submission conservatively, retain token and reconcile; no blind retry                                             |
+| Old journal snapshot / cloned namespace / switched root              | No new run grant, refunded slot or recovered create capability                                                                   |
+| Missing fresh reservation acknowledgement / source-open sync failure | No fresh-process permit, replacement bootstrap or provider send; an existing row is recovery data only                           |
+| Changed funding authority/run/plan or genesis/source pins            | Refuse before mutation/dispatch; no fallback to another store                                                                    |
+| Partial/schema/ownership/link/inode/foreign-file damage              | Preserve unknown data, refuse writes; any explicit recovery reader touches only recognized files and grants no create capability |
+| Busy/stale revision / file or row limit                              | No unacknowledged mutation/permit; cleanup reserve and observation limits remain enforced                                        |
+| Ephemeral secret lost / masked parameter / raw response              | No value checkpoint/replacement replay; private refusal and inspection/proven-owned cleanup only                                 |
+| Expired original / current factories unavailable                     | Historical inspection remains possible; no current create approval is inferred                                                   |
+| Timeout/conflict ID/tag/not-found only                               | Uncertainty remains until complete operation/ownership/settlement evidence                                                       |
+| Guard not ready / sentinel manual deletion / wrong data schedule     | No data creation or smoke; original lease is not extended                                                                        |
+| Teardown proof committed but ledger receipt ack lost                 | Reconcile exact immutable proof/receipt, no slot deletion/refund or automatic new run                                            |
+| Default note DB path / arbitrary codec/owned flag                    | Reject; no note, credential or unrecognized operator data is opened or adopted                                                   |
 
 ## Small PR sequence
 

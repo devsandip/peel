@@ -1655,7 +1655,7 @@
 - Verified all3main jobs40669051542 for PR103 mergef6b65f3 pass; appended issue102 evidence6466562508. Isolated work in a public-only worktree, preserving unrelated primary drafts/assets unread.
 - Compared immutable directories with an owned transactional journal, chose a separate bounded SQLite store and defined independently anchored genesis/pin recovery, immutable tokens, one-use dispatch fencing, uncertainty and cleanup receipt boundaries.
 - Resolved a concrete NoEcho constraint: complete secret-bearing wire requests stay transient; persist only a safe projection/commitment, never a key/value checkpoint or replacement-secret replay after process loss. Recovery cannot mint create permission.
-- Rechecked primary Node/SQLite/CloudFormation sources and actual ledger/hosting/cleanup contracts, documented pending failure vectors and small implementation boundaries, and linked the protocol from the hosting plan.
+- Rechecked primary Node/SQLite/CloudFormation sources and actual ledger/hosting/cleanup contracts, documented pending failure vectors and small implementation boundaries, and linked the protocol from the hosting plan. Focused review required fresh same-coordinator reservation acknowledgement plus separate recipe/context sync acknowledgements; an existing row or storage bootstrap alone cannot mint execution permission.
 
 **State now:**
 - Documentation only. No journal/schema/API/runtime behavior, new test, actual database, secret, account/resource/billing, app or stopped-probe action. Existing ledger/create/inspection compatibility is explicitly retained for a later extraction.
