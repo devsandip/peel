@@ -1368,3 +1368,18 @@
 
 **Next:**
 - Merge this focused collector after all hosted gates, then plan the next small remaining collision/ownership slice without conflating fixture/model evidence with managed acceptance.
+
+## 2026-10-28 - Bound the artifact-bucket observation at the SDK wire boundary
+
+**Did:**
+- Confirmed PR 66's main run 40613478710 passed all three jobs, then planned issue 67 as one owner-bound global bucket metadata observation.
+- Stopped the unpublished CLI prototype after inspecting its implicit region-redirect HeadBucket fallback without ExpectedBucketOwner. Replaced it with a pinned dev-only S3/SSO client and one-request method/host/path/query/owner transport guard.
+- Added bounded metadata decoding, current configured identity before/after, exact HTTP error classification and late transport/credential rejection. No tags, credentials or raw provider errors enter results.
+- Passed ten actual Node 24 wire fixtures/direct import, 295 shared cases, TypeScript, formatting, web build and synthetic IaC/packaged checks. Clean frozen installs reproduce the prior Lambda ZIP with a newly reviewed lock hash; hosted gates follow before integration.
+
+**State now:**
+- Global bucket collision/not-found is only a partial prospective observation. Full absence and creation ownership remain explicitly unproven. No real account/default database access, operator slot, infrastructure/settings/billing change or stopped probe retry occurred.
+- Audit 51 remains unresolved; Cognito discovery, complete ownership/absence and original-manifest lifecycle/recovery remain under 30/31. App Cloud and canonical v0.7 stay unchanged.
+
+**Next:**
+- Integrate this single-purpose PR after all hosted gates. Continue the next separate prerequisite only within the 09:00 IST handoff boundary; do not start a new AWS run after the full-run/cleanup runway cutoff.
