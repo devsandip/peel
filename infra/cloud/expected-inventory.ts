@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import {
+  inventoryV1Rules as rules,
+  type InventoryV1Stack as Stack,
+} from "./inventory-v1.ts";
+import {
   cloudCleanupGuardTemplate,
   cloudCleanupSentinelTemplate,
   cloudDevStackNames,
@@ -16,150 +20,6 @@ export interface CloudInventoryInput extends CloudHostingInput {
   region: "us-east-1";
   templatesSha256: string;
 }
-type Stack = "artifacts" | "guard" | "sentinel" | "data";
-type Rule = {
-  id: string;
-  type: string;
-  identifier: "name" | "provider" | "parent";
-  name?: [property: string, suffix: string];
-  constantName?: [property: string, value: string];
-  tags?: "Tags" | "UserPoolTags";
-  parents?: [property: string, logicalId: string][];
-  dependsOn?: string;
-};
-// Exhaustive, separately reviewed coverage: a new factory resource cannot be ignored.
-const rules: Record<Stack, Rule[]> = {
-  artifacts: [
-    {
-      id: "ArtifactBucket",
-      type: "AWS::S3::Bucket",
-      identifier: "name",
-      name: ["BucketName", ""],
-      tags: "Tags",
-    },
-    {
-      id: "ArtifactBucketPolicy",
-      type: "AWS::S3::BucketPolicy",
-      identifier: "parent",
-      parents: [["Bucket", "ArtifactBucket"]],
-    },
-  ],
-  guard: [
-    {
-      id: "CloudDeletionRole",
-      type: "AWS::IAM::Role",
-      identifier: "name",
-      name: ["RoleName", "-delete"],
-      tags: "Tags",
-    },
-    {
-      id: "CleanupGroup",
-      type: "AWS::Scheduler::ScheduleGroup",
-      identifier: "name",
-      name: ["Name", "-group"],
-      tags: "Tags",
-    },
-    {
-      id: "CleanupScheduleRole",
-      type: "AWS::IAM::Role",
-      identifier: "name",
-      name: ["RoleName", "-schedule"],
-      tags: "Tags",
-    },
-    {
-      id: "SentinelCleanup",
-      type: "AWS::Scheduler::Schedule",
-      identifier: "name",
-      name: ["Name", "-sentinel"],
-      parents: [["GroupName", "CleanupGroup"]],
-    },
-    {
-      id: "DataCleanup",
-      type: "AWS::Scheduler::Schedule",
-      identifier: "name",
-      name: ["Name", "-data"],
-      parents: [["GroupName", "CleanupGroup"]],
-    },
-  ],
-  sentinel: [
-    {
-      id: "SentinelTable",
-      type: "AWS::DynamoDB::Table",
-      identifier: "name",
-      name: ["TableName", "-sentinel"],
-      tags: "Tags",
-    },
-  ],
-  data: [
-    {
-      id: "CloudTable",
-      type: "AWS::DynamoDB::Table",
-      identifier: "name",
-      name: ["TableName", ""],
-      tags: "Tags",
-    },
-    {
-      id: "CloudUserPool",
-      type: "AWS::Cognito::UserPool",
-      identifier: "provider",
-      name: ["UserPoolName", ""],
-      tags: "UserPoolTags",
-    },
-    {
-      id: "CloudSyncScope",
-      type: "AWS::Cognito::UserPoolResourceServer",
-      identifier: "parent",
-      constantName: ["Identifier", "peel-dev"],
-      parents: [["UserPoolId", "CloudUserPool"]],
-    },
-    {
-      id: "CloudClient",
-      type: "AWS::Cognito::UserPoolClient",
-      identifier: "provider",
-      name: ["ClientName", ""],
-      parents: [["UserPoolId", "CloudUserPool"]],
-      dependsOn: "CloudSyncScope",
-    },
-    {
-      id: "CloudDomain",
-      type: "AWS::Cognito::UserPoolDomain",
-      identifier: "name",
-      name: ["Domain", "-auth"],
-      parents: [["UserPoolId", "CloudUserPool"]],
-    },
-    {
-      id: "CloudBranding",
-      type: "AWS::Cognito::ManagedLoginBranding",
-      identifier: "provider",
-      parents: [
-        ["UserPoolId", "CloudUserPool"],
-        ["ClientId", "CloudClient"],
-      ],
-      dependsOn: "CloudDomain",
-    },
-    {
-      id: "CursorSecret",
-      type: "AWS::SecretsManager::Secret",
-      identifier: "provider",
-      name: ["Name", "-cursors"],
-      tags: "Tags",
-    },
-    {
-      id: "CloudExecutionRole",
-      type: "AWS::IAM::Role",
-      identifier: "name",
-      name: ["RoleName", "-exec"],
-      tags: "Tags",
-    },
-    {
-      id: "CloudFunction",
-      type: "AWS::Lambda::Function",
-      identifier: "name",
-      name: ["FunctionName", ""],
-      tags: "Tags",
-    },
-  ],
-};
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const fail = (): never => {
   throw Error("Cloud expected inventory unavailable");
