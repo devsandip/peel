@@ -19,3 +19,7 @@ This controls verification resources rather than extending a correctness deadlin
 5. Rebase and resume saved125, rerun its combined defaults and finish its own focused request PR. No milestone/app acceptance follows from test scheduling.
 
 No real/default note/operator files, account/AWS/budget/billing/app activation or stopped probe. M2.2/audit51/managed31/native72 and all release gates remain open or stopped. Existing [test timeout](https://vitest.dev/config/testtimeout) settings remain unchanged.
+
+## Main-only validation
+
+Configured defaults pass all298actualNode24 Cloud cases/26files and513shared cases/64files, followed by type/format/build. Existing browser chunk warning remains. Every production and test module compares byte-unchanged with main; the sole semantic config change is maxWorkers4. No retry, timeout, isolation, include or test-body change. The prospective125CLI4results above remain separate evidence for its saved branch, not this PR's case count. Required exact-head hosted gates and focused review still precede merge.

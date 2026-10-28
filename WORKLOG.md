@@ -1808,3 +1808,18 @@
 
 **Next:**
 - Finish focused review/all3exact-head gates, merge normally and update issue123/parent114/Project with accumulated evidence. Verify main separately. Then scope only the next original complete-request/secret-binding slice from the protocol before code. Keep WORKLOG/journal/immutable resumes current and wait for actual milestone exit before its completion report.
+
+
+## 2026-10-28 - Isolate a bounded test-worker budget before request integration
+
+**Did:**
+- Verified PR124source9d18e68 all3checks40706925842, merged normally as6bb9025 and confirmed123/114closed/ProjectDone. All3actual merged-main40708704764 pass; parentclosure6472266194/mainproof6472435262. M2.2 remains open.
+- Saved unpublished request125branchdc211ee after13focused/independent Python golden/negative-secret-binding cases and type checks. Its first default Node24 consumer run310PASS/1 unchanged context-storage5000ms timeout (5604ms observed) is retained as failed evidence. Same isolated casePASS1.15s total; explicit4worker prospective311Cloud/526shared runsPASS. Exact external CPU/I/O contributor unproven.
+- Created issue126/ProjectInprogress and committed planc337819 before changing only Vitest maxWorkers4. No production/test module, assertion, timeout, retry, isolation or include changes. Actual writer/SIGKILL/barrier processes remain unchanged.125isBlocked on this short dependency, with public evidence6473348370 and its own local source preserved.
+- Passed actual configured-default298Node24 Cloud consumers26files and513shared64files, type/format/build. Existing browser chunk warning remains. These main-only checks are separate from saved125's larger prospective cohort.
+
+**State now:**
+- One verification scheduling change; focused review and all3required final-head hosted gates precede merge. No runtime/data/account/provider/app change or stopped probe. M2.2/managed/teardown/app acceptance remain open.
+
+**Next:**
+- Merge this small fix after exact-head gates/review, update126/Project and verify main. Rebase/resume125, rerun its actual defaults and remaining validation/review, then finish its separate request PR. Preserve failed runs and actual process evidence. Keep immutable resumes current; no milestone report until actual exit.
