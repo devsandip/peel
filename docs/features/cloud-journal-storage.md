@@ -36,3 +36,7 @@ Ten focused storage cases pass under actualNode24.22.1, including literal bytes/
 ActualNode24 direct imports and284Cloud consumer cases/25files pass. A concurrently launched499case shared run had498passes and one unchanged peer-inventory5000ms timeout. The unchanged test passes alone in299ms; a separate full run without the competing consumer suite passes all499cases/63files. Its initial timeout is retained as failure evidence; the precise cause is unproven. No peer production/test or timeout setting changed. Type/format/build pass, with the existing browser chunk warning. Initial settings readback used the wrong busy_timeout result-column name (actual SQLite returns timeout), and fixture literal types needed normalization; both were corrected before final passing checks.
 
 All required final-head hosted checks and focused review still precede merge. Actual source acknowledgement, independent actual funding observation, provider execution and app acceptance remain outside this primitive and keep issue114 open.
+
+## Integration follow-up, 28 October 2026
+
+The fixed persistence primitive merged in PR122 as a6061ab, after all three source checks40701061350 and all three exact-main checks40702504975 passed. [Actual funding/source binding](cloud-journal-sources.md) is issue123. The initial concurrent local timeout remains failed historical evidence; later passing source/main checks do not erase it. This storage layer still returns no execution capability.
