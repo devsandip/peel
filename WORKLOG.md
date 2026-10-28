@@ -1453,3 +1453,18 @@
 
 **Next:**
 - Merge the domain-prefix PR only after exact-head hosted checks and review, verify postmerge CI and synchronize Project issue/PR cards. Continue a separately planned issue 30 slice and save a milestone report when actual exit criteria are met.
+
+## 2026-10-28 - Retain original Cloud recipe bytes before durable lifecycle work
+
+**Did:**
+- Confirmed PR 77 merged as c4d4ead with all three source and postmerge checks (40628619582/40629497959) passing. Issue 71 is closed and its issue/PR Project cards are Done.
+- Investigated standalone native drag issue 72, then stopped at an unreliable isolated app-control binding before entering test text. Unwired preparation is preserved only on unpublished branch codex/native-titlebar-drag at 40363b4; no physical drag or shipped fix is claimed. Only owned test copies were stopped; unrelated processes/data were preserved. Its issue/Project card is Blocked.
+- Created current-milestone issue 78 and planned a pure original-recipe codec before implementation. Capture validates current reviewed factories; read verifies independently retained pins and exact original bytes without today's source/factory/clock or a fresh lease. Inventory remains opaque until a historical interpreter and ownership gate.
+- Passed eight actual Node 24 cases/direct import, all 324 shared cases, TypeScript, formatting and web build; added focused hosted coverage.
+
+**State now:**
+- The codec establishes an immutable bounded retention/integrity contract. It has no filesystem, ledger, reservation, physical provider ID, ownership or cleanup authority. No AWS resource, billing, default note data or app feature changed in this Cloud slice. Hosted checks/review precede merge.
+- M2.2 remains open. Audit 51, durable original-manifest/creation-intent storage, historical inventory interpretation, owned lifecycle/recovery/apply and managed proof remain. Native issue 72 cannot pass until live isolated process selection works reliably; do not blindly retry that stopped UI path.
+
+**Next:**
+- Merge the single-purpose recipe PR after all exact-head gates, synchronize Project state and verify postmerge CI. Continue a separately planned durable manifest-storage slice before any owned create/recovery/apply work. Save and send the milestone report only when its actual exit criteria have evidence.

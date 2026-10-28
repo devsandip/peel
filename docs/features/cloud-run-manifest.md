@@ -15,3 +15,7 @@ A self-supplied digest is not provenance. This codec has no storage, run-slot re
 ## Verification plan
 
 Use the actual inventory/template factories and synthetic selectors. Verify deterministic bytes despite input property order, exact immutable round trip after source/factory changes and lease expiry, and rejection of tampering, wrong/extra/malformed pins, unknown versions, noncanonical JSON, invalid snapshot headers/digests, byte limits and accessors. Verify that reading does not call the current factory. Run direct actual Node 24 import/focused tests, shared type/format/tests/build and all three exact-head hosted checks before a single-purpose merge. These establish a codec contract, not durability, provider ownership, recovery execution or app acceptance.
+
+## Local implementation evidence, 28 October
+
+Eight focused cases and direct import pass under actual Node 24.22.1. They exercise deterministic capture and detached immutable pins, original-byte restoration with the current factory disabled and clock throwing, every pinned identity/hash drift, extra/version/malformed/noncanonical data, full opaque-snapshot digest binding, byte limits, getters and private frozen errors. All 324 shared cases in 49 files, TypeScript, formatting and web build pass locally. The existing browser chunk-size warning remains. Hosted Node 24 import/focused coverage is included; all three exact-head gates and focused review still precede merge. No dependency, artifact, IaC factory, account, database, journal, provider/resource or app behavior changed.
