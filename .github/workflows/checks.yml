@@ -56,8 +56,8 @@ jobs:
       - run: pnpm cloud:iac:render
       - run: pnpm cloud:iac:check
       - run: pnpm cloud:check
-      - run: node --input-type=module -e "await import('./infra/cloud/inspection-identity.ts'); await import('./infra/cloud/stack-metadata.ts')"
-      - run: pnpm exec vitest run tests/unit/cloud-ledger-store.test.ts tests/unit/cloud-run-ledger.test.ts tests/unit/cloud-expected-inventory.test.ts tests/unit/cloud-source-observations.test.ts tests/unit/cloud-inspection-identity.test.ts tests/unit/cloud-stack-metadata.test.ts
+      - run: node --input-type=module -e "await import('./infra/cloud/inspection-identity.ts'); await import('./infra/cloud/stack-metadata.ts'); await import('./infra/cloud/fixed-target-metadata.ts')"
+      - run: pnpm exec vitest run tests/unit/cloud-ledger-store.test.ts tests/unit/cloud-run-ledger.test.ts tests/unit/cloud-expected-inventory.test.ts tests/unit/cloud-source-observations.test.ts tests/unit/cloud-inspection-identity.test.ts tests/unit/cloud-stack-metadata.test.ts tests/unit/cloud-fixed-target-metadata.test.ts
   native:
     runs-on: macos-latest
     timeout-minutes: 25

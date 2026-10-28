@@ -1,0 +1,35 @@
+# Fixed-name Cloud target collisions
+
+## Purpose and boundary
+
+[Issue 65](https://github.com/devsandip/peel/issues/65) adds one partial prospective-collision collector under issue 30 in [M2.2](https://github.com/devsandip/peel/milestone/2), supporting SPEC FR-04/14/20 and AC-04/12/13 prerequisites. Derive eight exact non-bucket selectors from the [reviewed expected inventory](cloud-expected-inventory.md): two tables, three roles, one function, one cursor-secret name and one Scheduler group. Use the [current inspection identity gate](cloud-inspection-identity.md) before and after reads. No new-run lease, credential export, actual operator slot or resource write belongs here.
+
+## Metadata and response evidence
+
+| Target          | Fixed read                                                                                                                             | Captured successful response                           | Documented not-found code |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------- |
+| DynamoDB tables | [DescribeTable](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeTable.html), exact account-scoped table ARN | Table name/ARN                                         | ResourceNotFoundException |
+| IAM roles       | [ListRoleTags](https://docs.aws.amazon.com/IAM/latest/APIReference/API_ListRoleTags.html), exact role name                             | Constant success marker, no tag values or trust policy | NoSuchEntity              |
+| Lambda function | [ListTags](https://docs.aws.amazon.com/lambda/latest/api/API_ListTags.html), exact function ARN                                        | Constant success marker, no tag values/environment     | ResourceNotFoundException |
+| Cursor secret   | [DescribeSecret](https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_DescribeSecret.html), exact name                   | Secret name/ARN, never its value                       | ResourceNotFoundException |
+| Scheduler group | [GetScheduleGroup](https://docs.aws.amazon.com/scheduler/latest/APIReference/API_GetScheduleGroup.html), exact group name              | Group name/ARN, never schedule Input                   | ResourceNotFoundException |
+
+Any successful, scope-valid response is a collision, even an untagged resource or one with familiar run tags. A first successful tag page suffices to establish that collision; there is no tag-completeness claim or need to enumerate more tags. CLI projections are client-side, not server field masks. The CLI transiently receives metadata while the collector captures only the fields above. No notes/items, secret values, function configuration, schedule Input, policy values or raw provider responses/errors enter reports.
+
+API review excludes DynamoDB ListTagsOfResource for existence: its documented [not-found exception can also mean a non-ACTIVE table](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_ListTagsOfResource.html). DescribeTable itself documents eventual metadata visibility after creation. Return the precise label `not-found`, not physical absence. That observation cannot establish old-run deletion or the complete new-run target-absence gate. Never retry a consumed run identity merely because metadata is not found.
+
+## Scope, process boundary and failure policy
+
+Require an explicit profile plus canonical inventory/template inputs. Capture/freeze selectors before awaits. Fixed verified-TLS endpoints are [DynamoDB us-east-1](https://docs.aws.amazon.com/general/latest/gr/ddb.html), [Lambda us-east-1](https://docs.aws.amazon.com/general/latest/gr/lambda-service.html), [Secrets Manager us-east-1](https://docs.aws.amazon.com/general/latest/gr/asm.html), [Scheduler us-east-1](https://docs.aws.amazon.com/general/latest/gr/eventbridgescheduler.html) and [IAM's commercial global endpoint](https://docs.aws.amazon.com/general/latest/gr/iam-service.html). Preserve explicit account/region, disabled history/prompt/debug/retries and environment protections. Unsupported names/endpoints cannot be supplied by the caller.
+
+Inject the subprocess runner for fixtures, not a manually asserted absence flag. The production reader uses argument arrays and fixed `--cli-error-format json`. Only exit 254, empty stdout, no kill/signal and a bounded JSON object containing the exact operation's documented Code can produce `not-found`. Discard Message and extra fields without reflecting them. Wrong codes, permissions, generic validation, malformed/oversized/partial responses, stderr on success and process failures remain unavailable. Validate returned names/ARNs against the expected scope; retain only collision/not-found state plus expected selectors, not provider payloads.
+
+Bound each process to 15 seconds/64 KiB and the complete operation to 90 seconds. Support caller abort, check before/after awaits, reject late readers and remove timers/listeners. Compare the same independently configured profile/account/role before and after the eight reads. Return a deeply frozen snapshot with the oldest observation time, explicit partial scope and full-target absence/ownership unproven. No returned field grants provisioning readiness.
+
+## Verification and remaining gates
+
+Test the real process-response classifier using synthetic injected execution: all eight successes/not-found codes, mixed collisions, strict private error handling, mismatched ARNs/names, input/identity drift, deadline/cancellation and immutable output. Validate fixed CLI inputs/projections against the installed models offline where supported, and distinguish unavailable SDK sample generation from passing checks. Run direct actual Node 24 import, focused/shared tests, TypeScript, formatting, web build and all hosted gates before merge. No live account/audit probe or real note/default database is needed.
+
+Global bucket ownership/collisions, Cognito parent/domain discovery, complete target-absence composition, ownership reconciliation and lifecycle/apply stay outside this partial adapter. Recovery needs the original reviewed manifest/code version and exact owned creation IDs; fresh new-run source/quote/lease checks must not gate old-run cleanup. Audit 51 remains unresolved and managed acceptance 30/31 remain open. App Cloud and canonical v0.7 requirements/mockups stay unchanged.
+
+Eleven focused cases and direct strip-only import pass under actual Node 24.22.1. All 285 shared cases, TypeScript, formatting and web build pass locally. Offline diagnostics validate the five exact CLI input parsers, installed Botocore input models and JMESPath projections with synthetic success metadata, unsigned input-skeleton generation and empty configuration. The diagnostic imports the CLI's normal bootstrap before its bundled Botocore namespace; no vendor code or sample is changed. Zero API requests are made. Hosted gates follow before integration; no live account observation is claimed.
