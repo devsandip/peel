@@ -3,25 +3,8 @@ import {
   cloudCognitoPoolCommand,
   collectCloudCognitoPools,
 } from "../../infra/cloud/cognito-pool-collisions.ts";
-import { cloudStackFixture } from "../fixtures/cloud-stack-pages.ts";
+import { name, row, fixture } from "../fixtures/cloud-cognito-pool-pages.ts";
 
-const name = "peel-cloud-dev-00000000-0000-4000-8000-000000000001";
-const row = (id = "us-east-1_Private1", Name = name) => ({ Id: id, Name });
-function fixture(
-  pages: Record<string, unknown>[] = [
-    { NextToken: null, Count: 0, Matches: [] },
-  ],
-) {
-  let page = 0;
-  return {
-    ...cloudStackFixture(),
-    pages,
-    run: vi.fn(async (_args: readonly string[], _signal: AbortSignal) => ({
-      stdout: JSON.stringify(pages[page++]),
-      stderr: "",
-    })),
-  };
-}
 const failure = (code: string) => ({
   kind: "unavailable",
   code,

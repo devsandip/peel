@@ -1543,3 +1543,18 @@
 
 **Next:**
 - Merge the focused bucket PR after exact-head checks/review, update Project and verify main separately. Continue one current-milestone slice and save/send its milestone report only when exit criteria have evidence.
+
+## 2026-10-28 - Inspect original Cognito pool recipes through bounded native pagination
+
+**Did:**
+- Merged issue88/PR89 as645e873 after all3exact-source jobs40644483497 and focused review, with matching source/merge trees and no-reply/scans. Issue/PR cards Done; fresh main40645523985 was still pending at the last separate observation.
+- Created issue90 in M2.2/Project12 and committed its requirement-linked plan before code. Added strict retained-recipe pool scan/command capture through private shared extraction/collection; original profile/name/digests survive current-factory unavailability and mutation.
+- Preserved native CLI command bytes, full bounded page scan/classification, current identity/role, private output and unproven ownership/full-target absence. Shared existing synthetic page fixtures; captured original signal for cleanup.
+- Passed12retained+10prospective cases/direct import under actual Node24.22.1 and all397shared cases/55files, TypeScript, format/build. Corrected a new test's expected error text to the preserved existing message. Existing browser chunk warning remains.
+
+**State now:**
+- This is another original-recipe read-only adapter. No account/default database/resource/app/billing change or stopped-component retry. Hosted gates/focused review precede merge; no managed/provider/app acceptance from fixtures.
+- M2.2 remains open. Retained domain inspection, creation receipts/budget linkage, ownership/absence composition, lifecycle and actual managed/teardown evidence remain; audit51/managed31/native72 stay blocked.
+
+**Next:**
+- Merge the focused pool PR after exact-head gates/review, update Project and verify main separately. Continue a separately scoped domain/lifecycle prerequisite. Save/send the milestone report only after actual exit criteria pass.
