@@ -1791,3 +1791,20 @@
 
 **Next:**
 - Merge the focused persistence PR after all3exact-head gates/review, update Project and verify main separately. Then implement actual canonical funding/original source selection and distinct acknowledged source opens in one small requirement-linked slice. Do not close114 until all original criteria have evidence, or report M2.2 complete without managed/teardown proof.
+
+
+## 2026-10-28 - Bind genesis to actual original funding and separate source acknowledgements
+
+**Did:**
+- Verified PR122source3f54cf5 all3checks40701061350, merged normally asa6061ab and confirmed121closed/ProjectbothDone. All3actual merged-main40702504975 pass; issue121proof6471460086. Reused the owned worktree for issue123 and committed requirement-linked pland4ffd9a before code.
+- Added a fixed source wrapper deriving the anchor from actual canonical recognized funding state. It separately opens/re-syncs the original recipe/context with independent pins, checks exact original bytes and stable tuple before creation, before commit and after readback, and preserves uncertain committed state on later source failure. No caller reservation/owned flag, raw genesis, default DB, alternate journal path, repair or permission.
+- Added normal source-bound open/read plus explicit actual-anchored historical inspection with retained pins when sources disappeared. Stable original identity survives actual synthetic cleanup/second reservation; current helpers and caller pin memory are not recovery requirements. All provider/run authority stays unproven.
+- Passed14focused actual source cases, including distinct recipe/context descriptor-sync failures, canonical/authority/run/pin/tuple changes, source disappearance, real independent creators/SIGKILL and preservation. Replacing recipe open with inspection fails the intended refusal assertion despite actual context acknowledgement; exact source restored.
+- Passed actualNode24 direct import/298Cloud consumers26files, then513shared64files sequentially, plus type/format/build. No failed positive source run. Existing chunk warning remains. Existing ledger/immutable/source APIs are unchanged. Added parent114 acceptance trace and scoped follow-up links without rewriting historical journal entries.
+
+**State now:**
+- Actual local source/genesis binding is implemented; final-head hosted gates and focused review precede merge. Parent114 closes only after that final slice passes/integrates; M2.2 stays open. No provider provenance, fresh-coordinator funding ACK, create permit or app/release acceptance is implied.
+- No actual/default operator/note DB, account/resource/lease/budget/billing/app activation, private history or stopped probe. Native72/audit51/managed31/relay/peer-WebKit remain stopped.
+
+**Next:**
+- Finish focused review/all3exact-head gates, merge normally and update issue123/parent114/Project with accumulated evidence. Verify main separately. Then scope only the next original complete-request/secret-binding slice from the protocol before code. Keep WORKLOG/journal/immutable resumes current and wait for actual milestone exit before its completion report.

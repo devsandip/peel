@@ -37,3 +37,7 @@ The pure codec passes13focused cases and an actualNode24 direct create/read roun
 The first259-case consumer run exposed an unchanged ledger test assuming exactly one acknowledged concurrent writer. Its original interleaving remains unproven; controlled shared-reader evidence demonstrates a legitimate busy+uncertain/zero-row outcome. That verification correction is separately merged in PR117 without production changes; no passing result is substituted for the original failure.
 
 After that dependency, all260actualNode24 Cloud cases/23files and475shared cases/61files, TypeScript, formatting and web build pass. The dependency-source and post-merge rebases preserve the exact locally tested tree. Existing browser chunk warning remains. Required exact-head hosted gates and focused review still precede the pure-codec PR merge. Actual namespace ownership, canonical filesystem selection, source ACKs, durable transactions, process/crash recovery and physical page capacity remain UNRUN issue114 work. No journal persistence, provider permission or app acceptance is claimed.
+
+## Integration follow-up, 28 October 2026
+
+The pure contract merged in PR118 with all three exact-source and exact-main checks passing. Strict files (PR120) and fixed SQLite persistence (PR122) have since merged with their own evidence. [Actual funding/source binding](cloud-journal-sources.md) is issue123, the final parent114 slice. Earlier UNRUN statements above describe the pure PR scope; none establishes provider or app acceptance.

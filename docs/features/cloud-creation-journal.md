@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-[Issue104](https://github.com/devsandip/peel/issues/104) defines the local recovery contract for issue30/[M2.2](https://github.com/devsandip/peel/milestone/2). It supports SPEC FR-04/14/20 and AC-04/12/13 prerequisites. This document is a design, not implemented journal behavior or executed acceptance evidence. Public v0.7 stays unchanged. No apply command, account call, new authorization, billing or stopped-probe retry follows from this document.
+[Issue104](https://github.com/devsandip/peel/issues/104) defines the local recovery contract for issue30/[M2.2](https://github.com/devsandip/peel/milestone/2). It supports SPEC FR-04/14/20 and AC-04/12/13 prerequisites. This document defines the full journal/coordinator design. Implemented genesis-only evidence is tracked separately below; later request/intent/fence/receipt/provider behavior is not implemented or accepted by this design. Public v0.7 stays unchanged. No apply command, account call, new authorization, billing or stopped-probe retry follows from this document.
 
 Use the [original identity codec](cloud-stack-create-intent.md), [bound context](cloud-run-context-storage.md), [run ledger](cloud-run-ledger.md), [owned namespace](cloud-ledger-namespace.md) and [original recipe](cloud-manifest-storage.md). The [hosting](cloud-dev-hosting.md), [independent cleanup](cloud-dev-cleanup.md) and [private key/hosting](cloud-private-hosting.md) plans still own their operational gates. Historical dates and allowances in those plans are not a renewed lease or budget.
 
@@ -16,6 +16,10 @@ Choose a separate bounded SQLite journal per run. Its recognized private namespa
 | Owned SQLite journal         | Transactions can bind uniqueness, original bytes and revision checks in one store | A separate fixed schema, genesis trust, token/dispatch/receipt policies and process-crash evidence are still required                                     | Use after a behavior-preserving extraction of reusable namespace mechanics                               |
 
 [SQLite transactions](https://www.sqlite.org/lang_transaction.html) support multiple readers and one simultaneous writer; BEGIN IMMEDIATE can fail busy before obtaining the write transaction. This motivates our locking policy, not a distributed transaction or an AWS spending guarantee. [Atomic commit](https://www.sqlite.org/atomiccommit.html) depends on filesystem/storage assumptions. The existing [Node24 DatabaseSync](https://nodejs.org/download/release/latest-v24.x/docs/api/sqlite.html) API is synchronous; no new database package is selected here.
+
+## Implemented genesis boundary
+
+The [pure codec](cloud-journal-genesis.md), [strict file boundary](cloud-journal-files.md) and [fixed SQLite genesis store](cloud-journal-storage.md) are merged in PR118/120/122. [Actual funding and separate source acknowledgements](cloud-journal-sources.md), issue123, is the final source wrapper pending its own final gates/merge. These local original-data/storage contracts return no execution capability and do not complete M2.2. The later coordinator still needs its own fresh reservation acknowledgement/current gates, and request/intent/fence/receipt/lifecycle phases remain separate.
 
 ## Independent anchor and genesis
 
@@ -115,7 +119,7 @@ Reserve local journal observation capacity for cleanup. If disk/commit failure s
 
 ## Acceptance vectors, not yet executed
 
-Every row below is pending journal implementation. Existing ledger/context tests prove their own contracts only.
+The table describes full journal/coordinator acceptance. Genesis-only process, source and storage vectors have the scoped evidence linked above; later execution-capability/intent/fence/receipt/provider vectors remain pending. Existing ledger/context tests prove their own contracts only.
 
 | Vector                                                               | Required outcome                                                                                                                 |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |

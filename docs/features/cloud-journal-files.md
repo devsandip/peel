@@ -35,3 +35,7 @@ ActualNode24.22.1 direct import and274Cloud consumer cases/24files pass, retaini
 ## Sources checked
 
 The [Node24 filesystem API](https://nodejs.org/docs/latest-v24.x/api/fs.html) defines descriptor operations and no-follow flags. [SQLite PRAGMAs](https://www.sqlite.org/pragma.html) remain later SQL-layer concerns. This slice uses actual file/process tests for its own contract, not documentation as acceptance evidence.
+
+## Integration follow-up, 28 October 2026
+
+The file boundary merged in PR120, with all three exact-source and exact-main checks passing. [Fixed SQLite persistence](cloud-journal-storage.md) then merged in PR122 with separate evidence. [Actual funding/source binding](cloud-journal-sources.md) is the remaining issue123/parent114 boundary. The file-layer-only validation above remains scoped to its own contract.
