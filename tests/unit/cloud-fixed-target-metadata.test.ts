@@ -3,42 +3,8 @@ import {
   cloudFixedTargetCommands,
   collectCloudFixedTargets,
 } from "../../infra/cloud/fixed-target-metadata.ts";
-import { cloudStackFixture } from "../fixtures/cloud-stack-pages.ts";
+import { cloudFixedTargetFixture as fixture } from "../fixtures/cloud-fixed-target-pages.ts";
 
-function fixture() {
-  const f = cloudStackFixture(),
-    commands = cloudFixedTargetCommands(f.input),
-    missing = new Set<string>();
-  const run = vi.fn(async (args: readonly string[], _signal: AbortSignal) => {
-    const target = commands.find(
-      (c) => JSON.stringify(c.args) === JSON.stringify(args),
-    );
-    if (!target) throw Error("unexpected synthetic command");
-    if (missing.has(target.logicalId))
-      throw {
-        code: 254,
-        stdout: "",
-        stderr: JSON.stringify({
-          Code: target.notFound,
-          Message: "private-provider-message",
-          Extra: { ignored: "private-value" },
-        }),
-      };
-    return {
-      stderr: "",
-      stdout: JSON.stringify(
-        target.expectedArn === null
-          ? { Found: true }
-          : {
-              Name: target.name,
-              Arn:
-                target.expectedArn + (target.kind === "secret" ? "Ab12Cd" : ""),
-            },
-      ),
-    };
-  });
-  return { ...f, commands, missing, run };
-}
 const unavailable = (code: string) => ({
   kind: "unavailable",
   code,

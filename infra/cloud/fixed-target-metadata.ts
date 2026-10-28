@@ -4,6 +4,7 @@ import {
   cloudExpectedInventory,
   type CloudInventoryInput,
 } from "./expected-inventory.ts";
+import { readHistoricalCloudInventory } from "./historical-inventory.ts";
 import { collectCloudInspectionIdentity } from "./inspection-identity.ts";
 import { assertCloudIdentityEnvironment } from "./identity-observations.ts";
 
@@ -11,6 +12,21 @@ type Input = {
   profile: string;
   inventory: CloudInventoryInput;
   templates: string;
+};
+type RetainedInput = {
+  json: string;
+  pin: Parameters<typeof readHistoricalCloudInventory>[1];
+};
+type Scope = {
+  profile: string;
+  expected: ReturnType<typeof cloudExpectedInventory>;
+  retainedManifestSha256?: string;
+};
+type Dependencies = {
+  run?: Runner;
+  identity?: typeof collectCloudInspectionIdentity;
+  clock?: () => number;
+  signal?: AbortSignal;
 };
 type Runner = (
   args: readonly string[],
@@ -31,6 +47,7 @@ class TargetFailure extends Error {
   constructor(code: Code) {
     super("Cloud fixed-target metadata unavailable");
     this.code = code;
+    Object.freeze(this);
   }
 }
 const execute = promisify(execFile),
@@ -76,7 +93,7 @@ function freeze<T>(value: T): Readonly<T> {
   }
   return value;
 }
-function capture(input: Input) {
+function capture(input: Input): Scope {
   const value = record(
       input,
       ["profile", "inventory", "templates"],
@@ -95,6 +112,22 @@ function capture(input: Input) {
         value.inventory as CloudInventoryInput,
         value.templates as string,
       ),
+    };
+  } catch {
+    return fail("invalid-input");
+  }
+}
+function captureRetained(input: RetainedInput): Scope {
+  const value = record(input, ["json", "pin"], "invalid-input");
+  try {
+    const retained = readHistoricalCloudInventory(
+      value.json as string,
+      value.pin as RetainedInput["pin"],
+    );
+    return {
+      profile: retained.profile,
+      expected: retained.inventory,
+      retainedManifestSha256: retained.manifestSha256,
     };
   } catch {
     return fail("invalid-input");
@@ -225,6 +258,11 @@ export function cloudFixedTargetCommands(input: Input) {
   const captured = capture(input);
   return commands(captured.profile, captured.expected);
 }
+/** Fixed commands from original pinned selectors, independent of current factories. */
+export function cloudRetainedFixedTargetCommands(input: RetainedInput) {
+  const captured = captureRetained(input);
+  return commands(captured.profile, captured.expected);
+}
 function defaultRunner(): Runner {
   try {
     assertCloudIdentityEnvironment(process.env);
@@ -281,27 +319,33 @@ function validClock(time: number) {
 }
 
 /** Partial prospective collision evidence only; never all-target absence or old-run cleanup proof. */
-export async function collectCloudFixedTargets(
+export function collectCloudFixedTargets(
   input: Input,
-  dependencies: {
-    run?: Runner;
-    identity?: typeof collectCloudInspectionIdentity;
-    clock?: () => number;
-    signal?: AbortSignal;
-  } = {},
+  dependencies: Dependencies = {},
 ) {
+  return collect(() => capture(input), dependencies);
+}
+/** Original recipe metadata only; never physical ownership or deletion authority. */
+export function collectRetainedCloudFixedTargets(
+  input: RetainedInput,
+  dependencies: Dependencies = {},
+) {
+  return collect(() => captureRetained(input), dependencies);
+}
+async function collect(captureScope: () => Scope, dependencies: Dependencies) {
   const controller = new AbortController(),
-    clock = dependencies.clock ?? Date.now;
+    clock = dependencies.clock ?? Date.now,
+    signal = dependencies.signal;
   let timer: ReturnType<typeof setTimeout> | undefined,
     listener: (() => void) | undefined,
     timedOut = false,
     aborted = false;
   try {
-    const captured = capture(input),
+    const captured = captureScope(),
       targets = commands(captured.profile, captured.expected),
       started = clock();
     if (!validClock(started)) return fail("clock-invalid");
-    if (dependencies.signal?.aborted) return fail("aborted");
+    if (signal?.aborted) return fail("aborted");
     const run = dependencies.run ?? defaultRunner();
     const work = async () => {
       const identity = async () => {
@@ -412,6 +456,9 @@ export async function collectCloudFixedTargets(
         fullTargetAbsence: "unproven" as const,
         ownership: "unproven" as const,
         resourceWrites: 0 as const,
+        ...(captured.retainedManifestSha256 === undefined
+          ? {}
+          : { retainedManifestSha256: captured.retainedManifestSha256 }),
       });
     };
     const cancelled = new Promise<never>((_, reject) => {
@@ -420,8 +467,8 @@ export async function collectCloudFixedTargets(
         controller.abort();
         reject(new TargetFailure("aborted"));
       };
-      dependencies.signal?.addEventListener("abort", listener, { once: true });
-      if (dependencies.signal?.aborted) listener();
+      signal?.addEventListener("abort", listener, { once: true });
+      if (signal?.aborted) listener();
     });
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
@@ -446,6 +493,6 @@ export async function collectCloudFixedTargets(
     });
   } finally {
     if (timer !== undefined) clearTimeout(timer);
-    if (listener) dependencies.signal?.removeEventListener("abort", listener);
+    if (listener) signal?.removeEventListener("abort", listener);
   }
 }
