@@ -1337,3 +1337,6 @@
 
 **Next:**
 - Complete hosted gates and merge this focused identity PR, then compose it before/after the exact stack metadata collector in issue 61. Actual service collision/ownership, lifecycle/recovery and managed teardown remain open under 30/31.
+
+**Validation refinement before integration:**
+- Direct Node 24 strip-only import caught a TypeScript parameter property that transformed Vitest tests accepted. Replaced it with erasable declarations and added a hosted direct-import gate; no account command is executed by that check. The reviewed PR must pass its final updated head before merging.

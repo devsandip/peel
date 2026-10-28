@@ -34,8 +34,10 @@ type Code =
   | "aborted"
   | "deadline";
 class InspectionFailure extends Error {
-  constructor(readonly code: Code) {
+  readonly code: Code;
+  constructor(code: Code) {
     super("Cloud inspection identity unavailable");
+    this.code = code;
   }
 }
 function fail(code: Code): never {
