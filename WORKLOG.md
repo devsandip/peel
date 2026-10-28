@@ -1354,3 +1354,17 @@
 
 **Next:**
 - Integrate the focused identity prerequisite and then this collector after their respective gates. Plan exact service collision/ownership reconciliation and durable owned lifecycle/recovery before any managed run.
+
+## 2026-10-28 - Keep prospective fixed-name collisions distinct from full absence
+
+**Did:**
+- Confirmed PR 64's main run 40609823180 passed all three jobs, then planned issue 65's eight fixed non-bucket metadata selectors against current primary APIs.
+- Implemented raw process-response classification with exact structured not-found codes, scope-valid collision checks and current identity before/after. DynamoDB uses DescribeTable; its eventual visibility remains explicit and no not-found result grants full absence or old-run deletion proof.
+- Verified 11 focused actual Node 24 cases/direct import, all 285 shared cases, TypeScript, formatting and web build. Five CLI input parsers, bundled Botocore input models and JMESPath projections pass offline with synthetic data/empty configuration and zero API requests.
+
+**State now:**
+- This is a partial prospective observation only. No provider payloads are retained, no credential export/live account/audit probe or resource/settings/slot/default note database access occurred. Hosted gates follow before integration.
+- Global bucket/Cognito checks, complete ownership/absence, durable lifecycle/recovery and managed proof stay open under 30/31; audit 51 stays unresolved. App Cloud and v0.7 remain unchanged.
+
+**Next:**
+- Merge this focused collector after all hosted gates, then plan the next small remaining collision/ownership slice without conflating fixture/model evidence with managed acceptance.

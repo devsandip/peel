@@ -29,6 +29,7 @@ Keep one purpose per subsequent PR:
 | [59](https://github.com/devsandip/peel/issues/59) | Expected owned inventory | Exact reviewed four-stack/17-resource description; no observed ownership or cleanup authority |
 | [62](https://github.com/devsandip/peel/issues/62) | Current inspection identity | Preserve configured pin/history protections without new-run runway requirements; no credential export |
 | [61](https://github.com/devsandip/peel/issues/61) | Private stack metadata | Bounded exact stack/tag/resource observation after the separate identity gate; no service ownership or absence authority |
+| [65](https://github.com/devsandip/peel/issues/65) | Fixed-name target collisions | Eight non-bucket prospective metadata checks; not-found is not full target absence or cleanup proof |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
