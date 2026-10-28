@@ -23,11 +23,22 @@ try {
         : {}),
     },
   );
-  writeSync(1, JSON.stringify({ kind: "ok", runs: result.runs.length }) + "\n");
+  writeSync(
+    1,
+    JSON.stringify({
+      kind: "ok",
+      runId: request.plan.runId,
+      runs: result.runs.length,
+    }) + "\n",
+  );
   if (mode === "after-ack") block("acknowledged");
 } catch (error) {
   writeSync(
     1,
-    JSON.stringify({ kind: "error", code: error?.code ?? "unexpected" }) + "\n",
+    JSON.stringify({
+      kind: "error",
+      runId: request.plan.runId,
+      code: error?.code ?? "unexpected",
+    }) + "\n",
   );
 }

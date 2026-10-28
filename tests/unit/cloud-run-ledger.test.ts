@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { DatabaseSync } from "node:sqlite";
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import {
@@ -417,7 +418,7 @@ describe("Durable Cloud run-slot ledger", () => {
     code(() => f.ledger.read(), "unrecognized");
     expect(readFileSync(extra, "utf8")).toBe("synthetic private extra");
   });
-  it("lets only one independent process book against the same prior snapshot", async () => {
+  it("limits independent competing writers to at most one durable reservation", async () => {
     const f = fixture(),
       prior = f.ledger.read(),
       a = worker(f, f.sample, prior.snapshotSha256),
@@ -426,17 +427,71 @@ describe("Durable Cloud run-slot ledger", () => {
       JSON.parse(line),
     );
     await Promise.all([exited(a.child), exited(b.child)]);
-    expect(outcomes.filter((r) => r.kind === "ok")).toHaveLength(1);
-    expect(outcomes.filter((r) => r.kind === "error")).toHaveLength(1);
-    expect(outcomes.find((r) => r.kind === "error").code).not.toBe(
-      "unexpected",
+    const acknowledged = outcomes.filter((r) => r.kind === "ok"),
+      refused = outcomes.filter((r) => r.kind === "error");
+    expect(acknowledged.length, JSON.stringify(outcomes)).toBeLessThanOrEqual(
+      1,
     );
+    expect(refused).toHaveLength(2 - acknowledged.length);
+    for (const r of refused)
+      expect([
+        "busy",
+        "stale",
+        "uncertain",
+        "unrecognized",
+        "unavailable",
+      ]).toContain(r.code);
     const state = CloudRunLedger.open(
       f.directory,
       f.sample.authorization,
     ).read();
-    expect(state.runs).toHaveLength(1);
-    expect(state.reservedEnvelopeUSD).toBe(3);
+    expect(state.runs.length).toBeLessThanOrEqual(1);
+    expect(state.reservedEnvelopeUSD).toBe(1 + state.runs.length * 2);
+    for (const row of state.runs) {
+      expect(ledgerRunIds.slice(0, 2)).toContain(row.runId);
+      expect(row.slot).toBe(1);
+      expect(row.cleanup).toBeNull();
+    }
+    if (acknowledged.length) {
+      expect(state.runs.map((r) => r.runId)).toEqual([acknowledged[0].runId]);
+      expect(acknowledged[0].runs).toBe(1);
+    } else if (state.runs.length) {
+      // An unacknowledged committed slot stays consumed. Never book again or refund it here.
+      expect(refused.find((r) => r.runId === state.runs[0].runId)?.code).toBe(
+        "uncertain",
+      );
+    }
+  }, 20000);
+  it("fails closed with no acknowledged slot when a real shared reader blocks competing commits", async () => {
+    const f = fixture(),
+      prior = f.ledger.read(),
+      reader = new DatabaseSync(join(f.directory, "runs.sqlite"));
+    try {
+      reader.exec("BEGIN");
+      reader.prepare("SELECT slot FROM reservations").all();
+      const a = worker(f, f.sample, prior.snapshotSha256),
+        b = worker(f, cloudLedgerPlan(ledgerRunIds[1]), prior.snapshotSha256),
+        outcomes = (await Promise.all([a.line, b.line])).map((line) =>
+          JSON.parse(line),
+        );
+      await Promise.all([exited(a.child), exited(b.child)]);
+      expect(outcomes.filter((r) => r.kind === "ok")).toHaveLength(0);
+      expect(outcomes.filter((r) => r.kind === "error")).toHaveLength(2);
+      expect(outcomes.some((r) => r.code === "uncertain")).toBe(true);
+      for (const r of outcomes)
+        expect(["busy", "uncertain", "unrecognized", "unavailable"]).toContain(
+          r.code,
+        );
+    } finally {
+      try {
+        reader.exec("ROLLBACK");
+      } finally {
+        reader.close();
+      }
+    }
+    expect(
+      CloudRunLedger.open(f.directory, f.sample.authorization).read(),
+    ).toEqual(prior);
   }, 20000);
   it("recovers acknowledged and commit-before-ack reservations after terminating the writer", async () => {
     for (const [mode, checkpoint] of [
