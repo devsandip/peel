@@ -1,0 +1,30 @@
+{
+  "format": 1,
+  "checkedAt": "2026-10-28T03:24:28.744885Z",
+  "purpose": "pre-implementation protocol compatibility only",
+  "operation": "DescribeUserPoolDomain",
+  "awsCli": "2.34.14",
+  "cliNativeInputAccepted": true,
+  "botocoreInputValidated": true,
+  "descriptionFieldsOptional": true,
+  "modeledResourceNotFoundException": true,
+  "httpStatusEncodedInInstalledErrorModel": false,
+  "documentedResourceNotFoundHttpStatus": 400,
+  "httpStatusSource": "https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_DescribeUserPoolDomain.html",
+  "projectionShapes": [
+    "missing",
+    "null",
+    "empty-object",
+    "invalid-string",
+    "invalid-array"
+  ],
+  "collisionStatuses": ["CREATING", "DELETING", "UPDATING", "ACTIVE", "FAILED"],
+  "unrelatedMetadataDiscarded": true,
+  "accountCalls": 0,
+  "resourceWrites": 0,
+  "liveIdentityVerified": false,
+  "liveAbsenceVerified": false,
+  "creationOwnershipVerified": false,
+  "observerImplemented": false,
+  "controlCorrection": "Initial HTTP-status model assertion failed: installed exception traits contain no HTTP status. Corrected diagnostic validates the modeled error name; HTTP 400 comes from the API contract, not model evidence."
+}
