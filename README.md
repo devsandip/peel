@@ -11,6 +11,7 @@ Implementation has started on a local Mac development build. Peer sync, paid Clo
 - [SPEC](docs/SPEC.md): requirements, storage design and cost model, behavior, architecture, milestones, and acceptance criteria.
 - [Screen mockups](docs/mockups/index.html): the complete local gallery.
 - [Visual specification](docs/ui-spec.md): design decisions and PNG screen inventory.
+- [Milestone reports](docs/milestones/README.md): completed scope, validation evidence and dated status snapshots.
 
 ## Development approach
 

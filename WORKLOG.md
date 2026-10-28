@@ -1412,3 +1412,17 @@
 
 **Next:**
 - Merge the tracking PR after its checks, synchronize its issue/PR cards to Done, then resume domain 71 within the 09:00 IST handoff boundary.
+
+## 2026-10-28 - Save comprehensive milestone reports as versioned Markdown
+
+**Did:**
+- Persisted mandatory milestone completion reports in the shared agent instructions and Peel's repo workflow, with dated canonical files under docs/milestones/ and separate in-progress snapshots.
+- Saved the current comprehensive status report and a clearly retrospective M2.1 completion report, using its actual closure, ten deliverables, merged PRs and configured hosted evidence. M2.2 remains open.
+- Added the report index/README link and tracked this focused reporting delivery as issue 75 in Project12. No app behavior, dependency, AWS or note-data changes occurred.
+
+**State now:**
+- Reports distinguish backend foundations from enabled app features, scope the rough 35 percent estimate and retain failed/unrun acceptance gates. Shared global instructions are local configuration; repository reports/instructions follow the normal PR gates.
+- Hosted checks and final report/milestone linkage follow before completion. Domain 71 remains Ready on its separate unpushed plan branch.
+
+**Next:**
+- Merge the focused reporting PR after required checks, verify milestone/report links and Project issue/PR Done states, then make the precise 09:00 IST handoff.
