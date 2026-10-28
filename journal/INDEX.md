@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-28 19:02 IST.
+Last refreshed: 2026-10-28 19:25 IST.
 
-Latest entry: [Journal files before transactional genesis](entries/2026-10-28-1902-journal-file-boundary.md).
+Latest entry: [Genesis transactions before source acknowledgement](entries/2026-10-28-1925-genesis-transaction-boundary.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
 
@@ -12,10 +12,11 @@ I have a local Mac development build and browser client. The complete promised s
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
 
-Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Shared SQLite mechanics, corrected zero-timeout contention verification and the pure original-genesis contract are integrated. Issue119 adds strict journal file ownership and exclusive creation; its local checks pass and hosted gates/review remain. Fixed SQL/bootstrap/source acknowledgement and later dispatch/lifecycle work remain; M2.2 still needs managed/independent teardown evidence.
+Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Shared SQLite mechanics, corrected zero-timeout contention verification, pure original-genesis integrity and strict journal files are integrated. Issue121 adds fixed transactional genesis persistence; local checks pass and hosted gates/review remain. Actual canonical funding/source acknowledgement and later dispatch/lifecycle work remain; M2.2 still needs managed/independent teardown evidence.
 
 ## Recent entries
 
+- [2026-10-28 19:25 IST: genesis transactions before source acknowledgement](entries/2026-10-28-1925-genesis-transaction-boundary.md)
 - [2026-10-28 19:02 IST: journal files before transactional genesis](entries/2026-10-28-1902-journal-file-boundary.md)
 - [2026-10-28 18:39 IST: original journal genesis contract](entries/2026-10-28-1839-original-genesis-contract.md)
 - [2026-10-28 17:38 IST: shared SQLite mechanics after branding](entries/2026-10-28-1738-sqlite-mechanics-shared.md)

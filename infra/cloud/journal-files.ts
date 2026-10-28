@@ -231,6 +231,14 @@ function files(value: unknown, create: boolean, inspection: boolean) {
         runAuthority: "unproven" as const,
         resourceWrites: 0 as const,
         verify: () => privateCall(() => verify(!inspection)),
+        readDatabaseHeader: () =>
+          privateCall(() => {
+            verify(!inspection);
+            const header = Buffer.alloc(100);
+            if (readSync(database.fd, header, 0, 100, 0) !== 100) return fail();
+            verify(!inspection);
+            return header;
+          }),
         sync: () => privateCall(sync),
         close: () => privateCall(release),
       });
