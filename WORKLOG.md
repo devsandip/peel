@@ -1839,3 +1839,20 @@
 
 **Next:**
 - Finish request issue 125 review, all three exact-head checks and normal integration; update issue/Project and verify main separately. Scope the next fresh same-process reserve/bootstrap preparation-session proof before immutable preparation. Existing rows or recovered genesis cannot substitute for the same coordinator's actual acknowledgements. Keep journal and immutable ignored resumes current.
+
+
+## 2026-10-28 - Retain fresh preparation-session acknowledgement lineage
+
+**Did:**
+- Confirmed PR 128 merged as eae63ed after all three exact-source checks 40720939496 passed. Issue 125 closed and both Project cards Done verified, old owned branches cleaned. All three exact-main checks 40722632541 pass; main proof comment 6474436692. Primary safely advanced with unknown drafts preserved unread.
+- Created issue 129 / Project In progress and committed plan 09fd874 before implementation d7fd75d. The initializer exclusively acknowledges a new private workspace before its own actual reserve call, actual source publication and exclusive source-bound genesis bootstrap. Existing rows, snapshots, callbacks, copied metadata and process restart cannot mint the runtime-private lineage. Post-start failures preserve files/slots; no automatic retry/refund.
+- Retained/checks parent/workspace/funding directory identities and exact source/genesis/reservation state. Safe read makes no fresh-sync/current approval claim; validation failure or explicit discard permanently removes private state. No token/key generation, durable request preparation, dispatch or provider permission.
+- Passed final actual Node 24 direct/334 Cloud cases / 28 files, then 549 shared cases / 66 files, type/format/build sequentially. Actual first/second slots, busy/uncertain/source-sync/closure failures, writers and SIGKILL before/after reserve/genesis commits are covered. An ACK-loss read fallback fails the intended negative control; exact source restored.
+- Kept initial harness typing/stdin corrections and failed runs visible. A first shared run had unchanged context-sync 5133 ms and new four-namespace 9656 ms timeouts at the existing 5000 ms limit. Unchanged case alone passes in 1.56 seconds. Independent new variants now have separate cases/cleanup, retaining assertions and deadlines. Final passing results are new evidence; complete external timing causes remain unproven. No legacy tests, timeout/retry/isolation/worker configuration changed.
+
+**State now:**
+- Local session-lineage prerequisite implemented; focused review and all three final-head hosted gates precede merge. Every provider/current authority remains unproven, with zero provider resource writes. Existing store/schema/error contracts and app behavior are unchanged. Browser chunk warning remains.
+- No actual/default operator/note DB, real credentials, account/resource/budget/billing/app activation, private history or stopped probe. M2.2/managed/teardown/app gates remain open.
+
+**Next:**
+- Finish issue 129 focused review, exact-head gates and normal merge; verify actual closure/Project and merged main separately. Plan already-reserved current safety/collector-provenance requirements before trusted immutable preparation; no existing row, source snapshot or caller boolean supplies approval. Keep journal and immutable ignored resumes current.
