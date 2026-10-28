@@ -44,7 +44,7 @@ export class BrowserRepository implements Repository {
     validateNote(note);
     if (note.collectionId !== "local")
       throw new Error(
-        "Peel Cloud is not connected. Your local note has not been uploaded.",
+        "Synkies Cloud is not connected. Your local note has not been uploaded.",
       );
     const tx = (await this.db).transaction(
       ["notes", "tombstones"],

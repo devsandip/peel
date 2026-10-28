@@ -45,10 +45,12 @@ impl Note {
     }
     fn validate(&self) -> Result<()> {
         if self.schema_version != 1 {
-            return Err("This collection needs a newer version of Peel.".into());
+            return Err("This collection needs a newer version of Synkies.".into());
         }
         if self.collection_id != "local" {
-            return Err("Peel Cloud is not connected. Local notes have not been uploaded.".into());
+            return Err(
+                "Synkies Cloud is not connected. Local notes have not been uploaded.".into(),
+            );
         }
         if self.note_id.is_empty()
             || self.note_id.len() > 128
@@ -135,7 +137,7 @@ impl Database {
             .map_err(|e| e.to_string())?;
         if version > 1 {
             return Err(
-                "This collection needs a newer version of Peel. Its data has not been changed."
+                "This collection needs a newer version of Synkies. Its data has not been changed."
                     .into(),
             );
         }
@@ -171,14 +173,14 @@ impl Database {
         let metadata = std::fs::metadata(&self.path).map_err(|_| "The selected notes folder is unavailable. Reconnect the drive or restore access; your draft has not been saved.".to_string())?;
         if !metadata.is_file() {
             return Err(
-                "The selected notes file is unavailable. Reopen Peel before editing.".into(),
+                "The selected notes file is unavailable. Reopen Synkies before editing.".into(),
             );
         }
         #[cfg(unix)]
         {
             use std::os::unix::fs::MetadataExt;
             if (metadata.dev(), metadata.ino()) != self.identity {
-                return Err("The selected notes file was replaced. Reopen Peel before editing; your draft has not been saved.".into());
+                return Err("The selected notes file was replaced. Reopen Synkies before editing; your draft has not been saved.".into());
             }
         }
         Ok(())

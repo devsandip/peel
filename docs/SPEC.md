@@ -1,14 +1,16 @@
-# Peel product and technical specification
+# Synkies product and technical specification
 
 Version 0.7 | 26 October 2026 | Implementation in progress
 
-This is the canonical behavior and implementation contract for Peel. [PRFAQ.md](PRFAQ.md) defines the customer promise. Requirement IDs remain stable as this specification evolves. Implementation was authorized on 26 October. Current evidence and remaining gates live in [features/local-mac-app.md](features/local-mac-app.md); targets below remain acceptance targets until measured.
+Brand update: 28 October 2026. Synkies replaces the name Peel and adopts Antigravity v2 Folded Horizon. Functional version 0.7 and requirement IDs stay unchanged; repository, storage and protocol identifiers retain their compatible names. See [brand plan](features/synkies-brand.md).
+
+This is the canonical behavior and implementation contract for Synkies. [PRFAQ.md](PRFAQ.md) defines the customer promise. Requirement IDs remain stable as this specification evolves. Implementation was authorized on 26 October. Current evidence and remaining gates live in [features/local-mac-app.md](features/local-mac-app.md); targets below remain acceptance targets until measured.
 
 ## Product scope
 
-Build a personal note app with fast floating notes on Mac, a searchable library, two app-wide saving modes, and access through an iPhone app and the browser. Free On-device mode stores notes only on devices and periodically synchronizes paired devices, including remotely. Paid Peel Cloud stores the complete library in Amazon DynamoDB and synchronizes connected devices live. Capture, local saving, and word search must work without a network connection. The first user is Sandip; the architecture must also support unrelated public users without access to one another's notes.
+Build a personal note app with fast floating notes on Mac, a searchable library, two app-wide saving modes, and access through an iPhone app and the browser. Free On-device mode stores notes only on devices and periodically synchronizes paired devices, including remotely. Paid Synkies Cloud stores the complete library in Amazon DynamoDB and synchronizes connected devices live. Capture, local saving, and word search must work without a network connection. The first user is Sandip; the architecture must also support unrelated public users without access to one another's notes.
 
-Confirmed decisions: the app is Peel; iPhone comes first and Android uses the web app. Mac is the only native desktop target.
+Confirmed decisions: the app is Synkies; iPhone comes first and Android uses the web app. Mac is the only native desktop target.
 
 ### Delivery stages
 
@@ -21,7 +23,7 @@ Confirmed decisions: the app is Peel; iPhone comes first and Android uses the we
 | M4 | Search by meaning | Local inference meets quality and performance gates on Mac, iPhone, and web |
 | M5 | Public beta and launch readiness | All public requirements pass, 14 days of dogfooding complete, distribution and operating requirements met |
 
-M4 experiments start in M0; the feature must not delay M1 capture work. All ten items in the original brief remain in public v1. The modes are free On-device with remote periodic peer sync, and paid Peel Cloud operated in Sandip’s AWS account using DynamoDB. A local-only build is an intermediate step, not the completed free mode. Google Drive integration is excluded.
+M4 experiments start in M0; the feature must not delay M1 capture work. All ten items in the original brief remain in public v1. The modes are free On-device with remote periodic peer sync, and paid Synkies Cloud operated in Sandip’s AWS account using DynamoDB. A local-only build is an intermediate step, not the completed free mode. Google Drive integration is excluded.
 
 ## Functional requirements
 
@@ -29,7 +31,7 @@ M4 experiments start in M0; the feature must not delay M1 capture work. All ten 
 | --- | --- | --- |
 | FR-01 | Create a focused blank note with one action. Mac supports a configurable global shortcut, menu bar action, and library action. | M1 |
 | FR-02 | Save changes automatically to durable local storage. Closing a native note waits for the final local save and keeps the note in the library. | M1 |
-| FR-03 | Offer two app-wide library modes: free On-device and paid Peel Cloud. Switching to Cloud explicitly authorizes upload of the complete library. No per-note destination picker. | M1 local; M2 modes |
+| FR-03 | Offer two app-wide library modes: free On-device and paid Synkies Cloud. Switching to Cloud explicitly authorizes upload of the complete library. No per-note destination picker. | M1 local; M2 modes |
 | FR-04 | Store the entire Cloud-mode library through an authenticated API in app-managed DynamoDB. Cache it locally, accept offline edits, and deliver updates live to connected devices. | M2 |
 | FR-05 | Provide a Mac app, browser app including Android, and native iPhone app with the same note content and lifecycle behavior. | M1 to M3 |
 | FR-06 | Search locally by words and tags; add an optional local search by meaning that returns source notes and excerpts. | M1 words; M4 meaning |
@@ -40,7 +42,7 @@ M4 experiments start in M0; the feature must not delay M1 capture work. All ten 
 | FR-11 | Make independent, draggable top-level Mac note windows the primary desktop experience. Each lives outside the separate Notes Library and has one top-left green minus (Put away) control that saves locally before closing. | M1 |
 | FR-12 | Export portable Markdown plus metadata and import that format without duplicating matching note revisions. | M1 |
 | FR-13 | Expose separate local-save and mode-specific sync states. Recover interrupted writes and transitions. On-device sync applies the latest edit automatically with optional local version recovery; Cloud preserves concurrent offline drafts for resolution. | M1 local; M2 sync |
-| FR-14 | Keep unrelated users and Peel accounts isolated. Keep note text, queries, tags, and tokens out of telemetry. | All |
+| FR-14 | Keep unrelated users and Synkies accounts isolated. Keep note text, queries, tags, and tokens out of telemetry. | All |
 | FR-15 | Pin a note to the desktop by dragging it out of the Notes Library or choosing Pin to desktop from its right-click menu. Keep one note identity and unchanged storage. | M1 |
 | FR-16 | Arrange open notes along the left, right, top, or bottom edge using configurable shortcuts and Window menu commands. Offer Undo last arrangement. | M1 |
 | FR-17 | Pair trusted devices and periodically sync On-device notes over direct encrypted connections or transient relays across different networks. Store no note payload on servers. | M2; iPhone M3 |
@@ -56,13 +58,13 @@ The baseline excludes attachments, reminders, collaboration, live cursors, arbit
 
 The proposed Mac shortcut is Control Option N. Detect registration failure and let the user choose another shortcut. The menu bar process stays resident after the last note closes; Quit is a separate action. Launch at login is an explicit preference. A shortcut works while the app is running; operating-system launch behavior is not assumed.
 
-Launch at login reads the Mac's current login-item status and changes only after an explicit Settings action. Never register automatically on install/startup or silently re-enable a login item disabled in System Settings. Show pending approval separately from enabled, refresh on return to Peel, and preserve the observed state on failure. Turning it off leaves the current app and notes running. Development executables and isolated test libraries cannot change login items. Verify registration, approval, disable and actual login/relaunch with the installed signed app before treating this behavior as accepted.
+Launch at login reads the Mac's current login-item status and changes only after an explicit Settings action. Never register automatically on install/startup or silently re-enable a login item disabled in System Settings. Show pending approval separately from enabled, refresh on return to Synkies, and preserve the observed state on failure. Turning it off leaves the current app and notes running. Development executables and isolated test libraries cannot change login items. Verify registration, approval, disable and actual login/relaunch with the installed signed app before treating this behavior as accepted.
 
 An action creates a new note ID, uses the library’s selected mode, and focuses an empty editor. A missing cloud connection does not silently switch mode: keep changes locally, show Waiting to sync, and offer reconnection or the explicit whole-library mode transition. No account or title prompt interrupts On-device capture.
 
-Floating notes are the primary Mac surface. On launch, restore the person's pinned desktop notes; opening Peel does not require opening the library. New Note creates a note directly in its own floating window. Each note has at most one such window per Mac; opening an already visible note brings that window forward.
+Floating notes are the primary Mac surface. On launch, restore the person's pinned desktop notes; opening Synkies does not require opening the library. New Note creates a note directly in its own floating window. Each note has at most one such window per Mac; opening an already visible note brings that window forward.
 
-Each desktop note is an independent top-level macOS window, outside the Notes Library's bounds and view hierarchy. Closing, minimizing, or moving the library must not close, minimize, clip, or move its floating notes. They remain visible on the desktop while the library is closed. The desktop scene in the mockup is wallpaper and OS context, not a larger Peel window containing the notes. Native window independence must be established in M0.
+Each desktop note is an independent top-level macOS window, outside the Notes Library's bounds and view hierarchy. Closing, minimizing, or moving the library must not close, minimize, clip, or move its floating notes. They remain visible on the desktop while the library is closed. The desktop scene in the mockup is wallpaper and OS context, not a larger Synkies window containing the notes. Native window independence must be established in M0.
 
 The note title bar has exactly one control: a green circle with a minus at the top left, called Put away. It performs the existing save-and-close action and keeps the note in the library. Do not add other minimize, maximize/fullscreen, pin, overflow, or always-on-top controls in that title bar. The remaining area is a drag handle. Keep on top, source view, and lifecycle/storage actions are available through right-click or app menus. The normal desktop note omits a persistent formatting toolbar and uses a quiet, noninteractive save/mode footer; Markdown editing remains available in the body. Save failures may expose recovery actions in the note body.
 
@@ -84,7 +86,7 @@ Pinning means keeping a note open on the desktop and restoring its placement nex
 
 ### Arranging desktop notes
 
-Provide these proposed, configurable global shortcuts while Peel is resident:
+Provide these proposed, configurable global shortcuts while Synkies is resident:
 
 | Action | Shortcut |
 | --- | --- |
@@ -97,7 +99,7 @@ Expose the same commands under Window, with shortcut labels. Settings provides d
 
 Save a changed preference only after its OS registrations succeed, then publish the new action routing. On registration or persistence failure keep the previous preference, attempt rollback and show any unavailable or uncertain registrations. Menu actions remain usable even when a global shortcut fails. Command N stays the app-level New note action. These preferences stay on the current device. The browser mockup handles its proposed keys only while the preview has focus; native acceptance requires actual global capture and arrangement checks.
 
-The target is the display containing the focused Peel window, otherwise the pointer's display. Arrange all open notes on that display; preserve notes on other displays and the library's bounds. Left/right forms a vertical arrangement against that edge; top/bottom forms a horizontal arrangement. Respect the menu bar, Dock, usable display bounds, and readable minimum note sizes. Keep a stable note order. A manual drag after arrangement moves only that note.
+The target is the display containing the focused Synkies window, otherwise the pointer's display. Arrange all open notes on that display; preserve notes on other displays and the library's bounds. Left/right forms a vertical arrangement against that edge; top/bottom forms a horizontal arrangement. Respect the menu bar, Dock, usable display bounds, and readable minimum note sizes. Keep a stable note order. A manual drag after arrangement moves only that note.
 
 When full content cannot fit, resize within minimum bounds and then cascade with accessible title bars. Further overlap must retain access through the Window menu and library rather than placing windows off-screen. The final native layout policy is validated with one, three, ten, and thirty notes. Arrange changes geometry only, never note content, archive state, pin identity, or library mode.
 
@@ -120,7 +122,7 @@ The mode belongs to the complete linked library. It is not a property independen
 | Mode | Durable note storage | Synchronization | Commercial status |
 | --- | --- | --- | --- |
 | On-device | SQLite on each native device; IndexedDB in each browser profile | Periodic peer sync across local or different networks; no server-stored note copies | Free |
-| Peel Cloud | Complete library in DynamoDB plus local caches | Live delivery between active online devices; stored catch-up for offline clients | Paid |
+| Synkies Cloud | Complete library in DynamoDB plus local caches | Live delivery between active online devices; stored catch-up for offline clients | Paid |
 
 On-device pairing uses authenticated device keys and explicit confirmation/QR or a verified pairing code. Remote pairing and reconnect work across different networks. Do not send note data to a device until pairing is authenticated. Unpairing revokes future connections; offer keeping or removing that device's existing local copy. Removal of a lost device cannot remotely erase an offline copy. Changing a peer group must not expose notes, keys or suggestions from the former group.
 
@@ -132,7 +134,7 @@ iOS schedules background execution opportunistically. The UI must not promise a 
 
 On Mac, use a small SQLite database in a user-selected local directory, with an app-managed default. Relocation flushes writes and uses SQLite backup or a closed checkpointed database; never copy an open database as an ordinary file. A disconnected drive produces a recoverable save error without silently choosing another folder. iPhone uses private app storage. Web uses IndexedDB and requests persistent storage; clearing browser data can still remove local replicas. Every client supports portable export. Browser direct/relayed peer compatibility is an M0 gate, not an omitted feature.
 
-Choose a destination without an existing Peel database. Verify a complete copy before atomically selecting it, and retain the previous folder as an inactive recovery copy until the user explicitly removes it. Later edits go only to the selected copy. A missing selected library opens a reconnect/retry view rather than creating an empty replacement. During relocation every open editor saves and freezes; failed saves cancel the move. If selection publication is uncertain, keep the already-saved editors read-only and offer Quit/reopen before allowing more edits.
+Choose a destination without an existing Synkies database. Verify a complete copy before atomically selecting it, and retain the previous folder as an inactive recovery copy until the user explicitly removes it. Later edits go only to the selected copy. A missing selected library opens a reconnect/retry view rather than creating an empty replacement. During relocation every open editor saves and freezes; failed saves cancel the move. If selection publication is uncertain, keep the already-saved editors read-only and offer Quit/reopen before allowing more edits.
 
 Enabling paid Cloud requires sign-in, an active entitlement and explicit confirmation that the complete linked library will upload, including Archive and retained Trash. Signing in alone does not change mode or upload data. Keep the on-device source, identity map, pairing information and transition journal until the complete cloud copy is acknowledged. Migrate paired devices deliberately into the same authenticated library; a still-offline peer retains work and is reconciled before activation. Do not create two active sync engines for the same library during a transition.
 
@@ -352,7 +354,7 @@ A mutation transaction conditionally updates the note, advances META from an exp
 
 Keep idempotency receipts body-free. A retry response includes the original applied/conflict classification and original revision/sequence, alongside the latest current note or permanent purge head. The current head can be newer than the receipt. Clients reconcile that head and never interpret a replayed acknowledgement as proof that no later edit or deletion exists. A conflict retry returns the current remote version without retaining its old body in the operation record. [Server mutation implementation plan](features/cloud-server-mutations.md).
 
-The isolated service and HTTP/client adapters have local SQLite and synthetic loopback evidence. They do not enable application Cloud mode or establish Cognito/DynamoDB acceptance. If a success receipt matches the current in-flight operation but its current head is newer, retire that known-accepted operation atomically. Adopt the remote head when no later local action exists; otherwise keep the latest local action as a conflict against that head. Do not fabricate an intermediate historical snapshot from the body-free receipt. [Per-note reconciliation plan](features/cloud-head-reconciliation.md). The [paginated pull implementation](features/cloud-paginated-pull.md) adds isolated bootstrap/change and atomic local cursor evidence; production account, store, push and app integration remain open. Single-note HTTP reads carry the expected collection and mode generation in `X-Peel-Collection` and `X-Peel-Mode-Generation`; the owner always comes from server authentication.
+The isolated service and HTTP/client adapters have local SQLite and synthetic loopback evidence. They do not enable application Cloud mode or establish Cognito/DynamoDB acceptance. If a success receipt matches the current in-flight operation but its current head is newer, retire that known-accepted operation atomically. Adopt the remote head when no later local action exists; otherwise keep the latest local action as a conflict against that head. Do not fabricate an intermediate historical snapshot from the body-free receipt. [Per-note reconciliation plan](features/cloud-head-reconciliation.md). The [paginated pull implementation](features/cloud-paginated-pull.md) adds isolated bootstrap/change and atomic local cursor evidence; production account, store, push and app integration remain open. Single-note HTTP reads carry the expected collection and mode generation in `X-Synkies-Collection` and `X-Synkies-Mode-Generation`; the owner always comes from server authentication.
 
 The [DynamoDB mutation adapter](features/cloud-dynamodb-mutations.md) implements the same server read/write contract using transactional reads and conditional writes, including atomic content removal on purge. Its DynamoDB Local suite is isolated implementation evidence; managed-service IAM/cost/backup behavior, hosting and app activation remain open. It does not provision a table or enable Cloud in the app.
 
@@ -393,7 +395,7 @@ Enable point-in-time recovery for hosted beta, initially a documented 7-day reco
 
 ### Authentication and security
 
-On-device capture requires no cloud account. Peer pairing uses authenticated device keys stored in the OS keychain/native secure store or non-extractable browser keys. It does not confer cloud entitlement. Peel Cloud uses Amazon Cognito user pools. Email/password with email verification and password reset is the initial auth proposal; passwordless or social login can be evaluated later. Signing in is for Peel, not for the customer's own AWS account. A verified paid entitlement is also required for Cloud access; a client-side paid flag is never authorization.
+On-device capture requires no cloud account. Peer pairing uses authenticated device keys stored in the OS keychain/native secure store or non-extractable browser keys. It does not confer cloud entitlement. Synkies Cloud uses Amazon Cognito user pools. Email/password with email verification and password reset is the initial auth proposal; passwordless or social login can be evaluated later. Signing in is for Synkies, not for the customer's own AWS account. A verified paid entitlement is also required for Cloud access; a client-side paid flag is never authorization.
 
 Order local pairing confirmation, revocation, session replay claims and received note mutations through the same durable transaction boundary. A revocation committed before an edit, purge or acknowledgement prevents that operation from committing. Reconfirmation invalidates earlier session generations. A stored session claim never restores an active connection after restart; require a fresh verified transcript and local challenge. Local capture remains independent of peer authorization. The isolated [current-trust experiment](features/peer-current-trust.md) is prerequisite evidence, not app pairing or native keystore acceptance.
 
@@ -491,7 +493,7 @@ No acknowledged save may be lost in the recovery test suite. Cloud or AI failure
 | AC-10 | FR-07, FR-13 | A device offline for more than 30 days cannot resurrect a purged note. Explicit recovery of stale text creates a new ID and never restores the purged identity. |
 | AC-11 | FR-03, FR-12 | Interrupt a whole-library mode transition after each durable step. At least one recoverable full copy remains. Export/import preserves body, tags, archive state, and timestamps without duplicating known revisions. |
 | AC-12 | FR-13 | Duplicate requests, paginated pulls, expired sessions, quotas, deleted accounts, interrupted transactions, and expired 90-day cursors preserve local work and show the specified status. |
-| AC-13 | FR-05, FR-14 | Switch Peel accounts and browser tabs; no notes, tokens, outbox entries, suggestions, or vectors leak across accounts. Two independent test accounts have no access to each other's cloud data. |
+| AC-13 | FR-05, FR-14 | Switch Synkies accounts and browser tabs; no notes, tokens, outbox entries, suggestions, or vectors leak across accounts. Two independent test accounts have no access to each other's cloud data. |
 | AC-14 | FR-08 | Run the repeatable performance fixture on production native and web builds. All applicable budgets pass, with raw measurements attached to the release. |
 | AC-15 | FR-05, FR-10 | Complete creation, editing, checkbox toggling, search, archive, restore, and export using keyboard and VoiceOver. Verify Dynamic Type/text zoom, visible focus, contrast, and reduced motion. |
 | AC-16 | FR-03, FR-13 | Browser persistence denied, quota exceeded, folder permission revoked, external drive removed, and iPhone background termination each preserve committed data and expose a truthful state. |
@@ -539,7 +541,7 @@ For hosted beta, provision AWS through reviewed infrastructure code, confirm the
 
 GitHub authentication is verified as devsandip. AWS authentication was verified using the current admin SSO profile with us-east-1 configured. Two isolated disposable relay experiments were provisioned and fully deleted. Runtime controls passed, but relay transfer failed; the second run observed allocation-quota error 486 and live experiments are stopped pending a controlled follow-up. Remote connectivity remains an open gate. See [relay evidence](features/remote-relay-experiment.md). No hosted app or paid billing is enabled. Apple developer distribution access remains unverified. Google Cloud and Google Drive are not dependencies.
 
-Confirmed decisions: the app is Peel; saving has two app-wide modes: free device-only storage with remote periodic peer sync, or paid DynamoDB-backed Cloud with live sync; iPhone comes first with Android browser access. Recommended defaults are SQLite on native clients, IndexedDB in browsers, local semantic retrieval, Cognito authentication, the Markdown grammar above, 30-day Trash, 90-day sync history, and a single cloud region. Cloud price/billing/grace policy, per-account quotas, encryption requirements, remote peer transport and relay deployment, exact supported OS versions, semantic model, and M0 framework results remain open.
+Confirmed decisions: the app is Synkies; saving has two app-wide modes: free device-only storage with remote periodic peer sync, or paid DynamoDB-backed Cloud with live sync; iPhone comes first with Android browser access. Recommended defaults are SQLite on native clients, IndexedDB in browsers, local semantic retrieval, Cognito authentication, the Markdown grammar above, 30-day Trash, 90-day sync history, and a single cloud region. Cloud price/billing/grace policy, per-account quotas, encryption requirements, remote peer transport and relay deployment, exact supported OS versions, semantic model, and M0 framework results remain open.
 
 Screen mockups for this baseline are documented in [ui-spec.md](ui-spec.md) and available in [the local gallery](mockups/index.html). Mockups do not implement the application or establish that performance and reliability requirements have passed.
 

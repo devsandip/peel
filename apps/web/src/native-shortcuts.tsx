@@ -136,7 +136,7 @@ export function NativeShortcutSettings() {
           {data.cleanupRequired && (
             <p role="alert">
               Some global keys could not be released or confirmed. Retry
-              activation, or quit and reopen Peel. Menu actions remain
+              activation, or quit and reopen Synkies. Menu actions remain
               available.
             </p>
           )}

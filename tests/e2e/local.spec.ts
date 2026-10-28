@@ -78,7 +78,7 @@ test("local editing, immediate Close, reload, tags, archive, Trash and transfer"
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export notes…" }).click();
   const exported = await download;
-  expect(exported.suggestedFilename()).toBe("Peel-notes.zip");
+  expect(exported.suggestedFilename()).toBe("Synkies-notes.zip");
   await page.getByRole("button", { name: "Close settings" }).click();
   expect(errors).toEqual([]);
 });

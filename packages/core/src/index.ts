@@ -53,7 +53,7 @@ export function validateNote(value: unknown): Note {
   if (!value || typeof value !== "object") throw new Error("Invalid note.");
   const n = value as Note;
   if (n.schemaVersion !== 1)
-    throw new Error("This note needs a newer version of Peel.");
+    throw new Error("This note needs a newer version of Synkies.");
   if (
     typeof n.noteId !== "string" ||
     !/^[a-zA-Z0-9-]{1,128}$/.test(n.noteId) ||

@@ -16,16 +16,16 @@ interface View {
   error: string | null;
 }
 const descriptions: Record<Status, string> = {
-  notRegistered: "Off. Open Peel when you need it.",
-  enabled: "On. macOS reports Peel is eligible to open at login.",
+  notRegistered: "Off. Open Synkies when you need it.",
+  enabled: "On. macOS reports Synkies is eligible to open at login.",
   requiresApproval:
-    "Waiting for approval in System Settings, General, Login Items. Peel is not currently eligible to open at login.",
+    "Waiting for approval in System Settings, General, Login Items. Synkies is not currently eligible to open at login.",
   notFound:
-    "macOS could not find the login item. Use the installed, signed Peel app and check again.",
+    "macOS could not find the login item. Use the installed, signed Synkies app and check again.",
   unavailable: "macOS could not report the login item status. Check again.",
   unsupported: "Launch at login is available only in the Mac app.",
   development:
-    "Launch at login is unavailable in this development executable. Use the installed, signed Peel app.",
+    "Launch at login is unavailable in this development executable. Use the installed, signed Synkies app.",
   isolated:
     "Launch at login is disabled for this isolated test library. Your Mac login items stay unchanged.",
 };
@@ -75,8 +75,9 @@ export function NativeLoginItemSettings() {
     <section aria-labelledby="login-item-title" className="login-settings">
       <h3 id="login-item-title">Launch at login</h3>
       <p>
-        Start Peel automatically when you sign in to this Mac. Turning this off
-        leaves Peel running until you quit. This choice stays on this Mac.
+        Start Synkies automatically when you sign in to this Mac. Turning this
+        off leaves Synkies running until you quit. This choice stays on this
+        Mac.
       </p>
       {(error || view?.error) && <p role="alert">{error || view?.error}</p>}
       <p role="status">

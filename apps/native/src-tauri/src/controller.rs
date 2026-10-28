@@ -69,7 +69,7 @@ impl Controller {
         } else {
             Err(info
                 .error
-                .unwrap_or("Reconnect the notes folder and reopen Peel.".into()))
+                .unwrap_or("Reconnect the notes folder and reopen Synkies.".into()))
         }
     }
     pub fn begin_choice(&mut self, id: String) -> Result<()> {

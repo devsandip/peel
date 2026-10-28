@@ -42,7 +42,7 @@ impl Coordinator {
         if matches!(self.state, State::Idle) {
             Ok(())
         } else {
-            Err("Peel is finishing a storage operation. Please wait or complete the recovery action.".into())
+            Err("Synkies is finishing a storage operation. Please wait or complete the recovery action.".into())
         }
     }
     pub fn permits_save(&self, window: &str) -> Result<()> {
@@ -51,7 +51,7 @@ impl Coordinator {
         {
             Ok(())
         } else {
-            Err("This editor is frozen while Peel completes its save operation.".into())
+            Err("This editor is frozen while Synkies completes its save operation.".into())
         }
     }
     pub fn choose(&mut self, id: String) -> Result<()> {

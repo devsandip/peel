@@ -1,3 +1,9 @@
+# Synkies brand assets
+
+**Adopted:** [Antigravity v2 Folded Horizon](brand/folded-horizon/README.md), selected by Sandip on28 October2026. The shipping app is Synkies. Canonical masters, provenance and regeneration notes live with the selected assets.
+
+The earlier Peel explorations below are historical alternatives, not the shipping identity.
+
 # Peel logo work
 
 Logo exploration for Peel, 27 October 2026. Nothing here is adopted yet. The app still ships [`apps/web/public/peel.svg`](../apps/web/public/peel.svg) and `apps/native/src-tauri/icons/`.

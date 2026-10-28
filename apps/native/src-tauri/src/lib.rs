@@ -144,7 +144,7 @@ fn get_setting(app: tauri::AppHandle, key: String) -> Result<Option<Value>> {
 #[tauri::command]
 fn set_setting(app: tauri::AppHandle, key: String, value: Value) -> Result<()> {
     if key == "libraryIdentity" || key == "globalShortcuts" || key == "launchAtLogin" {
-        return Err("This setting is managed by Peel.".into());
+        return Err("This setting is managed by Synkies.".into());
     }
     idle_write(&app)?.set_setting(&key, value)
 }
@@ -233,7 +233,7 @@ fn note_window(app: &tauri::AppHandle, note_id: &str, position: Option<(f64, f64
         &label,
         WebviewUrl::App(format!("index.html?note={note_id}").into()),
     )
-    .title("Peel note")
+    .title("Synkies note")
     .decorations(false)
     .shadow(true)
     .resizable(true)
@@ -373,7 +373,7 @@ fn open_library(app: tauri::AppHandle) -> Result<()> {
         return w.set_focus().map_err(|e| e.to_string());
     }
     let window = WebviewWindowBuilder::new(&app, "library", WebviewUrl::App("index.html".into()))
-        .title("Peel · Notes Library")
+        .title("Synkies · Notes Library")
         .inner_size(1060.0, 720.0)
         .min_inner_size(660.0, 460.0)
         .center()
@@ -699,7 +699,7 @@ async fn choose_library_folder(app: tauri::AppHandle) -> Result<Option<LibraryIn
             picker
                 .dialog()
                 .file()
-                .set_title("Choose a folder for your Peel library")
+                .set_title("Choose a folder for your Synkies library")
                 .blocking_pick_folder()
                 .map(|path| {
                     path.into_path()
@@ -751,8 +751,8 @@ async fn export_archive(app: tauri::AppHandle, bytes: Vec<u8>) -> Result<bool> {
         let Some(path) = app
             .dialog()
             .file()
-            .add_filter("Peel export", &["zip"])
-            .set_file_name("Peel-notes.zip")
+            .add_filter("Synkies export", &["zip"])
+            .set_file_name("Synkies-notes.zip")
             .blocking_save_file()
         else {
             return Ok(false);
@@ -851,7 +851,7 @@ fn update_shortcut_menus(app: &tauri::AppHandle, state: &mut Shortcuts) {
             .as_ref()
             .map(|binding| binding.accelerator());
         if item.set_accelerator(key).is_err() {
-            state.warn("Global settings are saved, but a Window menu label could not refresh. Reopen Peel to retry the label.");
+            state.warn("Global settings are saved, but a Window menu label could not refresh. Reopen Synkies to retry the label.");
         }
     }
 }
@@ -942,13 +942,13 @@ fn menu(app: &tauri::AppHandle) -> tauri::Result<()> {
         Some("CmdOrCtrl+Shift+L"),
     )?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, Some("CmdOrCtrl+,"))?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Peel", true, Some("CmdOrCtrl+Q"))?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Synkies", true, Some("CmdOrCtrl+Q"))?;
     let peel = Submenu::with_items(
         app,
-        "Peel",
+        "Synkies",
         true,
         &[
-            &PredefinedMenuItem::about(app, Some("About Peel"), None)?,
+            &PredefinedMenuItem::about(app, Some("About Synkies"), None)?,
             &settings,
             &PredefinedMenuItem::separator(app)?,
             &PredefinedMenuItem::hide(app, None)?,
@@ -1063,7 +1063,7 @@ fn menu(app: &tauri::AppHandle) -> tauri::Result<()> {
     tauri::tray::TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .icon_as_template(false)
-        .tooltip("Peel")
+        .tooltip("Synkies")
         .menu(&tray_menu)
         .show_menu_on_left_click(true)
         .build(app)?;
@@ -1190,7 +1190,7 @@ pub fn run() {
             open_login_item_settings
         ])
         .build(tauri::generate_context!())
-        .expect("Peel could not start. Check access to your local notes folder.")
+        .expect("Synkies could not start. Check access to your local notes folder.")
         .run(|app, event| {
             if let tauri::RunEvent::ExitRequested { api, code, .. } = event {
                 if !app.state::<Store>().allow_exit.load(Ordering::SeqCst) {

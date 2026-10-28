@@ -1,8 +1,10 @@
-# Peel product requirements
+# Synkies product requirements
 
 Version 0.7 | 26 October 2026 | Implementation baseline
 
-Peel is a fast personal note app for Mac, iPhone, and browsers, including Android browsers. Sandip dogfoods it first; public release follows measured reliability and distribution gates. [PRFAQ.md](PRFAQ.md) describes the customer experience and [SPEC.md](SPEC.md) owns the detailed contracts and stable requirement IDs.
+Brand update: 28 October 2026. Synkies replaces the name Peel and adopts Antigravity v2 Folded Horizon. Functional version 0.7 and requirement IDs stay unchanged; repository, storage and protocol identifiers retain their compatible names. See [brand plan](features/synkies-brand.md).
+
+Synkies is a fast personal note app for Mac, iPhone, and browsers, including Android browsers. Sandip dogfoods it first; public release follows measured reliability and distribution gates. [PRFAQ.md](PRFAQ.md) describes the customer experience and [SPEC.md](SPEC.md) owns the detailed contracts and stable requirement IDs.
 
 ## Customer problem
 
@@ -10,14 +12,14 @@ Capture should take one action and no saving ritual. Notes should remain close t
 
 ## Two app-wide modes
 
-| | On-device | Peel Cloud |
+| | On-device | Synkies Cloud |
 | --- | --- | --- |
 | Price | Free | Paid; price and billing provider undecided |
 | Note storage | Local database on each paired device only | Complete collection in DynamoDB plus local device caches |
 | Sync | Periodic, between paired devices, including different networks | Live push between online connected devices |
 | Offline recipient | Changes wait on a device until peers overlap online | Stored cloud changes download when the device returns |
 | Concurrent edits | Latest edit wins automatically; optional local recovery history | Preserve both offline concurrent versions for explicit resolution |
-| Account | No cloud account required for local capture or peer pairing | Peel account and active entitlement |
+| Account | No cloud account required for local capture or peer pairing | Synkies account and active entitlement |
 
 On-device remote sync may use encrypted transient relays for connectivity. Relays do not store note content. This differs from a cloud copy that can deliver changes while the source device is offline. The UI must explain waiting devices and last successful sync. iOS decides when background work can run; foreground and reconnect provide reliable sync opportunities.
 

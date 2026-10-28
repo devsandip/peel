@@ -1,6 +1,8 @@
-# Peel
+# Synkies
 
-A Mac app centered on independent floating notes and a searchable Notes Library, with a local browser development client and an iPhone client planned. Two app-wide modes are confirmed: free On-device storage with periodic remote peer sync, and paid DynamoDB-backed Peel Cloud with live sync.
+Formerly Peel. The app now uses **Synkies** and Antigravity's **Folded Horizon** identity. The repository and compatible storage/package identifiers keep their existing names. [Selected brand assets](ux/brand/folded-horizon/README.md).
+
+A Mac app centered on independent floating notes and a searchable Notes Library, with a local browser development client and an iPhone client planned. Two app-wide modes are confirmed: free On-device storage with periodic remote peer sync, and paid DynamoDB-backed Synkies Cloud with live sync.
 
 Implementation has started on a local Mac development build. Peer sync, paid Cloud, live delivery, iPhone and meaning search are not implemented yet. The complete intended product is documented below.
 
@@ -15,11 +17,11 @@ Implementation has started on a local Mac development build. Peer sync, paid Clo
 
 ## Development approach
 
-Track current work in the [Peel GitHub Project](https://github.com/users/devsandip/projects/12). Its current-milestone view shows deliverable issues, with separate issue, pull-request and backlog views. Repository Issues and Milestones retain acceptance criteria and completion evidence; board card counts are not product-completion percentages.
+Track current work in the [Synkies GitHub Project](https://github.com/users/devsandip/projects/12). Its current-milestone view shows deliverable issues, with separate issue, pull-request and backlog views. Repository Issues and Milestones retain acceptance criteria and completion evidence; board card counts are not product-completion percentages.
 
 Use spec driven development. Start each milestone with a requirement-linked plan in `docs/features/`. Resolve the feasibility gates in the SPEC, implement a small vertical slice, and attach verification evidence to the matching acceptance criteria. Update the canonical specification when product behavior changes.
 
-The first implementation target is local Mac capture and durable automatic saving. Peel Remote peer sync, paid live Cloud and the web app follow, then the iPhone app and search by meaning. All are required for the intended public release.
+The first implementation target is local Mac capture and durable automatic saving. Synkies Remote peer sync, paid live Cloud and the web app follow, then the iPhone app and search by meaning. All are required for the intended public release.
 
 Both modes use local persistence for speed. Free peer sync keeps notes only on devices; paid Cloud uses DynamoDB and push delivery. AWS will host the browser shell, signaling and cloud services. This public repository starts from a reviewed snapshot; earlier development history and CI records remain in a private archive. Historical commit/run identifiers in experiment records refer to that archive. Public source access does not mean the application has passed its public-beta or distribution gates.
 
@@ -41,7 +43,7 @@ pnpm build
 pnpm --filter @peel/web preview
 ```
 
-Open http://127.0.0.1:4322 online once and wait for Settings to report offline access ready. It can then reload, capture, save and search without a connection. Updates wait for all Peel tabs to close. Only public app files are cached; notes remain in IndexedDB. Browser data can still be cleared or evicted, so keep exports. Development disables service workers; the separate port prevents an installed production shell from controlling the development server. Each origin has its own browser library.
+Open http://127.0.0.1:4322 online once and wait for Settings to report offline access ready. It can then reload, capture, save and search without a connection. Updates wait for all Synkies tabs to close. Only public app files are cached; notes remain in IndexedDB. Browser data can still be cleared or evicted, so keep exports. Development disables service workers; the separate port prevents an installed production shell from controlling the development server. Each origin has its own browser library.
 
 ```bash
 export PATH="$HOME/.cargo/bin:$PATH"
@@ -49,9 +51,9 @@ pnpm mac:dev
 pnpm mac:build
 ```
 
-The native bundle is generated at `apps/native/src-tauri/target/release/bundle/macos/Peel.app`. It is a development build, without distribution signing/notarization. The app is resident: use the File menu or Command Shift L for Notes Library; Quit Peel exits it. Each note has a green minus that saves and puts it away.
+The native bundle is generated at `apps/native/src-tauri/target/release/bundle/macos/Synkies.app`. It is a development build, without distribution signing/notarization. The app is resident: use the File menu or Command Shift L for Notes Library; Quit Synkies exits it. Each note has a green minus that saves and puts it away.
 
-Native notes default to `~/Library/Application Support/com.peelnotes.desktop/notes.sqlite3`. Settings can choose another empty notes folder after every open editor saves. Peel verifies the copy and retains the previous folder as an inactive recovery copy; later edits use the selected folder only. Missing storage opens a reconnect/retry view. Quit older Peel builds before testing, since they do not honor the new process locks.
+Native notes default to `~/Library/Application Support/com.peelnotes.desktop/notes.sqlite3`. Settings can choose another empty notes folder after every open editor saves. Synkies verifies the copy and retains the previous folder as an inactive recovery copy; later edits use the selected folder only. Missing storage opens a reconnect/retry view. Quit older Synkies builds before testing, since they do not honor the new process locks.
 
 Settings also configures device-local global capture and four-edge arrangement shortcuts. It supports disabled bindings, defaults, activation retry and visible registration failures. File and Window menu actions remain available.
 

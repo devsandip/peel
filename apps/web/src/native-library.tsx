@@ -73,14 +73,16 @@ export function NativeLibraryGate({ children }: { children: ReactNode }) {
         </h1>
         {error && <p role="alert">{error}</p>}
         <p>
-          Peel keeps your selected library in place. Reconnect its drive or
+          Synkies keeps your selected library in place. Reconnect its drive or
           restore access, then retry. No empty replacement library has been
           opened.
         </p>
         <button disabled={loading} onClick={() => void load(true)}>
           Retry opening library
         </button>{" "}
-        <button onClick={() => void invoke("request_quit")}>Quit Peel</button>
+        <button onClick={() => void invoke("request_quit")}>
+          Quit Synkies
+        </button>
       </main>
     );
   return (
@@ -95,7 +97,7 @@ export function NativeLibraryGate({ children }: { children: ReactNode }) {
           </p>
           {restart ? (
             <button onClick={() => void invoke("request_quit")}>
-              Quit and reopen Peel
+              Quit and reopen Synkies
             </button>
           ) : (
             !moving && <button onClick={() => setError("")}>Dismiss</button>
@@ -143,8 +145,8 @@ export function NativeFolderSettings() {
         <strong>Notes folder</strong>
         {info?.folder && <p className="folder-path">{info.folder}</p>}
         <p>
-          Choose a folder without an existing Peel database. Peel verifies a
-          complete copy before using it. The previous folder stays as an
+          Choose a folder without an existing Synkies database. Synkies verifies
+          a complete copy before using it. The previous folder stays as an
           inactive recovery copy.
         </p>
         {info?.previousFolder && (
@@ -163,7 +165,7 @@ export function NativeFolderSettings() {
         )}
         {info?.requiresRestart && (
           <button onClick={() => void invoke("request_quit")}>
-            Quit and reopen Peel
+            Quit and reopen Synkies
           </button>
         )}
       </div>

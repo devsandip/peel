@@ -136,7 +136,7 @@ impl Backend for Os {
         if self.dispatch(move || unsafe { peel_login_item_change(i32::from(enable)) })? != 0 {
             return Ok(());
         }
-        Err("macOS could not change the login item. Use the installed, signed Peel app and review Login Items in System Settings, then check again.".into())
+        Err("macOS could not change the login item. Use the installed, signed Synkies app and review Login Items in System Settings, then check again.".into())
     }
     fn open_settings(&mut self) -> Result<()> {
         #[cfg(target_os = "macos")]

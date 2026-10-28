@@ -92,7 +92,7 @@ try {
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(
     page.getByText(
-      "Peel can reopen without an internet connection. Browser data can still be cleared.",
+      "Synkies can reopen without an internet connection. Browser data can still be cleared.",
     ),
   ).toBeVisible();
   checks.initialVerifiedInstallReady = true;
@@ -157,6 +157,8 @@ try {
           !url.search &&
           (url.pathname === "/index.html" ||
             url.pathname === "/peel.svg" ||
+            url.pathname === "/synkies-logo-light.svg" ||
+            url.pathname === "/synkies-logo-dark.svg" ||
             url.pathname.startsWith("/assets/"));
         searchWorker ||= url.pathname.includes("search.worker-");
         containsNote ||= (await (await cache.match(request)).text()).includes(
@@ -180,7 +182,7 @@ try {
   await page.getByRole("button", { name: "Retry offline setup" }).click();
   await expect(
     page.getByText(
-      "Peel can reopen without an internet connection. Browser data can still be cleared.",
+      "Synkies can reopen without an internet connection. Browser data can still be cleared.",
     ),
   ).toBeVisible();
   await page.getByRole("button", { name: "Close settings" }).click();
@@ -311,7 +313,7 @@ try {
     .click();
   await expect(
     firstFailurePage.getByText(
-      "Peel can reopen without an internet connection. Browser data can still be cleared.",
+      "Synkies can reopen without an internet connection. Browser data can still be cleared.",
     ),
   ).toBeVisible();
   await firstFailureContext.setOffline(true);

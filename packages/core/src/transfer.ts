@@ -40,14 +40,14 @@ export function importArchive(bytes: Uint8Array): Note[] {
     },
   });
   if (!files["manifest.json"])
-    throw new Error("This file is missing its Peel manifest.");
+    throw new Error("This file is missing its Synkies manifest.");
   const manifest = JSON.parse(strFromU8(files["manifest.json"]));
   if (
     manifest.format !== "peel-export" ||
     manifest.version !== 1 ||
     !Array.isArray(manifest.notes)
   )
-    throw new Error("Unsupported Peel export.");
+    throw new Error("Unsupported Synkies export.");
   const seen = new Set<string>();
   return manifest.notes.map((entry: Record<string, unknown>) => {
     if (typeof entry.file !== "string" || !files[entry.file])

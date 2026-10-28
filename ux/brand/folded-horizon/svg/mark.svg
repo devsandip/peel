@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+<g>
+    <!-- Pale Yellow Paper Sticky Note Body -->
+    <path d="M 272 184 H 752 A 88 88 0 0 1 840 272 V 548 L 548 840 H 272 A 88 88 0 0 1 184 752 V 272 A 88 88 0 0 1 272 184 Z" fill="#FFF5C7" stroke="#292C28" stroke-width="24" stroke-linejoin="round"/>
+    <!-- Restrained Note Header / Text Lines in Note Text (#45412D) -->
+    <rect x="272" y="296" width="320" height="48" rx="24" ry="24" fill="#45412D"/>
+    <rect x="272" y="388" width="208" height="48" rx="24" ry="24" fill="#EFD06B"/>
+    <!-- Soft Amber Cloud-Horizon Corner Fold (separated by a 28px charcoal negative-space channel) -->
+    <path d="M 520.00 840.00 A 96.00 96.00 0 1 1 525.60 648.16 A 124.00 124.00 0 0 1 771.95 664.36 A 88.00 88.00 0 1 1 764.00 840.00 Z" fill="#EFD06B" stroke="#292C28" stroke-width="28" stroke-linejoin="round"/>
+  </g>
+</svg>
