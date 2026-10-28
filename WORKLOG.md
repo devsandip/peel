@@ -1712,3 +1712,18 @@
 
 **Next:**
 - Merge the focused mockup PR after gates, then resume issue106 from codex/cloud-owned-sqlite-engine. Preserve its original compatibility baseline and finish remaining code review/local/hosted validation before a separate merge. No user input is required for routine work.
+
+
+## 2026-10-28 - Resume compatible owned SQLite mechanics extraction after Synkies branding
+
+**Did:**
+- Completed the requested checkpoint/app/mockup Synkies work in PR108/110/112 and resumed issue106 on current main. Kept its pre-code plan and baseline compatibility history while rebasing only the unpublished owned branch.
+- Shared existing filesystem/SQLite initialization/validation mechanics through fixed internal repository configuration. Kept ledger schema/marker bytes, public wrapper/error/authority APIs and mutability, create/open/error ordering, recovery behavior and actual legacy limitations; run-ledger policy/transactions are unchanged.
+- Passed26 actualNode24 namespace/ledger cases against the original implementation and the extracted implementation, including original competing writers/SIGKILL/commit-ack/expired-cleanup behavior and five compatibility cases. Added actual connection-failure handle-close observation without replacing real SQL or process tests.
+- Verified five filesystem helpers match baseline ignoring whitespace. Omitting the delegated metadata validator fails the intended changed-authority refusal assertion; restored exact source passes. ActualNode24 direct imports and246focused Cloud consumer cases/22files pass, as do461shared cases/60files, type/format and web build. Existing chunk warning remains.
+
+**State now:**
+- This reuses internal mechanics; it adds no journal namespace/genesis/token/fence/receipt, spending authority, default database access, enabled app feature, AWS operation or stopped-probe retry. Final-source hosted gates and focused review precede integration. M2.2/audit51/managed31/native72 remain open/blocked as applicable.
+
+**Next:**
+- Finish this standalone PR after all required exact-head checks, merge normally, update Project and record main checks separately. Then scope only the next fixed journal-genesis/bootstrap deliverable from the canonical protocol; retain independent funding/source anchors and all current provisioning/cleanup gates.

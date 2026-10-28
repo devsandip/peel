@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-28 17:10 IST.
+Last refreshed: 2026-10-28 17:38 IST.
 
-Latest entry: [Synkies and Folded Horizon adopted](entries/2026-10-28-1710-synkies-brand-adopted.md).
+Latest entry: [Shared SQLite mechanics after branding](entries/2026-10-28-1738-sqlite-mechanics-shared.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
 
@@ -12,10 +12,11 @@ I have a local Mac development build and browser client. The complete promised s
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
 
-Synkies and Folded Horizon are adopted in the app after PR110, with compatible stored identities preserved. The110 canonical mockups plus five dark exports are regenerated and locally checked in the following focused slice. Issue106's extraction remains saved on its own branch, with final review, broader/hosted checks and merge still pending. I resume it after branding. No native app/controller was launched for this work.
+Synkies/Folded Horizon are adopted across the app and110canonical mockups plus five dark exports after PR108/110/112, with stored identities preserved. I returned to issue106: the funding ledger now reuses fixed shared SQLite mechanics, with original compatibility and actual process tests retained. This remains an operator foundation, not an enabled Cloud feature. Journal genesis/bootstrap and later request/dispatch/lifecycle slices remain separate next work; M2.2 still needs actual managed/teardown evidence.
 
 ## Recent entries
 
+- [2026-10-28 17:38 IST: shared SQLite mechanics after branding](entries/2026-10-28-1738-sqlite-mechanics-shared.md)
 - [2026-10-28 17:10 IST: Synkies and Folded Horizon adopted](entries/2026-10-28-1710-synkies-brand-adopted.md)
 - [2026-10-28 16:53 IST: build checkpoint and brand decision](entries/2026-10-28-1653-bootstrap.md)
 
