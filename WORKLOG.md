@@ -1588,3 +1588,18 @@
 
 **Next:**
 - Merge the focused context PR after exact-head checks/review, synchronize Project and verify main separately. Plan one canonical-binding/durable-journal slice before code; save/send the milestone report only after actual exit criteria pass.
+
+## 2026-10-28 - Observe actual original-run reservation binding in the selected canonical ledger
+
+**Did:**
+- Merged PR95/issue94 asfaffdb7 after all3exact-source jobs40652384865/focused review, matching tested/merge trees and no-reply/scans. Project cards Done; all3main40653688321 now pass independently.
+- Created issue96 and committed its requirement-linked plan before code. Added existing-namespace-only context/authority/reservation inspection through public ledger APIs, a narrow pure authority normalizer and no raw SQL or mutation path in the observer.
+- Checked original digest/identity/slot/time/margin and first-after-second envelopes, with explicit unproven ownership/run authority and receipt-recorded metadata. Added only optional synthetic fixture inputs; existing formats/APIs remain compatible.
+- Passed10focused/direct import and41combined legacy cases under actual Node24.22.1; all430shared cases/58files, type/format/build pass. Fresh synthetic SQLite files prove preservation/no record mutation, actual busy-lock refusal and expired/current-helper-unavailable reads. Existing chunk warning remains.
+
+**State now:**
+- This is local observation, not fresh durability, external approval or an atomic future write grant. No actual operator/default database/provider/resource/app/billing or stopped-probe work. Hosted checks/review precede merge.
+- M2.2 remains open with durable context/intents/client tokens/provider receipts, execution/rechecks, ownership/lifecycle and managed/teardown proof required. Audit51/managed31/native72 stay blocked.
+
+**Next:**
+- Merge the focused binding PR after exact-head gates/review, synchronize Project and verify main separately. Plan one durable journal namespace/intent slice before code; save/send its milestone report only after exit criteria pass.

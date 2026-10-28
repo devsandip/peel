@@ -13,9 +13,13 @@ import {
 } from "../../infra/cloud/cleanup.ts";
 
 // Actual validators/factories over synthetic inputs, never provider/budget approval.
-export function cloudNormalizedPlanFixture(secondSlot = false) {
+export function cloudNormalizedPlanFixture(
+  secondSlot = false,
+  runId = ledgerRunIds[0],
+  now = Date.parse("2026-10-27T12:00:00.000Z"),
+) {
   const hash = (s: string) => createHash("sha256").update(s).digest("hex"),
-    f = cloudLedgerPlan(undefined, Date.parse("2026-10-27T12:00:00.000Z")),
+    f = cloudLedgerPlan(runId, now),
     inventory = {
       accountId: f.plan.identity.accountId,
       region: "us-east-1" as const,
@@ -44,7 +48,12 @@ export function cloudNormalizedPlanFixture(secondSlot = false) {
       {
         format: 1,
         runs: secondSlot
-          ? [{ runId: ledgerRunIds[1], cleanup: "verified" }]
+          ? [
+              {
+                runId: ledgerRunIds.find((id) => id !== runId)!,
+                cleanup: "verified",
+              },
+            ]
           : [],
       },
       f.now,

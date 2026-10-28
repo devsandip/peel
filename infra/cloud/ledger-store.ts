@@ -119,6 +119,10 @@ function authorization(value: unknown) {
     authorizedUntil: iso(a.authorizedUntil),
   });
 }
+/** Normalize original local ledger scope only; no reservation or execution authority. */
+export function normalizeCloudLedgerAuthority(value: unknown) {
+  return privateCall(() => authorization(value));
+}
 function canonicalDirectory(value: string) {
   if (
     typeof value !== "string" ||
