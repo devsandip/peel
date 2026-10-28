@@ -1618,3 +1618,18 @@
 
 **Next:**
 - Merge this focused refactor after exact-head gates/review, update Project and verify main separately. Scope one bound journal/context persistence deliverable before code; save/send the milestone report only after actual exit criteria pass.
+
+## 2026-10-28 - Persist original Cloud context against actual selected recipe and reservation stores
+
+**Did:**
+- Verified all3main jobs40659752979 for PR99 merge567ccde pass; appended issue98 evidence6464963552. Committed issue100's requirement-linked plan before code and moved its Project card In progress.
+- Added a fixed immutable context wrapper with strict detached pre-I/O pins/digest/authority/path bounds, canonical source selection, actual manifest/ledger source checks before publication and on every readback/open/inspection. Reused the immutable engine; existing source formats/APIs remain unchanged.
+- Preserved first-run readability after actual cleanup/second reservation, context-only synchronization acknowledgements and unknown/source-damage preservation. Actual independent creators/SIGKILL cases prove process interruption behavior. Source-check removal and marker-source-binding negative controls fail; restored source passes.
+- Passed13focused/direct import and78combined cases under actualNode24.22.1; all445shared cases/59files, type/format/build pass. Corrected initial test-input type annotations before final checks; existing chunk warning remains.
+
+**State now:**
+- This is private local context persistence, not an appendable creation journal, atomic cross-store future-write authorization, recipe-store re-sync or spending/provider authority. No actual operator/default note DB, AWS/account/resource/app/billing or stopped-probe work. Hosted exact-head checks and focused review precede merge.
+- M2.2 stays open. Durable intents/client tokens/provider IDs, execution/rechecks, ownership/lifecycle and actual managed/teardown evidence remain; audit51/managed31/native72 stay Blocked.
+
+**Next:**
+- Merge the focused context-store PR after exact-head gates/review, update Project and verify main separately. Scope a durable creation-intent/client-token deliverable before code, retaining every execution/cleanup gate. Save/send the milestone report only after actual exit criteria pass.
