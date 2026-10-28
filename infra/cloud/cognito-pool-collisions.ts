@@ -4,6 +4,7 @@ import {
   cloudExpectedInventory,
   type CloudInventoryInput,
 } from "./expected-inventory.ts";
+import { readHistoricalCloudInventory } from "./historical-inventory.ts";
 import { collectCloudInspectionIdentity } from "./inspection-identity.ts";
 import { assertCloudIdentityEnvironment } from "./identity-observations.ts";
 
@@ -11,6 +12,22 @@ type Input = {
   profile: string;
   inventory: CloudInventoryInput;
   templates: string;
+};
+type RetainedInput = {
+  json: string;
+  pin: Parameters<typeof readHistoricalCloudInventory>[1];
+};
+type Scope = {
+  profile: string;
+  expected: ReturnType<typeof cloudExpectedInventory>;
+  name: string;
+  retainedManifestSha256?: string;
+};
+type Dependencies = {
+  run?: Runner;
+  identity?: typeof collectCloudInspectionIdentity;
+  clock?: () => number;
+  signal?: AbortSignal;
 };
 type Runner = (
   args: readonly string[],
@@ -32,6 +49,7 @@ class PoolFailure extends Error {
   constructor(code: Code) {
     super("Cloud Cognito pool observation unavailable");
     this.code = code;
+    Object.freeze(this);
   }
 }
 const fail = (code: Code): never => {
@@ -69,7 +87,7 @@ function text(
     return fail(code);
   return value;
 }
-function capture(input: Input) {
+function capture(input: Input): Scope {
   const data = record(
       input,
       ["profile", "inventory", "templates"],
@@ -82,26 +100,47 @@ function capture(input: Input) {
       "invalid-input",
     );
   try {
-    const expected = cloudExpectedInventory(
+    return scope(
+      profile,
+      cloudExpectedInventory(
         data.inventory as CloudInventoryInput,
         data.templates as string,
       ),
-      pool = expected.stacks
-        .find((s) => s.kind === "data")
-        ?.resources.find((r) => r.logicalId === "CloudUserPool");
-    if (
-      pool?.type !== "AWS::Cognito::UserPool" ||
-      pool.identity.kind !== "provider" ||
-      pool.identity.name?.property !== "UserPoolName"
-    )
-      return fail("invalid-input");
-    const name = text(
-      pool.identity.name.value,
-      /^[a-z0-9-]+$/,
-      128,
-      "invalid-input",
     );
-    return { profile, expected, name };
+  } catch {
+    return fail("invalid-input");
+  }
+}
+function scope(
+  profile: string,
+  expected: Scope["expected"],
+  retainedManifestSha256?: string,
+): Scope {
+  const pool = expected.stacks
+    .find((s) => s.kind === "data")
+    ?.resources.find((r) => r.logicalId === "CloudUserPool");
+  if (
+    pool?.type !== "AWS::Cognito::UserPool" ||
+    pool.identity.kind !== "provider" ||
+    pool.identity.name?.property !== "UserPoolName"
+  )
+    return fail("invalid-input");
+  const name = text(
+    pool.identity.name.value,
+    /^[a-z0-9-]+$/,
+    128,
+    "invalid-input",
+  );
+  return { profile, expected, name, retainedManifestSha256 };
+}
+function captureRetained(input: RetainedInput): Scope {
+  const data = record(input, ["json", "pin"], "invalid-input");
+  try {
+    const retained = readHistoricalCloudInventory(
+      data.json as string,
+      data.pin as RetainedInput["pin"],
+    );
+    return scope(retained.profile, retained.inventory, retained.manifestSha256);
   } catch {
     return fail("invalid-input");
   }
@@ -155,6 +194,13 @@ export function cloudCognitoPoolCommand(
   nextToken: string | null = null,
 ) {
   return command(capture(input), token(nextToken));
+}
+/** Fixed native page command from original independently pinned selectors. */
+export function cloudRetainedCognitoPoolCommand(
+  input: RetainedInput,
+  nextToken: string | null = null,
+) {
+  return command(captureRetained(input), token(nextToken));
 }
 function defaultRunner(): Runner {
   const env = {
@@ -226,26 +272,32 @@ async function readPage(
 }
 
 /** A bounded account/region scan is not full absence, an atomic snapshot or creation ownership. */
-export async function collectCloudCognitoPools(
+export function collectCloudCognitoPools(
   input: Input,
-  dependencies: {
-    run?: Runner;
-    identity?: typeof collectCloudInspectionIdentity;
-    clock?: () => number;
-    signal?: AbortSignal;
-  } = {},
+  dependencies: Dependencies = {},
 ) {
+  return collect(() => capture(input), dependencies);
+}
+/** Original recipe expectations only; never creation ownership or atomic absence proof. */
+export function collectRetainedCloudCognitoPools(
+  input: RetainedInput,
+  dependencies: Dependencies = {},
+) {
+  return collect(() => captureRetained(input), dependencies);
+}
+async function collect(captureScope: () => Scope, dependencies: Dependencies) {
   const controller = new AbortController(),
-    clock = dependencies.clock ?? Date.now;
+    clock = dependencies.clock ?? Date.now,
+    signal = dependencies.signal;
   let timer: ReturnType<typeof setTimeout> | undefined,
     listener: (() => void) | undefined,
     timedOut = false,
     aborted = false;
   try {
-    const captured = capture(input),
+    const captured = captureScope(),
       started = clock();
     if (!validClock(started)) return fail("clock-invalid");
-    if (dependencies.signal?.aborted) return fail("aborted");
+    if (signal?.aborted) return fail("aborted");
     try {
       assertCloudIdentityEnvironment(process.env);
     } catch {
@@ -351,6 +403,9 @@ export async function collectCloudCognitoPools(
         fullTargetAbsence: "unproven" as const,
         ownership: "unproven" as const,
         resourceWrites: 0 as const,
+        ...(captured.retainedManifestSha256 === undefined
+          ? {}
+          : { retainedManifestSha256: captured.retainedManifestSha256 }),
       });
     };
     const cancelled = new Promise<never>((_, reject) => {
@@ -359,8 +414,8 @@ export async function collectCloudCognitoPools(
         controller.abort();
         reject(new PoolFailure("aborted"));
       };
-      dependencies.signal?.addEventListener("abort", listener, { once: true });
-      if (dependencies.signal?.aborted) listener();
+      signal?.addEventListener("abort", listener, { once: true });
+      if (signal?.aborted) listener();
     });
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
@@ -385,6 +440,6 @@ export async function collectCloudCognitoPools(
     });
   } finally {
     if (timer !== undefined) clearTimeout(timer);
-    if (listener) dependencies.signal?.removeEventListener("abort", listener);
+    if (listener) signal?.removeEventListener("abort", listener);
   }
 }
