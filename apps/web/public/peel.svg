@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="7" y="5" width="50" height="54" rx="12" fill="#efd06b"/><path d="M43 59H20c17-3 26-12 37-26v12c0 8-6 14-14 14" fill="#c19a30"/><path d="M20 59c8-9 12-17 12-27 7 4 16 5 25 1C46 48 37 56 20 59" fill="#fff5c7"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+<rect x="0" y="0" width="1024" height="1024" rx="230.4" ry="230.4" fill="#292C28"/>
+  <rect x="12" y="12" width="1000" height="1000" rx="218.4" ry="218.4" fill="none" stroke="#30342E" stroke-width="20"/>
+  <g>
+    <!-- Pale Yellow Paper Sticky Note Body -->
+    <path d="M 272 184 H 752 A 88 88 0 0 1 840 272 V 548 L 548 840 H 272 A 88 88 0 0 1 184 752 V 272 A 88 88 0 0 1 272 184 Z" fill="#FFF5C7"/>
+    <!-- Restrained Note Header / Text Lines in Note Text (#45412D) -->
+    <rect x="272" y="296" width="320" height="48" rx="24" ry="24" fill="#45412D"/>
+    <rect x="272" y="388" width="208" height="48" rx="24" ry="24" fill="#EFD06B"/>
+    <!-- Soft Amber Cloud-Horizon Corner Fold (separated by a 28px charcoal negative-space channel) -->
+    <path d="M 520.00 840.00 A 96.00 96.00 0 1 1 525.60 648.16 A 124.00 124.00 0 0 1 771.95 664.36 A 88.00 88.00 0 1 1 764.00 840.00 Z" fill="#EFD06B" stroke="#292C28" stroke-width="28" stroke-linejoin="round"/>
+  </g>
+</svg>

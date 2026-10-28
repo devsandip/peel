@@ -166,7 +166,7 @@ export function Library() {
     try {
       const bytes = exportNotes(await repository.list());
       if (native) await invoke("export_archive", { bytes: Array.from(bytes) });
-      else download(bytes, "Peel-notes.zip");
+      else download(bytes, "Synkies-notes.zip");
     } catch (e) {
       setError(String(e));
     }
@@ -222,9 +222,15 @@ export function Library() {
   return (
     <main className="library">
       <aside className="sidebar">
-        <a className="brand" href="/" aria-label="Peel home">
-          <img src="/peel.svg" alt="" />
-          Peel<span>Notes, close by.</span>
+        <a className="brand" href="/" aria-label="Synkies home">
+          <picture>
+            <source
+              media="(prefers-color-scheme: dark)"
+              srcSet="/synkies-logo-dark.svg"
+            />
+            <img src="/synkies-logo-light.svg" alt="Synkies" />
+          </picture>
+          <span>Notes, close by.</span>
         </a>
         <div className="collection-label">
           <span className="device-dot" />
@@ -383,7 +389,7 @@ export function Library() {
               {query
                 ? "Try fewer words or clear your tag filter."
                 : section === "active"
-                  ? "Open a note, type, and carry on. Peel saves as you go."
+                  ? "Open a note, type, and carry on. Synkies saves as you go."
                   : "Your notes will appear here when you put them away."}
             </p>
             {section === "active" && !query && (
@@ -659,7 +665,7 @@ export function Library() {
         ref={file}
         type="file"
         accept=".zip,.md"
-        aria-label="Import Peel notes"
+        aria-label="Import Synkies notes"
         onChange={(e) => {
           if (e.target.files?.[0]) void importFile(e.target.files[0]);
           e.target.value = "";
@@ -730,7 +736,7 @@ function Settings({
         </div>
         <div className="setting-row">
           <div>
-            <strong>Peel Cloud · Paid</strong>
+            <strong>Synkies Cloud · Paid</strong>
             <p>
               Not available in this build. Cloud mode will store the whole
               library and sync live.
@@ -771,9 +777,9 @@ function Settings({
               <strong>Offline access</strong>
               <p role="status">
                 {offline === "ready"
-                  ? "Peel can reopen without an internet connection. Browser data can still be cleared."
+                  ? "Synkies can reopen without an internet connection. Browser data can still be cleared."
                   : offline === "update-ready"
-                    ? "An update is ready. It will apply after all Peel tabs close. Your notes save on this device."
+                    ? "An update is ready. It will apply after all Synkies tabs close. Your notes save on this device."
                     : offline === "preparing"
                       ? "Preparing offline access…"
                       : offline === "development"
@@ -790,8 +796,8 @@ function Settings({
         )}
         <h3>Your notes, in your hands</h3>
         <p>
-          Export Markdown files and a metadata manifest in a ZIP. Import a Peel
-          ZIP or a Markdown file. Importing never uploads notes.
+          Export Markdown files and a metadata manifest in a ZIP. Import a
+          Synkies ZIP or a Markdown file. Importing never uploads notes.
         </p>
         <div className="setting-buttons">
           <button onClick={onExport}>Export notes…</button>
@@ -811,7 +817,7 @@ function Settings({
           </>
         )}
         {error && <p role="alert">{error}</p>}
-        <p className="version">Peel 0.1 · Local development build</p>
+        <p className="version">Synkies 0.1 · Local development build</p>
       </section>
     </div>
   );

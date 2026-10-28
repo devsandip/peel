@@ -1,0 +1,43 @@
+{
+  "selection": "Synkies Folded Horizon",
+  "source": "User-provided Antigravity v2, directions/01-folded-horizon",
+  "adopted": "2026-10-28",
+  "files": [
+    {
+      "path": "direction.md",
+      "sha256": "973b0fb2f30dd1eec027f3b093751e5e1a8236ecda763c558511224ab07211de"
+    },
+    {
+      "path": "png/icon-1024.png",
+      "sha256": "3d5808859f876876640ee2b73750666e956d2758b2aa24475bc58f9f33fb0eeb"
+    },
+    {
+      "path": "svg/icon.svg",
+      "sha256": "3339e48ad41e1925a6b1c941062c68cfd31f90ab2406c2413a6093bfb6e8cfcc"
+    },
+    {
+      "path": "svg/lockup-dark.svg",
+      "sha256": "634fda018515f0413580c383149ec6c8274310c487acbbf4733c443fcff50916"
+    },
+    {
+      "path": "svg/lockup-light.svg",
+      "sha256": "2c7c9ce104113d527029f25943b76e06ba8209d0ba381230e4900acf73eb60d1"
+    },
+    {
+      "path": "svg/mark.svg",
+      "sha256": "4e43b51325253e4be10c6e8fa9595394a78fe4a93d0438b1987d22aeccccb2d8"
+    },
+    {
+      "path": "svg/wordmark-dark.svg",
+      "sha256": "faafd35e546a2735c79f30b01fed3a8544312b6959416b71e52b979cdf40e551"
+    },
+    {
+      "path": "svg/wordmark-light.svg",
+      "sha256": "a16b5c02ae817b4bd85770aa115ee9000306ddcc9895b4c062379977ef2a69e9"
+    },
+    {
+      "path": "tokens.json",
+      "sha256": "e7a89f6cf3e6e598efaa3167a0877dbff4601ebbf4f03cac3bf579ca11039c99"
+    }
+  ]
+}

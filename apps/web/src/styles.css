@@ -90,22 +90,26 @@ hr {
   overflow: auto;
 }
 .brand {
-  display: grid;
-  grid-template-columns: 37px 1fr;
-  gap: 0 9px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 170px;
+  max-width: 100%;
   text-decoration: none;
-  color: var(--text);
-  font-weight: 650;
-  font-size: 25px;
-  letter-spacing: -1px;
-  margin: 0 10px 38px;
+  margin: 0 0 31px;
+}
+.brand picture {
+  display: block;
+  width: 100%;
 }
 .brand img {
-  width: 36px;
-  grid-row: span 2;
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .brand span {
+  width: 100%;
+  text-align: center;
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 0.15px;
@@ -845,14 +849,9 @@ hr {
     overflow: visible;
   }
   .brand {
-    font-size: 21px;
-    grid-template-columns: 27px 1fr;
-    gap: 7px;
+    width: 126px;
+    flex-shrink: 0;
     margin: 0 auto 0 0;
-  }
-  .brand img {
-    width: 27px;
-    grid-row: auto;
   }
   .brand span,
   .collection-label,

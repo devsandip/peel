@@ -94,7 +94,7 @@ export function useNoteSession(initial: Note) {
       await flush();
       if (locks.current.size || draftsAreFrozen())
         throw new Error(
-          "Peel is finishing a storage operation. Retry this action afterward.",
+          "Synkies is finishing a storage operation. Retry this action afterward.",
         );
       latest.current = { ...next, localRevision: revision.current };
       dirty.current = true;

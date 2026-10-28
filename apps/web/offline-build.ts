@@ -24,6 +24,8 @@ export function offlineShell(): Plugin {
           (name) => name === "index.html" || name.startsWith("assets/"),
         ),
         "peel.svg",
+        "synkies-logo-light.svg",
+        "synkies-logo-dark.svg",
       ].sort();
       if (
         !paths.includes("index.html") ||

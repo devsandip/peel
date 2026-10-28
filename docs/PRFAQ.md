@@ -1,24 +1,26 @@
-# Peel PRFAQ
+# Synkies PRFAQ
 
 Version 0.7 | 26 October 2026 | Intended product, implementation underway
+
+Brand update: 28 October 2026. Synkies replaces the name Peel and adopts Antigravity v2 Folded Horizon. Functional version 0.7 and requirement IDs stay unchanged; repository, storage and protocol identifiers retain their compatible names. See [brand plan](features/synkies-brand.md).
 
 [PRD.md](PRD.md) defines the product scope; [SPEC.md](SPEC.md) owns behavior and acceptance. This launch narrative is a future promise, not a claim that all features have shipped.
 
 ## Proposed press release
 
-### Peel keeps a thought close, on your terms
+### Synkies keeps a thought close, on your terms
 
-Peel combines the immediacy of a Mac sticky note with a searchable library for Mac, iPhone, and the browser. One shortcut opens a note with a ready cursor. Type, put it away, and carry on. Saving happens automatically on the device.
+Synkies combines the immediacy of a Mac sticky note with a searchable library for Mac, iPhone, and the browser. One shortcut opens a note with a ready cursor. Type, put it away, and carry on. Saving happens automatically on the device.
 
-Choose one of two modes for your library. Free On-device mode keeps notes in local databases on your devices and periodically syncs paired devices, including across different networks. The latest edit becomes the current note after a peer sync. Peel stores no note content on a server in this mode. Encrypted transient relays help devices connect when a direct connection is unavailable; changes wait on a device until paired devices have an overlapping online opportunity.
+Choose one of two modes for your library. Free On-device mode keeps notes in local databases on your devices and periodically syncs paired devices, including across different networks. The latest edit becomes the current note after a peer sync. Synkies stores no note content on a server in this mode. Encrypted transient relays help devices connect when a direct connection is unavailable; changes wait on a device until paired devices have an overlapping online opportunity.
 
-Paid Peel Cloud stores the complete library in DynamoDB and keeps local copies on connected devices. Edits sync live between online devices, and the cloud can deliver saved changes after the originating device goes offline. Offline work still saves locally and catches up when a device reconnects.
+Paid Synkies Cloud stores the complete library in DynamoDB and keeps local copies on connected devices. Edits sync live between online devices, and the cloud can deliver saved changes after the originating device goes offline. Offline work still saves locally and catches up when a device reconnects.
 
 On Mac, notes are independent, draggable windows outside the separate Notes Library. The only top-left control is a green minus: Save and put away. It finishes the local save and closes that note window while keeping the note in the library. Drag cards out of the library or right-click to pin them. Keyboard commands arrange open notes against any screen edge, with Undo.
 
-Peel supports one Markdown heading level, bold, checkboxes, bullets, numbering, and ##tags. Find notes by words or with optional on-device search by meaning. Archive puts notes out of the way; Trash allows recovery for 30 days. Export portable Markdown and metadata whenever you want.
+Synkies supports one Markdown heading level, bold, checkboxes, bullets, numbering, and ##tags. Find notes by words or with optional on-device search by meaning. Archive puts notes out of the way; Trash allows recovery for 30 days. Export portable Markdown and metadata whenever you want.
 
-Sandip dogfoods Peel before public beta. Pricing and the launch date remain undecided. The intended public release includes both storage modes, remote periodic device sync, paid live Cloud sync, Mac, iPhone, browser access including Android, and local retrieval.
+Sandip dogfoods Synkies before public beta. Pricing and the launch date remain undecided. The intended public release includes both storage modes, remote periodic device sync, paid live Cloud sync, Mac, iPhone, browser access including Android, and local retrieval.
 
 ## Customer FAQ
 
@@ -32,15 +34,15 @@ It saves and puts the window away. The note remains in Notes Library. The toolti
 
 ### How do free On-device and paid Cloud differ?
 
-On-device stores notes on paired devices only. It syncs periodically whenever devices can reach one another, including remotely. Cloud stores the whole library in Peel Cloud and pushes committed updates to connected devices as they happen. Cloud is paid; the price is not set yet.
+On-device stores notes on paired devices only. It syncs periodically whenever devices can reach one another, including remotely. Cloud stores the whole library in Synkies Cloud and pushes committed updates to connected devices as they happen. Cloud is paid; the price is not set yet.
 
 ### Will free sync work when I am away from home?
 
-Yes, remote sync is required. Pair your devices once. Peel first attempts an encrypted direct connection and can use an encrypted transient relay when network restrictions require it. A relay passes packets without keeping your notes. Both devices, or a chain of paired devices holding the latest copy, must have overlapping online opportunities. If your phone is offline, your Mac keeps pending changes until a peer can receive them.
+Yes, remote sync is required. Pair your devices once. Synkies first attempts an encrypted direct connection and can use an encrypted transient relay when network restrictions require it. A relay passes packets without keeping your notes. Both devices, or a chain of paired devices holding the latest copy, must have overlapping online opportunities. If your phone is offline, your Mac keeps pending changes until a peer can receive them.
 
 ### Does “periodic” mean my iPhone always wakes on a fixed schedule?
 
-No. While apps are active and peers are reachable, the proposed default is an attempt every minute, plus foreground, reconnect, and Sync now. iOS controls background execution, so a suspended phone can catch up when Peel opens. Last sync and Waiting for a device make that visible.
+No. While apps are active and peers are reachable, the proposed default is an attempt every minute, plus foreground, reconnect, and Sync now. iOS controls background execution, so a suspended phone can catch up when Synkies opens. Last sync and Waiting for a device make that visible.
 
 ### What if I change the same note on two devices in On-device mode?
 
@@ -48,7 +50,7 @@ The latest edit becomes the current version automatically after sync. The app us
 
 ### Is the latest real-world edit always knowable offline?
 
-Device clocks can disagree. Peel combines edit time with a logical counter and stable device identity to converge, calibrates clocks during sync, and explains a clock problem when one is detected. Causally later edits win; truly concurrent offline edits use the agreed ordering. A recovery copy protects against an unwanted winner.
+Device clocks can disagree. Synkies combines edit time with a logical counter and stable device identity to converge, calibrates clocks during sync, and explains a clock problem when one is detected. Causally later edits win; truly concurrent offline edits use the agreed ordering. A recovery copy protects against an unwanted winner.
 
 ### How does Cloud behave offline?
 
@@ -74,7 +76,7 @@ Yes. Download and verify the complete collection before leaving Cloud. Keep pair
 
 Mac and iPhone use a small SQLite database. Mac can use a chosen local directory; iPhone uses private app storage. Web uses IndexedDB in its browser profile. Clearing browser data can remove its local copies, so export important notes. Free browser peer-sync compatibility is an M0 gate and remains part of the intended public product.
 
-### What is kept on Peel's servers in free mode?
+### What is kept on Synkies's servers in free mode?
 
 No note bodies, titles, tags, embeddings, recovery versions, or offline note queue. A remote connectivity service may keep limited pairing/public-key and connection metadata; transient relay buffers exist only for delivery. The privacy policy must distinguish that metadata from note storage. Server logs must exclude note payloads and credentials.
 

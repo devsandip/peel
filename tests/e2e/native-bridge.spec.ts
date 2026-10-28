@@ -340,7 +340,7 @@ test("native relocation freezes and acknowledges only durable saves, releases fa
     );
   });
   await expect(editor).toHaveAttribute("contenteditable", "false");
-  await page.getByRole("button", { name: "Quit and reopen Peel" }).click();
+  await page.getByRole("button", { name: "Quit and reopen Synkies" }).click();
   expect(
     await page.evaluate(() =>
       (Reflect.get(window, "nativeFixture") as Fixture).calls.includes(

@@ -77,7 +77,7 @@ export function NoteEditor({
       await session.flush();
       const bytes = exportNotes([session.current()]);
       if (native) await invoke("export_archive", { bytes: Array.from(bytes) });
-      else download(bytes, "Peel-note.zip");
+      else download(bytes, "Synkies-note.zip");
     } catch (e) {
       session.setError(String(e));
     }

@@ -1,8 +1,8 @@
-# Peel visual specification
+# Synkies visual specification
 
 Version 0.7 | 26 October 2026 | Mockup baseline for review
 
-Peel uses a quiet library and small paper notes, with the same content model on Mac, iPhone, and the browser. These mockups follow [SPEC version 0.7](SPEC.md) and [PRFAQ](PRFAQ.md). They are presentation artifacts, not an application implementation.
+Synkies uses a quiet library and small paper notes, with the same content model on Mac, iPhone, and the browser. These mockups follow [SPEC version 0.7](SPEC.md) and [PRFAQ](PRFAQ.md). They are presentation artifacts, not an application implementation.
 
 ## Review the screens
 
@@ -16,15 +16,15 @@ The gallery provides navigation, direct links, light/dark appearance, and relate
 
 ## Visual decisions
 
-Use system typography, warm neutral surfaces, compact icon controls, and restrained borders. Pale yellow paper makes floating notes distinct from the library. The folded corner mark suggests the name Peel. The pale variation between note cards is a visual treatment, not a new color-picker feature.
+Use system typography, warm neutral surfaces, compact icon controls, and restrained borders. Pale yellow paper makes floating notes distinct from the library. The adopted Antigravity v2 Folded Horizon icon combines pale-yellow paper with an amber cloud fold on charcoal. Use its outlined Synkies wordmark and light/dark lockups; system typography remains the app UI font. Canonical masters live under `ux/brand/folded-horizon/`. The pale variation between note cards is a visual treatment, not a new color-picker feature.
 
-Mac opens with independently draggable floating notes. Each note is a top-level macOS window outside Notes Library, with wallpaper and the OS Dock behind it. The desktop has no surrounding Peel app frame. Open Notes Library is an explicit action; closing or minimizing the separate library window leaves the notes visible. Pinning through drag-out or right-click keeps the same note on the desktop and in the library. Always on top is an independent preference. The library organizes a selected collection with Notes, Archive, Trash, tags, and Settings. Each floating note has exactly one top-left title-bar button, a green minus called Put away, which commits local text and closes only that window. The rest of the title bar is draggable. No additional minimize, maximize, pin, overflow, or formatting toolbar appears on the normal floating note. Its footer is noninteractive status. Note actions, Keep on top, and Markdown source live in menus. Save failure keeps the editor open with recovery actions. Close remains separate from archive and delete; the editor has no Save button.
+Mac opens with independently draggable floating notes. Each note is a top-level macOS window outside Notes Library, with wallpaper and the OS Dock behind it. The desktop has no surrounding Synkies app frame. Open Notes Library is an explicit action; closing or minimizing the separate library window leaves the notes visible. Pinning through drag-out or right-click keeps the same note on the desktop and in the library. Always on top is an independent preference. The library organizes a selected collection with Notes, Archive, Trash, tags, and Settings. Each floating note has exactly one top-left title-bar button, a green minus called Put away, which commits local text and closes only that window. The rest of the title bar is draggable. No additional minimize, maximize, pin, overflow, or formatting toolbar appears on the normal floating note. Its footer is noninteractive status. Note actions, Keep on top, and Markdown source live in menus. Save failure keeps the editor open with recovery actions. Close remains separate from archive and delete; the editor has no Save button.
 
 The entire Mac capture section uses that same desktop and note-window presentation: quick capture, formatted note, Markdown source, note actions, and menu bar capture. Each note is draggable in the gallery. The menu bar capture scene shows the library and all notes closed, with New note still available.
 
 On iPhone, use a two-column library, a direct new-note action, a full-screen editor, and bottom sheets for collection choice, filters, and actions. On Android, show the responsive browser layout rather than a native Android application.
 
-Saving mode is app-wide. Show On-device · Free and Peel Cloud · Paid. On-device stores note copies only on paired devices and periodically syncs across different networks; status includes last sync, waiting peers and remote connections. Explain transient encrypted relays without implying a stored cloud note copy. Cloud stores the whole library and pushes live changes to connected devices. Signing in alone does not enable an upload. Replace per-note destination and Move to storage actions with saving-mode settings and sync status.
+Saving mode is app-wide. Show On-device · Free and Synkies Cloud · Paid. On-device stores note copies only on paired devices and periodically syncs across different networks; status includes last sync, waiting peers and remote connections. Explain transient encrypted relays without implying a stored cloud note copy. Cloud stores the whole library and pushes live changes to connected devices. Signing in alone does not enable an upload. Replace per-note destination and Move to storage actions with saving-mode settings and sync status.
 
 Pairing, device verification, waiting/offline peers, encrypted relay status and automatic latest-edit recovery have explicit screens. On-device latest-edit convergence does not block on a conflict picker; the previous version is locally recoverable for seven days. Existing conflict comparison screens apply to concurrent offline paid Cloud edits only.
 
@@ -91,13 +91,13 @@ Use native system font stacks and line icons. Primary actions use a strong neutr
 | Screen | Platform | Requirements |
 | --- | --- | --- |
 | [Choose saving mode](mockups/screens/storage-destination.png) | mac | FR-03 · FR-17 · FR-18 |
-| [Connect Peel Cloud](mockups/screens/cloud-signin.png) | mac | FR-04 · FR-14 |
+| [Connect Synkies Cloud](mockups/screens/cloud-signin.png) | mac | FR-04 · FR-14 |
 | [Waiting for authorization](mockups/screens/cloud-authorizing.png) | mac | FR-04 |
 | [Downloading cloud notes](mockups/screens/cloud-download.png) | mac | FR-04 · FR-08 |
 | [Enable Cloud for all notes](mockups/screens/move-to-cloud.png) | mac | FR-03 · FR-13 · FR-18 |
 | [Switch library to On-device](mockups/screens/move-to-local.png) | mac | FR-03 · FR-13 |
-| [Sign out of Peel](mockups/screens/signout-cloud.png) | mac | FR-04 · FR-14 |
-| [Change Peel account](mockups/screens/switch-account.png) | mac | FR-14 |
+| [Sign out of Synkies](mockups/screens/signout-cloud.png) | mac | FR-04 · FR-14 |
+| [Change Synkies account](mockups/screens/switch-account.png) | mac | FR-14 |
 
 ### Settings
 
@@ -169,10 +169,10 @@ Use native system font stacks and line icons. Primary actions use a strong neutr
 
 | Screen | Platform | Requirements |
 | --- | --- | --- |
-| [Create a Peel account](mockups/screens/cloud-signup.png) | web | FR-04 · FR-14 |
+| [Create a Synkies account](mockups/screens/cloud-signup.png) | web | FR-04 · FR-14 |
 | [Verify email](mockups/screens/account-verify.png) | web | FR-14 |
 | [Reset password](mockups/screens/account-password.png) | web | FR-14 |
-| [Delete Peel account](mockups/screens/account-delete.png) | web | FR-07 · FR-14 |
+| [Delete Synkies account](mockups/screens/account-delete.png) | web | FR-07 · FR-14 |
 | [Account deletion status](mockups/screens/account-deleting.png) | web | FR-14 |
 | [Choose new password](mockups/screens/account-reset-code.png) | web | FR-14 |
 

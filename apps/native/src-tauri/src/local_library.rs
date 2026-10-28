@@ -60,7 +60,7 @@ fn private_new(path: &Path) -> Result<File> {
         use std::os::unix::fs::OpenOptionsExt;
         options.mode(0o600);
     }
-    options.open(path).map_err(|_| "The destination already exists or cannot be written. Choose a folder without a Peel database.".into())
+    options.open(path).map_err(|_| "The destination already exists or cannot be written. Choose a folder without a Synkies database.".into())
 }
 fn exclusive(path: &Path) -> Result<LibraryLock> {
     let mut options = OpenOptions::new();
@@ -74,7 +74,7 @@ fn exclusive(path: &Path) -> Result<LibraryLock> {
         .open(path)
         .map_err(|_| "Could not lock the local library folder.".to_string())?;
     file.try_lock().map_err(|_| {
-        "This library is open in another Peel process. Quit that copy before continuing."
+        "This library is open in another Synkies process. Quit that copy before continuing."
             .to_string()
     })?;
     Ok(LibraryLock(file))
@@ -126,7 +126,7 @@ fn selected_database(location: &Location) -> Result<Database> {
         .map_err(|_| "Could not read the selected library.".to_string())?;
     if version != 1 {
         return Err(
-            "The selected library needs another Peel version. Its data has not been changed."
+            "The selected library needs another Synkies version. Its data has not been changed."
                 .into(),
         );
     }
@@ -144,12 +144,12 @@ fn selected_database(location: &Location) -> Result<Database> {
         .query_row("SELECT value FROM settings WHERE key=?1", [IDENTITY], |r| {
             r.get(0)
         })
-        .map_err(|_| "The selected file is not the expected Peel library.".to_string())?;
+        .map_err(|_| "The selected file is not the expected Synkies library.".to_string())?;
     if version != 1
         || serde_json::from_str::<String>(&identity).ok().as_ref() != Some(&location.library_id)
     {
         return Err(
-            "The selected file is not the expected Peel library. Its data has not been changed."
+            "The selected file is not the expected Synkies library. Its data has not been changed."
                 .into(),
         );
     }
@@ -339,7 +339,7 @@ impl LocalLibrary {
                 .try_exists()
                 .map_err(|_| "Could not inspect the destination.".to_string())?
             {
-                return Err("The destination contains a Peel database or recovery file. Nothing was overwritten.".into());
+                return Err("The destination contains a Synkies database or recovery file. Nothing was overwritten.".into());
             }
         }
         let mut progress = Journal {
@@ -394,8 +394,8 @@ impl LocalLibrary {
             atomic_json(&self.root, LOCATION, &choice, || hook(Phase::Published))
         {
             if published {
-                self.database.block_writes("The library selection could not be confirmed. Both copies are preserved. Quit and reopen Peel before editing.");
-                return Err("The library selection could not be confirmed. Both copies are preserved. Quit and reopen Peel before editing.".into());
+                self.database.block_writes("The library selection could not be confirmed. Both copies are preserved. Quit and reopen Synkies before editing.");
+                return Err("The library selection could not be confirmed. Both copies are preserved. Quit and reopen Synkies before editing.".into());
             }
             return Err(error);
         }

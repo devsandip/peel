@@ -1682,3 +1682,19 @@
 **Decisions:**
 - Use Antigravity v2 directions/01-folded-horizon exactly as supplied. No new logo generation or unrelated design work.
 - Keep name/logo adoption distinct from SQLite refactoring and actual milestone/release acceptance.
+
+
+## 2026-10-28 - Adopt Synkies name and Antigravity Folded Horizon in the app
+
+**Did:**
+- Copied only the selected user-provided Antigravity v2 Folded Horizon masters, preserving bytes and recording SHA provenance. Adopted its light/dark outlined logo and favicon, regenerated the existing native icon family and changed product/menu/window/UI/export display names to Synkies.
+- Updated current README/PRFAQ/PRD/SPEC/visual naming and Project12 title. Preserved functional v0.7 and all existing repository, package, bundle, database, cache, export-schema, protocol and Cloud resource identities. Existing Peel libraries/exports remain compatible.
+- Included both logo variants in the integrity-checked public offline shell. Visually inspected fresh synthetic desktop light/dark and mobile browser renders, plus compact layout; logo selection/loading and no horizontal overflow passed, including dark logo switching offline.
+- Passed456shared tests, TypeScript, formatting,11browser tests on an owned isolated server and the production offline-shell checks. Native format/Clippy and34tests passed; the existing ignored crash child is invoked only by its parent harness. Existing browser chunk warning remains.
+
+**State now:**
+- Branding is one standalone requested app slice. Native release build passed; inspected Synkies.app name, unchanged bundle ID and exact bundled ICNS bytes without launching it. Focused review and final-head hosted gates precede merge. No stopped native controller launch, actual/default notes, AWS, billing or public-release change. Canonical mockup exports are the next separately tracked branding slice.
+- PR108 checkpoint is merged at85629d6 after all3source checks passed. Docs-only main checks were path-filtered, not passing runtime evidence. Issue106 stays saved/unpublished for resumption after branding.
+
+**Next:**
+- Finish the native bundle/asset checks and exact-head hosted gates, merge this app-brand PR, align canonical mockups in their own focused PR, then resume issue106. Keep Project/issues and immutable resumes current.
