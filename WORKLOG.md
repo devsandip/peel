@@ -1383,3 +1383,18 @@
 
 **Next:**
 - Integrate this single-purpose PR after all hosted gates. Continue the next separate prerequisite only within the 09:00 IST handoff boundary; do not start a new AWS run after the full-run/cleanup runway cutoff.
+
+## 2026-10-28 - Observe Cognito pool-name collisions without adopting existing identities
+
+**Did:**
+- Confirmed PR 68 merged as 7ffac942c3be89254e55e70b55b3c52c4f543883 with all three exact-head gates, no-reply metadata and tested-tree equality. All three postmerge jobs in 40617941004 pass; issue 67 is closed with evidence.
+- Split the next prospective Cognito pool-name scan into issue 69 and wrote its requirement-linked plan before code. Native MaxResults/NextToken JSON avoids the CLI paginator's token rewrite.
+- Added complete bounded scanning, private exact-name projections, repeated-token/ID and malformed-page rejection, before/after identity and late-page/final-identity cancellation. Multiple matching names are collisions; not-listed is not physical absence or creation ownership.
+- Passed ten actual Node 24 cases/direct import, 305 shared cases, TypeScript, formatting and web build. Installed CLI native-input/Botocore/paginator/JMESPath checks pass on the actual derived command with synthetic data and zero API requests.
+
+**State now:**
+- This collector is a separate partial prerequisite; hosted gates follow before merge. No dependency, deployed artifact, account/default note database, operator slot or resource/settings/billing change occurred.
+- Domain-prefix observation, complete ownership/absence and retained original-manifest lifecycle/recovery remain under 30/31. Audit 51 stays unresolved and stopped. App Cloud/v0.7 remain unchanged.
+
+**Next:**
+- Merge the focused pool-name PR only after all hosted gates, then continue the next separately scoped prerequisite within the 09:00 IST handoff boundary. New AWS-run headroom has already expired; no managed run tonight.

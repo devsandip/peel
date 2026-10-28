@@ -31,6 +31,7 @@ Keep one purpose per subsequent PR:
 | [61](https://github.com/devsandip/peel/issues/61) | Private stack metadata | Bounded exact stack/tag/resource observation after the separate identity gate; no service ownership or absence authority |
 | [65](https://github.com/devsandip/peel/issues/65) | Fixed-name target collisions | Eight non-bucket prospective metadata checks; not-found is not full target absence or cleanup proof |
 | [67](https://github.com/devsandip/peel/issues/67) | Global artifact-bucket collision | One owner-bound tagging read with SDK wire guards; no implicit HEAD, full absence or cleanup authority |
+| [69](https://github.com/devsandip/peel/issues/69) | Cognito pool-name collision | Complete bounded native-page scan with private projections; not-listed is not full absence or ownership |
 | [30](https://github.com/devsandip/peel/issues/30) | Plan/apply/cleanup guards | Ownership, account, source, cost and interruption tests before writes |
 | [31](https://github.com/devsandip/peel/issues/31) | Controlled managed-service evidence | One bounded synthetic run and verified teardown only after all gates |
 
