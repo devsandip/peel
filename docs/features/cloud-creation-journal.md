@@ -23,7 +23,7 @@ The operator retains one independently selected canonical workspace root, canoni
 
 Before journal access, open the actual canonical funding ledger with that independent authority and read the actual stable reservation: slot, run UUID, normalized-plan SHA and reservation time. Bind those facts, the authority digest and canonical workspace/ledger selection into a versioned journal scope. Do not use the changing whole-ledger snapshot as the immutable identity. Source/account/region and original cleanup-authority margin must match the original plan. This observation grants no new slot.
 
-Fresh bootstrap also verifies the actual existing recipe and bound context through their current public APIs, with independently supplied original pins. Persist one immutable genesis transaction containing:
+Fresh bootstrap requires successful acknowledged opens of both the actual original recipe and bound context stores, with independently supplied pins. Manifest open re-syncs the recipe; context open re-syncs context descriptors only and cannot substitute for that separate recipe acknowledgement. A source-sync failure cannot mint a run permit. Persist one immutable genesis transaction containing:
 
 - The canonical anchor and stable reservation tuple.
 - Exact original normalized context and recipe bytes, their independently captured pins and original source-store selections.
@@ -75,7 +75,7 @@ Keep the exact unsigned request, including that one-time value, only in active-p
 
 ## Dispatch fencing and recovery states
 
-Bootstrap storage returns no execution capability. A separate trusted coordinator can mint a fresh-process run permit only after successful exclusive bootstrap and the actual reservation/source/current safety gates. It is an internal nonserializable process-local capability, not a caller-owned flag. Reading a journal, a Boolean field, copying an object or possessing a token cannot recreate it.
+Bootstrap storage returns no execution capability. A separate trusted coordinator can mint a fresh-process run permit only after its own fresh funding-reservation commit acknowledgement, successful exclusive bootstrap, acknowledged source opens and the actual current safety gates. Reading an existing reservation, even when the journal is missing, cannot stand in for that same-coordinator acknowledgement. A lost reservation acknowledgement enters recovery rather than a new bootstrap/dispatch flow. It is an internal nonserializable process-local capability, not a caller-owned flag. Reading a journal, a Boolean field, copying an object or possessing a token cannot recreate it.
 
 Immediately before a stack call, commit a unique dispatch fence bound to kind/token/request digest and current journal revision. Recheck current policy/time and required actual dependencies. Only the process that receives a successful durable fence acknowledgement may obtain one in-memory, one-use send capability. No database transaction spans network I/O. A commit error or lost acknowledgement gives no capability and invalidates the active coordinator for further creation. The transport must disable automatic create retries and allow at most one application dispatch per stack in v1; provider-internal behavior is not an exactly-once guarantee.
 
@@ -123,6 +123,7 @@ Every row below is pending journal implementation. Existing ledger/context tests
 | Dispatch-fence commit failure / ack loss                         | No send capability; recovered state cannot mint one                                                                              |
 | Kill before send / after send before receipt                     | Treat possible submission conservatively, retain token and reconcile; no blind retry                                             |
 | Old journal snapshot / cloned namespace / switched root          | No new run grant, refunded slot or recovered create capability                                                                   |
+| Missing fresh reservation acknowledgement / source-open sync failure | No fresh-process permit, replacement bootstrap or provider send; an existing row is recovery data only |
 | Changed funding authority/run/plan or genesis/source pins        | Refuse before mutation/dispatch; no fallback to another store                                                                    |
 | Partial/schema/ownership/link/inode/foreign-file damage          | Preserve unknown data, refuse writes; any explicit recovery reader touches only recognized files and grants no create capability |
 | Busy/stale revision / file or row limit                          | No unacknowledged mutation/permit; cleanup reserve and observation limits remain enforced                                        |
