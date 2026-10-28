@@ -19,3 +19,11 @@ No user/client/secret enumeration, tag lookup, domain changes, resource write, s
 ## Verification plan
 
 Before implementation, check the installed CLI input parser, bundled operation/input/error model and exact JMESPath projection using empty configuration, synthetic domain data and no signing/API request. Exercise normal/foreign/deleting collisions, empty/null/malformed/partial descriptions, exact versus ambiguous errors, captured selectors, identity drift, deadline/cancellation/late results and private immutable outputs. Run direct actual Node 24 import/focused tests, shared checks, formatting/build and all three hosted gates before merging the single-purpose PR. Fixtures and model checks do not establish live domain visibility or managed acceptance.
+
+## Pre-implementation evidence, 28 October
+
+The [offline protocol record](../experiments/cognito-domain-input-projection-2026-10-28.json) verifies installed CLI 2.34.14 native Domain input, bundled operation shape, optional description fields, the modeled ResourceNotFoundException name and all five collision lifecycle states. The exact projection keeps description type plus domain/account/pool/status and discards synthetic distribution/S3/certificate/routing values. Missing/null/empty descriptions and malformed string/array descriptions remain distinguishable; the future parser must reject the latter rather than manufacture absence.
+
+The first diagnostic incorrectly expected HTTP 400 to be encoded in the installed exception shape. That control failed: these AWS JSON exception traits contain only the exception marker. The corrected check records the missing HTTP metadata and verifies the modeled name; HTTP 400 remains an independent API-documentation fact. No vendor, SDK sample or provider setting was changed.
+
+The ignored scratch/check-cognito-domain-model.mjs uses the canonical synthetic inventory, empty configuration, no signing, input-skeleton mode and bundled model/JMESPath checks. It makes zero account calls. No collector, live identity/visibility, full absence, creation ownership, timeout or native/app acceptance is established. Issue 71 stays Ready for implementation after this plan/protocol preparation.

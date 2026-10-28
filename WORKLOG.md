@@ -1426,3 +1426,16 @@
 
 **Next:**
 - Merge the focused reporting PR after required checks, verify milestone/report links and Project issue/PR Done states, then make the precise 09:00 IST handoff.
+
+## 2026-10-28 - Prepare the next domain observer without a late managed run
+
+**Did:**
+- Rebased the owned unpublished domain-plan branch on current main after the reporting PR merged.
+- Verified canonical synthetic Domain input and five description/projection/lifecycle shapes against the installed CLI/Botocore/JMESPath with empty configuration and no signing/API call.
+- Preserved an initially failed HTTP-status assertion: the installed exception model does not encode status; the corrected diagnostic checks its modeled name and records API documentation separately.
+
+**State now:**
+- This is pre-implementation evidence on the feature branch. Domain 71 remains Ready; no observer/runtime/app acceptance or actual AWS/notes/settings/slot work is claimed. Main remains unchanged and working.
+
+**Next:**
+- Implement issue 71's bounded current-identity observer from its plan, with actual Node 24/raw-process tests and all required gates in one focused PR. Finish the overnight handoff at 09:00 IST.
