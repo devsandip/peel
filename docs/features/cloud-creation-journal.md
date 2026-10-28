@@ -89,6 +89,8 @@ Immediately before a stack call, commit a unique dispatch fence bound to kind/to
 | Teardown observed    | Owned-resource verifier has complete bounded teardown evidence                 | Durably record that evidence, then idempotently publish the matching funding-ledger receipt  |
 | Unknown/conflicting  | Missing/corrupt/inconsistent evidence or unresolved result                     | Preserve, stop creation, inspect and clean only resources independently proven owned         |
 
+Already-reserved live execution needs a separate policy check over the actual matching reservation and current facts. Never replay new-run validation with a fabricated empty ledger, reserve the same run again or reinterpret the original reservation as unused budget.
+
 This conservative v1 policy permits no create resubmission after process restart, even from a journal that appears prepared or empty. It does not infer unsent from an absent fence in a restored view. It can consume a slot without creating resources. A future retry feature would require separate provider/recovery evidence and review; the API's token support alone does not enable it.
 
 After a timeout, lost response, AlreadyExists or TokenAlreadyExists, retain the original identity and mark uncertainty. Same-process reconciliation is metadata-only and bounded. A returned ID, matching tag, expected name, empty description or single not-found response is insufficient. Future provenance adapters must correlate the original operation/token and exact account/region/stack, reviewed template/role/dependency expectations and actual resource identities before cleanup or phase advancement. No CLI manual verified/owned override.
