@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-28 22:30 IST.
+Last refreshed: 2026-10-28 23:21 IST.
 
-Latest entry: [A consumed run needs current phase evidence](entries/2026-10-28-2230-reserved-run-phase-evidence.md).
+Latest entry: [Initial guard facts stay unproven](entries/2026-10-28-2321-initial-guard-facts-stay-unproven.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
 
@@ -12,9 +12,11 @@ I have a local Mac development build and browser client. The complete promised s
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
 
-Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. PR 127 integrated the separate test worker budget. PR 128 integrated request feature 125 with all source/main checks passing. Its complete unsigned input and transient NoEcho value stay behind private active handles; safe metadata cannot reconstruct them. PR 130 integrated private session lineage with all source/main checks passing. Issue 131 now refines current phase/provenance and original time/quote rules before eligibility code. Actual current gates, durable preparation, dispatch, lifecycle and managed/independent teardown remain. No local record is a create capability.
+Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. PR 127 integrated the separate test worker budget. PR 128 integrated request feature 125 with all source/main checks passing. Its complete unsigned input and transient NoEcho value stay behind private active handles; safe metadata cannot reconstruct them. PR 130 integrated private session lineage with all source/main checks passing. PR 132 integrated the phase/provenance design with passing source checks and honest docs-only main not-run evidence. Issue 133 now has a pure supplied-facts checker with local tests and explicitly unproven authority, awaiting its own final review/checks/merge. Actual current gates, durable preparation, dispatch, lifecycle and managed/independent teardown remain. No local record is a create capability.
 
 ## Recent entries
+
+- [2026-10-28 23:21 IST: initial guard facts stay unproven](entries/2026-10-28-2321-initial-guard-facts-stay-unproven.md)
 
 - [2026-10-28 22:30 IST: a consumed run needs current phase evidence](entries/2026-10-28-2230-reserved-run-phase-evidence.md)
 
