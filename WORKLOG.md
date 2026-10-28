@@ -1603,3 +1603,18 @@
 
 **Next:**
 - Merge the focused binding PR after exact-head gates/review, synchronize Project and verify main separately. Plan one durable journal namespace/intent slice before code; save/send its milestone report only after exit criteria pass.
+
+## 2026-10-28 - Extract immutable Cloud record mechanics without changing the manifest store
+
+**Did:**
+- Verified all3main jobs40656778166 for PR97 mergef213ad9 pass and appended issue96 evidence6464479558. Committed issue98's requirement-linked plan before code and moved its Project card In progress.
+- Moved only owned-file path/descriptor/publication/inspection mechanics into a trusted internal engine. Kept fixed wrapper API, state/error/result shapes, pin capture, exact manifest/marker bytes and acknowledgement semantics.
+- Preserved actual independent writer/SIGKILL/sync-failure cases. Added original-byte/API/sync-order and descriptor-closure/post-commit compatibility cases; all16 pass against both original source and extraction under actual Node24. A sync-order negative control fails; restored source passes.
+- Passed actualNode24 direct imports/65combined legacy cases, all432shared cases/58files, TypeScript, formatting and browser build. Existing chunk warning remains.
+
+**State now:**
+- This is a behavior-preserving operator persistence refactor, with no new namespace/journal feature, ledger/schema/note-store/API change, actual account/default database/resource/app/billing or stopped-probe work. Hosted gates/review precede merge.
+- M2.2 remains open. Bound journal/context durability, intents/client tokens/provider receipts, execution/rechecks, owned lifecycle and actual managed/teardown evidence remain; audit51/managed31/native72 stay blocked.
+
+**Next:**
+- Merge this focused refactor after exact-head gates/review, update Project and verify main separately. Scope one bound journal/context persistence deliverable before code; save/send the milestone report only after actual exit criteria pass.
