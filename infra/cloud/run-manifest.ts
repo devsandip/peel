@@ -104,6 +104,11 @@ function privateCall<T>(work: () => T): T {
   }
 }
 
+/** Normalize an independently retained pin for private persistence; no provenance grant. */
+export function normalizeCloudRunManifestPin(value: unknown) {
+  return privateCall(() => pin(value));
+}
+
 /** Capture only; supplied source/plan metadata still requires independent provenance. */
 export function createCloudRunManifest(input: {
   profile: string;

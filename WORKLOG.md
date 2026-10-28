@@ -1468,3 +1468,18 @@
 
 **Next:**
 - Merge the single-purpose recipe PR after all exact-head gates, synchronize Project state and verify postmerge CI. Continue a separately planned durable manifest-storage slice before any owned create/recovery/apply work. Save and send the milestone report only when its actual exit criteria have evidence.
+
+## 2026-10-28 - Persist original run recipes with explicit synchronization and crash boundaries
+
+**Did:**
+- Confirmed all three postmerge main checks for PR 79 in 40631601473 pass. Issue 78 and its PR card remain Done; the recipe codec does not establish ownership or durability on its own.
+- Planned issue 80 before code and moved its Project card to In progress. Added a separate private immutable manifest/marker namespace with copied pins, file/directory/inode checks, exclusive creation and fixed private failures. Existing note stores and the run-ledger schema are untouched.
+- Distinguished read-only inspection from a fresh verified synchronization acknowledgement. Tested actual independent competing writers and three SIGKILL checkpoints, four injected sync failures, identity/link/mode/unknown-content preservation and strict UTF-8 bytes.
+- Found and fixed BOM stripping during exact-byte verification, with an actual Node 24 failing negative control and passing restored source. Fourteen storage cases/direct import and 22 combined Node 24 codec/storage cases pass. All 338 shared cases, TypeScript, formatting and web build pass; the existing chunk-size warning remains.
+
+**State now:**
+- This is local operator-file persistence, with documented filesystem/power-loss/ACL limits. It creates no run slot, creation ID, physical resource, AWS ownership, billing or app behavior. All relevant local/hosted checks and focused review precede merge.
+- M2.2 remains open. Historical inventory interpretation, creation intent/response journaling, complete ownership/absence, lifecycle/apply and actual managed/teardown evidence remain under 30/31. Audit 51 and the native 72 isolation gate stay stopped; no retries occurred.
+
+**Next:**
+- Merge the focused storage PR only after exact-head gates, verify main CI separately and synchronize Project state. Continue a separately planned historical inventory/creation-journal slice before any AWS write. Save/send the milestone report only when actual exit criteria pass.
