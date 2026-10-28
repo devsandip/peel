@@ -1513,3 +1513,18 @@
 
 **Next:**
 - Merge this focused observer PR only after all current-commit gates and review, then synchronize Project state and verify main CI separately. Continue one separately scoped current-milestone deliverable; write/send its milestone report only when actual exit criteria pass.
+
+## 2026-10-28 - Observe original fixed Cloud target recipes without current factories
+
+**Did:**
+- Verified all three postmerge main jobs40640491565 for PR85 mergeaf4a4dc pass and appended issue84 evidence6462004162. No open PR remained before issue86's requirement-linked plan and In progress transition.
+- Added exact retained recipe/pin command and observation entry points for the existing eight fixed non-bucket targets. Private shared capture/collection preserves original selectors and manifest/inventory digests, current identity/role checks and unchanged metadata command/error classification. Results keep ownership/full-target absence unproven.
+- Captured the caller's original cancellation signal so cleanup removes its registration after dependency mutation. Shared existing synthetic response fixtures across both APIs.
+- Passed13retained+11prospective cases/direct import under actual Node24.22.1, all372shared cases/53files, TypeScript, formatting and browser build. Existing browser chunk warning remains.
+
+**State now:**
+- This is another bounded read-only recipe adapter, with no provider call/resource/default database/app/billing change. No stopped-component retry. All relevant hosted gates and focused review follow before merge.
+- M2.2 remains open. Retained artifact/S3/Cognito adapters, creation provenance, owned lifecycle and actual managed/teardown evidence remain; audit51/managed31/native72 isolation stay blocked.
+
+**Next:**
+- Merge the single-purpose fixed-target PR only after exact-head gates/review, synchronize Project state and verify main separately. Continue one current-milestone slice; save/send the milestone report only when actual exit criteria pass.
