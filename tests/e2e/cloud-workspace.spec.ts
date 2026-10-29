@@ -623,3 +623,519 @@ test("uses neutral New-note focus fallback instead of focusing another note with
     library.getByRole("button", { name: "New note", exact: true }),
   ).toBeFocused();
 });
+
+test("renders fixed truthful copy for all five optional connection states without automatic callbacks or Save buttons", async ({
+  page,
+}) => {
+  const library = page.getByRole("region", { name: "Cached Cloud library" });
+  const connectionBanner = page.locator(".cloud-workspace-connection");
+  const connectionText = page.locator(".cloud-workspace-connection-text");
+
+  await expect(connectionBanner).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Retry sync" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sign in again" })).toHaveCount(
+    0,
+  );
+
+  const states = [
+    {
+      kind: "cached" as const,
+      copy: "Showing notes cached on this device.",
+      retryCount: 0,
+      signInCount: 0,
+    },
+    {
+      kind: "syncing" as const,
+      copy: "Syncing with Cloud\u2026",
+      retryCount: 0,
+      signInCount: 0,
+    },
+    {
+      kind: "offline" as const,
+      copy: "Offline. New edits stay pending on this device.",
+      retryCount: 0,
+      signInCount: 0,
+    },
+    {
+      kind: "paused" as const,
+      copy: "Cloud sync is paused. Your pending drafts remain on this device.",
+      retryCount: 1,
+      signInCount: 0,
+    },
+    {
+      kind: "sign-in-required" as const,
+      copy: "Sign in again to resume Cloud sync. Your pending drafts remain on this device.",
+      retryCount: 0,
+      signInCount: 1,
+    },
+  ];
+
+  for (const entry of states) {
+    await page.evaluate(
+      (kind) => window.cloudWorkspaceFixture.setConnection(kind),
+      entry.kind,
+    );
+    await expect(connectionBanner).toHaveAttribute(
+      "data-connection-kind",
+      entry.kind,
+    );
+    await expect(connectionText).toHaveText(entry.copy);
+    await expect(page.getByRole("button", { name: "Retry sync" })).toHaveCount(
+      entry.retryCount,
+    );
+    await expect(
+      page.getByRole("button", { name: "Sign in again" }),
+    ).toHaveCount(entry.signInCount);
+    await expect(page.locator("body")).not.toContainText("All notes synced");
+    await expect(page.locator("body")).not.toContainText("Up to date");
+    await expect(connectionText).not.toContainText("Live");
+  }
+
+  await page.evaluate(() => window.cloudWorkspaceFixture.setConnection(null));
+  await expect(connectionBanner).toHaveCount(0);
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.recoveryCalls()),
+  ).toEqual([]);
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("offline"),
+  );
+  await expect(connectionText).toHaveText(
+    "Offline. New edits stay pending on this device.",
+  );
+  await library
+    .getByRole("button", { name: "Refresh cached notes", exact: true })
+    .click();
+  await expect(library.getByRole("listitem")).toHaveCount(3);
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.recoveryCalls()),
+  ).toEqual([]);
+
+  await library
+    .getByRole("button", { name: "Open Account A workspace note" })
+    .click();
+  const editorArticle = page.getByRole("article", {
+    name: "Cloud note editor",
+  });
+  const editor = editorArticle.getByRole("textbox", { name: "Note text" });
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+  await expect(editorArticle.getByRole("button")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: /^save$/i })).toHaveCount(0);
+
+  const committedBeforeEdit = server.control.committed;
+  server.control.hold = true;
+  await editor.fill("# Offline workspace edit\nRetained locally while offline");
+  await expect
+    .poll(() => server.control.committed)
+    .toBe(committedBeforeEdit + 1);
+  await expect(editorArticle.getByRole("status")).toHaveText("Pending upload");
+
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await expect(editorArticle).toHaveCount(0);
+  const editedCard = library
+    .getByRole("listitem")
+    .filter({ hasText: "Offline workspace edit" });
+  await expect(editedCard).toContainText("Pending upload");
+  await expect(connectionText).toHaveText(
+    "Offline. New edits stay pending on this device.",
+  );
+
+  server.release();
+  await expect(editedCard).toContainText("Saved in Cloud");
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.recoveryCalls()),
+  ).toEqual([]);
+});
+
+test("gates Retry sync and Sign in again by state and callback, enforces single-flight and keeps parent state authoritative", async ({
+  page,
+}) => {
+  const connectionText = page.locator(".cloud-workspace-connection-text");
+  const retryButton = page.getByRole("button", { name: "Retry sync" });
+  const signInButton = page.getByRole("button", { name: "Sign in again" });
+
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.setRecoveryCallbacks({
+      retrySync: false,
+      signIn: true,
+    });
+    window.cloudWorkspaceFixture.setConnection("paused");
+  });
+  await expect(connectionText).toHaveText(
+    "Cloud sync is paused. Your pending drafts remain on this device.",
+  );
+  await expect(retryButton).toHaveCount(0);
+  await expect(signInButton).toHaveCount(0);
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setInvalidRecoveryCallbacks(true),
+  );
+  await expect(retryButton).toHaveCount(0);
+  await expect(signInButton).toHaveCount(0);
+
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.setRecoveryCallbacks({
+      retrySync: true,
+      signIn: true,
+    });
+    window.cloudWorkspaceFixture.holdRecovery(0);
+  });
+  await expect(retryButton).toBeVisible();
+  await expect(retryButton).toBeEnabled();
+
+  await page.evaluate(() => {
+    const button = document.querySelector<HTMLButtonElement>(
+      ".cloud-workspace-connection-action",
+    )!;
+    button.click();
+    button.click();
+  });
+  await expect(retryButton).toBeDisabled();
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.heldRecoveries()),
+  ).toEqual([{ action: "retry-sync", owner: 0 }]);
+  expect(
+    await page.evaluate(
+      () => window.cloudWorkspaceFixture.recoveryCalls().length,
+    ),
+  ).toBe(1);
+
+  await page.evaluate(() => window.cloudWorkspaceFixture.refresh());
+  await expect(retryButton).toBeDisabled();
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.releaseRecoveries(false),
+  );
+  await expect(retryButton).toBeEnabled();
+  await expect(connectionText).toHaveText(
+    "Cloud sync is paused. Your pending drafts remain on this device.",
+  );
+  await expect(page.getByRole("alert")).toHaveCount(0);
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("syncing"),
+  );
+  await expect(connectionText).toHaveText("Syncing with Cloud\u2026");
+
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.failRecoverySync(0);
+    window.cloudWorkspaceFixture.setConnection("paused");
+  });
+  await retryButton.click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Could not resume Cloud sync. Your pending drafts remain on this device.",
+  );
+  await expect(page.locator("body")).not.toContainText("synthetic private");
+  await expect(retryButton).toBeEnabled();
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.failRecoverySync(null),
+  );
+  await retryButton.click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.setRecoveryCallbacks({
+      retrySync: true,
+      signIn: false,
+    });
+    window.cloudWorkspaceFixture.setConnection("sign-in-required");
+  });
+  await expect(connectionText).toHaveText(
+    "Sign in again to resume Cloud sync. Your pending drafts remain on this device.",
+  );
+  await expect(signInButton).toHaveCount(0);
+  await expect(retryButton).toHaveCount(0);
+
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.setRecoveryCallbacks({
+      retrySync: true,
+      signIn: true,
+    });
+    window.cloudWorkspaceFixture.failRecoveryAsync(0);
+  });
+  await expect(signInButton).toBeEnabled();
+  await signInButton.click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Could not start Cloud sign-in. Your pending drafts remain on this device.",
+  );
+  await expect(page.locator("body")).not.toContainText("synthetic private");
+  await expect(page.locator("body")).not.toContainText("token-xyz");
+  await expect(signInButton).toBeEnabled();
+});
+
+test("passes original captured context despite in-place caller mutation and ignores stale recovery results across status, refresh, abort and account replacement", async ({
+  page,
+}) => {
+  const retryButton = page.getByRole("button", { name: "Retry sync" });
+  const signInButton = page.getByRole("button", { name: "Sign in again" });
+
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.setConnection("paused");
+    window.cloudWorkspaceFixture.mountMutableContextAndCorruptInPlace();
+  });
+  await retryButton.click();
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.recoveryCalls()),
+  ).toEqual([
+    {
+      action: "retry-sync",
+      owner: 0,
+      ownerSubject: server.contexts[0].scope.ownerSubject,
+      collectionId: server.contexts[0].scope.collectionId,
+      modeGeneration: server.contexts[0].scope.modeGeneration,
+      matchedOriginalStore: true,
+      frozenContext: true,
+      frozenScope: true,
+    },
+  ]);
+  await page.evaluate(() => window.cloudWorkspaceFixture.clearMutableContext());
+
+  await page.evaluate(() => window.cloudWorkspaceFixture.holdRecovery(0));
+  await retryButton.click();
+  await expect(retryButton).toBeDisabled();
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("offline"),
+  );
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("paused"),
+  );
+  await expect(retryButton).toBeEnabled();
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.releaseFirstRecovery(true),
+  );
+  await expect(retryButton).toBeEnabled();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+
+  await retryButton.click();
+  await expect(retryButton).toBeDisabled();
+  await page.evaluate(() => window.cloudWorkspaceFixture.setInvalidRefresh());
+  await expect(page.locator(".cloud-workspace-connection")).toHaveCount(0);
+  await expect(retryButton).toHaveCount(0);
+  await page.evaluate(() => window.cloudWorkspaceFixture.refresh());
+  await expect(retryButton).toBeEnabled();
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.releaseRecoveries(true),
+  );
+  await expect(retryButton).toBeEnabled();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+
+  await page.evaluate(() => window.cloudWorkspaceFixture.holdRecovery(0));
+  await retryButton.click();
+  await expect(retryButton).toBeDisabled();
+  await page.evaluate(() => {
+    window.cloudWorkspaceFixture.selectAccount(1);
+    window.cloudWorkspaceFixture.setConnection("sign-in-required");
+  });
+  await expect(signInButton).toBeEnabled();
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.releaseRecoveries(true),
+  );
+  await expect(signInButton).toBeEnabled();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("synthetic private");
+
+  await page.evaluate(() => window.cloudWorkspaceFixture.holdRecovery(1));
+  await signInButton.click();
+  await expect(signInButton).toBeDisabled();
+  await page.evaluate(() => window.cloudWorkspaceFixture.abortCurrent());
+  await expect(page.locator(".cloud-workspace-connection")).toHaveCount(0);
+  await expect(signInButton).toHaveCount(0);
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.releaseRecoveries(true),
+  );
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("synthetic private");
+});
+
+test("renders generic unavailable presentation for malformed connection inputs without leaking extra fields or losing open pending drafts", async ({
+  page,
+}) => {
+  const library = page.getByRole("region", { name: "Cached Cloud library" });
+  await library
+    .getByRole("button", { name: "Open Account A workspace note" })
+    .click();
+
+  const editorArticle = page.getByRole("article", {
+    name: "Cloud note editor",
+  });
+  const editor = editorArticle.getByRole("textbox", { name: "Note text" });
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+
+  const committedBeforeEdit = server.control.committed;
+  server.control.hold = true;
+  await editor.fill(
+    "# Draft preserved across malformed connection\nPending body kept safe",
+  );
+  await expect
+    .poll(() => server.control.committed)
+    .toBe(committedBeforeEdit + 1);
+  await expect(editorArticle.getByRole("status")).toHaveText("Pending upload");
+
+  const presets = [
+    "null",
+    "primitive",
+    "array",
+    "empty-object",
+    "unknown-kind",
+    "all-synced-kind",
+    "extra-secret-fields",
+    "symbol-extra",
+    "non-enumerable",
+    "class-instance",
+    "accessor-getter",
+  ] as const;
+
+  for (const preset of presets) {
+    await page.evaluate(
+      (item) => window.cloudWorkspaceFixture.setMalformedConnection(item),
+      preset,
+    );
+    await expect(page.locator(".cloud-workspace-unavailable")).toHaveText(
+      "Cloud sync status unavailable. Your pending drafts remain on this device.",
+    );
+    await expect(page.locator(".cloud-workspace-connection")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Retry sync" })).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByRole("button", { name: "Sign in again" }),
+    ).toHaveCount(0);
+    await expect(page.locator("body")).not.toContainText("synthetic-secret");
+    await expect(page.locator("body")).not.toContainText("synthetic-bearer");
+    await expect(page.locator("body")).not.toContainText("synthetic-symbol");
+    await expect(page.locator("body")).not.toContainText("synthetic-error");
+    await expect(page.locator("body")).not.toContainText("synthetic-getter");
+    await expect(page.locator("body")).not.toContainText("All notes synced");
+    await expect(editor).toContainText("Pending body kept safe");
+    await expect(editor).toHaveAttribute("contenteditable", "true");
+  }
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("offline"),
+  );
+  await expect(page.locator(".cloud-workspace-unavailable")).toHaveCount(0);
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await expect(editorArticle).toHaveCount(0);
+
+  const retainedCard = library
+    .getByRole("listitem")
+    .filter({ hasText: "Draft preserved across malformed connection" });
+  await expect(retainedCard).toContainText("Pending upload");
+
+  server.release();
+  await expect(retainedCard).toContainText("Saved in Cloud");
+});
+
+test("preserves desktop split and 390px sheet geometry, target sizes, keyboard activation and inert background containment with connection controls", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const library = page.getByRole("region", { name: "Cached Cloud library" });
+  const connectionBanner = page.locator(".cloud-workspace-connection");
+  const connectionText = page.locator(".cloud-workspace-connection-text");
+  const retryButton = page.getByRole("button", { name: "Retry sync" });
+  const signInButton = page.getByRole("button", { name: "Sign in again" });
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("paused"),
+  );
+  await library
+    .getByRole("button", { name: "Open Account A workspace note" })
+    .click();
+
+  const editorArticle = page.getByRole("article", {
+    name: "Cloud note editor",
+  });
+  const editor = editorArticle.getByRole("textbox", { name: "Note text" });
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+  await expect(editorArticle.getByRole("button")).toHaveCount(1);
+  await expect(connectionText).toHaveAttribute("aria-live", "polite");
+
+  const desktopConnectionBox = await connectionBanner.boundingBox(),
+    desktopLibraryBox = await library.boundingBox(),
+    desktopEditorPaneBox = await page
+      .locator(".cloud-workspace-editor")
+      .boundingBox(),
+    desktopRetryBox = await retryButton.boundingBox();
+  expect(desktopConnectionBox).not.toBeNull();
+  expect(desktopLibraryBox).not.toBeNull();
+  expect(desktopEditorPaneBox).not.toBeNull();
+  expect(desktopRetryBox).not.toBeNull();
+  expect(desktopRetryBox!.width).toBeGreaterThanOrEqual(24);
+  expect(desktopRetryBox!.height).toBeGreaterThanOrEqual(32);
+  expect(desktopLibraryBox!.y).toBeGreaterThanOrEqual(
+    desktopConnectionBox!.y + desktopConnectionBox!.height,
+  );
+  expect(desktopEditorPaneBox!.x).toBeGreaterThanOrEqual(
+    desktopConnectionBox!.x + desktopConnectionBox!.width - 1,
+  );
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(1280);
+
+  await retryButton.focus();
+  await expect(retryButton).toBeFocused();
+  await page.keyboard.press("Enter");
+  expect(
+    await page.evaluate(
+      () => window.cloudWorkspaceFixture.recoveryCalls().at(-1)?.action,
+    ),
+  ).toBe("retry-sync");
+  await expect(editor).toContainText("Account A private body");
+
+  await page.screenshot({
+    path: testInfo.outputPath("workspace-status-desktop-split.png"),
+  });
+
+  await page.evaluate(() =>
+    window.cloudWorkspaceFixture.setConnection("sign-in-required"),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".cloud-workspace-library")).toHaveAttribute(
+    "inert",
+    "",
+  );
+  await expect(connectionText).toHaveAttribute("aria-live", "off");
+  const mobileEditorBox = await editorArticle.boundingBox();
+  expect(mobileEditorBox!.width).toBe(390);
+  expect(mobileEditorBox!.height).toBe(844);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await expect(editorArticle).toHaveCount(0);
+  await expect(page.locator(".cloud-workspace-library")).not.toHaveAttribute(
+    "inert",
+  );
+  await expect(connectionText).toHaveAttribute("aria-live", "polite");
+
+  const mobileConnectionBox = await connectionBanner.boundingBox(),
+    mobileLibraryBox = await library.boundingBox(),
+    mobileSignInBox = await signInButton.boundingBox();
+  expect(mobileConnectionBox).not.toBeNull();
+  expect(mobileLibraryBox).not.toBeNull();
+  expect(mobileSignInBox).not.toBeNull();
+  expect(mobileSignInBox!.width).toBeGreaterThanOrEqual(24);
+  expect(mobileSignInBox!.height).toBeGreaterThanOrEqual(36);
+  expect(mobileLibraryBox!.y).toBeGreaterThanOrEqual(
+    mobileConnectionBox!.y + mobileConnectionBox!.height,
+  );
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+
+  await signInButton.focus();
+  await expect(signInButton).toBeFocused();
+  await page.keyboard.press("Space");
+  expect(
+    await page.evaluate(
+      () => window.cloudWorkspaceFixture.recoveryCalls().at(-1)?.action,
+    ),
+  ).toBe("sign-in");
+
+  await page.screenshot({
+    path: testInfo.outputPath("workspace-status-mobile-library.png"),
+  });
+});

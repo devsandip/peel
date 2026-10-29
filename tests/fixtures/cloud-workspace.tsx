@@ -14,6 +14,8 @@ import {
 } from "../../apps/web/src/cloud-note-upload";
 import {
   CloudWorkspace,
+  type CloudWorkspaceConnection,
+  type CloudWorkspaceConnectionKind,
   type CloudWorkspacePutAway,
 } from "../../apps/web/src/cloud-workspace";
 import {
@@ -58,8 +60,32 @@ let holdCommitOwner: number | null = null,
   failOpenOwner: number | null = null,
   holdCreateOwner: number | null = null,
   failCreateOwner: number | null = null,
+  holdRecoveryOwner: number | null = null,
+  failRecoveryAsyncOwner: number | null = null,
+  failRecoverySyncOwner: number | null = null,
   failPutAwayCallback = false,
-  invalidScope = false;
+  invalidScope = false,
+  connectionState: CloudWorkspaceConnection | undefined = undefined,
+  enableRetrySync = true,
+  enableSignIn = true,
+  invalidRecoveryCallbacks = false,
+  mutableContextOverride: {
+    store: CloudLibraryStateStore;
+    scope: CloudScope;
+  } | null = null;
+
+type MalformedConnectionPreset =
+  | "null"
+  | "primitive"
+  | "array"
+  | "empty-object"
+  | "unknown-kind"
+  | "all-synced-kind"
+  | "extra-secret-fields"
+  | "symbol-extra"
+  | "non-enumerable"
+  | "class-instance"
+  | "accessor-getter";
 
 const heldCommits: Array<() => void> = [],
   heldOpens: Array<{
@@ -67,7 +93,12 @@ const heldCommits: Array<() => void> = [],
     noteId: string;
     resolve: (fail: boolean) => void;
   }> = [],
-  heldCreates: Array<{ owner: number; resolve: (fail: boolean) => void }> = [];
+  heldCreates: Array<{ owner: number; resolve: (fail: boolean) => void }> = [],
+  heldRecoveries: Array<{
+    action: "retry-sync" | "sign-in";
+    owner: number;
+    resolve: (fail: boolean) => void;
+  }> = [];
 
 const wrappers: CloudLibraryStateStore[] = stores.map((store, owner) => ({
   read: (...args) => store.read(...args),
@@ -199,6 +230,16 @@ const ownersByAccount: [CloudNoteUpload[], CloudNoteUpload[]] = [[], []],
     noteId: string;
     retained: boolean;
     matchedSession: boolean;
+  }> = [],
+  recoveryCalls: Array<{
+    action: "retry-sync" | "sign-in";
+    owner: number;
+    ownerSubject: string;
+    collectionId: string;
+    modeGeneration: number;
+    matchedOriginalStore: boolean;
+    frozenContext: boolean;
+    frozenScope: boolean;
   }> = [];
 
 let selected = 0,
@@ -296,6 +337,91 @@ async function onPutAway(closed: CloudWorkspacePutAway) {
   }
 }
 
+function recordAndExecuteRecovery(
+  action: "retry-sync" | "sign-in",
+  context: CloudLibraryContext,
+): void | Promise<void> {
+  const owner = ownerOf(context);
+  recoveryCalls.push({
+    action,
+    owner,
+    ownerSubject: context.scope.ownerSubject,
+    collectionId: context.scope.collectionId,
+    modeGeneration: context.scope.modeGeneration,
+    matchedOriginalStore: context.store === wrappers[owner],
+    frozenContext: Object.isFrozen(context),
+    frozenScope: Object.isFrozen(context.scope),
+  });
+  if (failRecoverySyncOwner === owner) {
+    throw Error(`synthetic private ${action} synchronous exception`);
+  }
+  if (holdRecoveryOwner === owner) {
+    return new Promise<boolean>((resolve) =>
+      heldRecoveries.push({ action, owner, resolve }),
+    ).then((shouldFail) => {
+      if (shouldFail) {
+        throw Error(`synthetic private ${action} held rejection token-xyz`);
+      }
+    });
+  }
+  if (failRecoveryAsyncOwner === owner) {
+    return Promise.reject(
+      Error(`synthetic private ${action} async rejection token-xyz`),
+    );
+  }
+}
+
+function buildMalformedConnection(preset: MalformedConnectionPreset): unknown {
+  switch (preset) {
+    case "null":
+      return null;
+    case "primitive":
+      return "live";
+    case "array":
+      return ["paused"];
+    case "empty-object":
+      return {};
+    case "unknown-kind":
+      return { kind: "live" };
+    case "all-synced-kind":
+      return { kind: "all-synced" };
+    case "extra-secret-fields":
+      return {
+        kind: "paused",
+        message: "synthetic-secret-server-body",
+        token: "synthetic-bearer-xyz",
+        paid: true,
+      };
+    case "symbol-extra":
+      return {
+        kind: "paused",
+        [Symbol("secret")]: "synthetic-symbol-secret",
+      };
+    case "non-enumerable": {
+      const value = {};
+      Object.defineProperty(value, "kind", {
+        value: "paused",
+        enumerable: false,
+      });
+      return value;
+    }
+    case "class-instance":
+      return Object.assign(new Error("synthetic-error-instance-secret"), {
+        kind: "paused",
+      });
+    case "accessor-getter": {
+      const value = {};
+      Object.defineProperty(value, "kind", {
+        enumerable: true,
+        get() {
+          return "paused";
+        },
+      });
+      return value;
+    }
+  }
+}
+
 const root = createRoot(document.getElementById("fixture")!);
 
 function render() {
@@ -304,7 +430,19 @@ function render() {
         store: wrappers[selected],
         scope: { ...config.contexts[selected].scope, ownerSubject: "" },
       } as CloudLibraryContext)
-    : libraryContexts[selected];
+    : (mutableContextOverride ?? libraryContexts[selected]);
+  const retrySyncProp = invalidRecoveryCallbacks
+    ? ("not-a-function" as unknown as (context: CloudLibraryContext) => void)
+    : enableRetrySync
+      ? (context: CloudLibraryContext) =>
+          recordAndExecuteRecovery("retry-sync", context)
+      : undefined;
+  const signInProp = invalidRecoveryCallbacks
+    ? ("not-a-function" as unknown as (context: CloudLibraryContext) => void)
+    : enableSignIn
+      ? (context: CloudLibraryContext) =>
+          recordAndExecuteRecovery("sign-in", context)
+      : undefined;
   flushSync(() =>
     root.render(
       <StrictMode>
@@ -312,9 +450,12 @@ function render() {
           context={activeContext}
           signal={controllers[selected].signal}
           refreshKey={refreshKey}
+          connection={connectionState}
           onOpen={onOpen}
           onCreate={onCreate}
           onPutAway={onPutAway}
+          onRetrySync={retrySyncProp}
+          onSignIn={signInProp}
         />
       </StrictMode>,
     ),
@@ -328,6 +469,7 @@ const api = {
     selected = owner;
     refreshKey = 0;
     invalidScope = false;
+    mutableContextOverride = null;
     render();
   },
   abortCurrent() {
@@ -345,6 +487,62 @@ const api = {
     invalidScope = value;
     render();
   },
+  setConnection(kind: CloudWorkspaceConnectionKind | null) {
+    connectionState = kind === null ? undefined : Object.freeze({ kind });
+    render();
+  },
+  setMalformedConnection(preset: MalformedConnectionPreset) {
+    connectionState = buildMalformedConnection(
+      preset,
+    ) as CloudWorkspaceConnection;
+    render();
+  },
+  setRecoveryCallbacks(options: { retrySync: boolean; signIn: boolean }) {
+    invalidRecoveryCallbacks = false;
+    enableRetrySync = options.retrySync;
+    enableSignIn = options.signIn;
+    render();
+  },
+  setInvalidRecoveryCallbacks(value: boolean) {
+    invalidRecoveryCallbacks = value;
+    render();
+  },
+  mountMutableContextAndCorruptInPlace() {
+    mutableContextOverride = {
+      store: wrappers[selected],
+      scope: { ...config.contexts[selected].scope },
+    };
+    render();
+    const otherOwner = selected === 0 ? 1 : 0;
+    mutableContextOverride.store = wrappers[otherOwner];
+    mutableContextOverride.scope.ownerSubject =
+      "mutated-global-attacker-subject";
+    mutableContextOverride.scope.collectionId = "mutated-global-collection";
+  },
+  clearMutableContext() {
+    mutableContextOverride = null;
+    render();
+  },
+  holdRecovery(owner: number | null) {
+    holdRecoveryOwner = owner;
+  },
+  heldRecoveries: () =>
+    heldRecoveries.map(({ action, owner }) => ({ action, owner })),
+  releaseRecoveries(fail = false) {
+    holdRecoveryOwner = null;
+    for (const item of heldRecoveries.splice(0)) item.resolve(fail);
+  },
+  releaseFirstRecovery(fail = false) {
+    const first = heldRecoveries.shift();
+    first?.resolve(fail);
+  },
+  failRecoveryAsync(owner: number | null) {
+    failRecoveryAsyncOwner = owner;
+  },
+  failRecoverySync(owner: number | null) {
+    failRecoverySyncOwner = owner;
+  },
+  recoveryCalls: () => [...recoveryCalls],
   failRetention(owner: number, value: boolean) {
     retentionFailures[owner] = value;
   },
@@ -403,8 +601,11 @@ const api = {
     api.releaseCommits();
     api.releaseOpens(false);
     api.releaseCreates(false);
+    api.releaseRecoveries(false);
     retentionFailures.fill(false);
     failPutAwayCallback = false;
+    failRecoveryAsyncOwner = null;
+    failRecoverySyncOwner = null;
     await Promise.allSettled(
       [...allUploads].map((upload) => upload.session.flush()),
     );

@@ -22,6 +22,13 @@ import type { CloudDraftSession } from "./cloud-draft-session";
 import type { CloudNoteUpload } from "./cloud-note-upload";
 import { CloudUploadingNoteEditor } from "./cloud-uploading-note-editor";
 
+export type CloudWorkspaceConnectionKind =
+  "cached" | "syncing" | "offline" | "sign-in-required" | "paused";
+
+export type CloudWorkspaceConnection = Readonly<{
+  kind: CloudWorkspaceConnectionKind;
+}>;
+
 export type CloudWorkspacePutAway = Readonly<{
   context: CloudLibraryContext;
   upload: CloudNoteUpload;
@@ -32,6 +39,7 @@ export type CloudWorkspaceProps = {
   context: CloudLibraryContext;
   signal: AbortSignal;
   refreshKey: number;
+  connection?: CloudWorkspaceConnection;
   onOpen: (
     selection: CloudLibraryNoteSelection,
   ) => CloudNoteUpload | Promise<CloudNoteUpload>;
@@ -39,7 +47,81 @@ export type CloudWorkspaceProps = {
     context: CloudLibraryContext,
   ) => CloudNoteUpload | Promise<CloudNoteUpload>;
   onPutAway?: (closed: CloudWorkspacePutAway) => void | Promise<void>;
+  onRetrySync?: (context: CloudLibraryContext) => void | Promise<void>;
+  onSignIn?: (context: CloudLibraryContext) => void | Promise<void>;
 };
+
+type ParsedConnection =
+  | Readonly<{ mode: "omitted" }>
+  | Readonly<{ mode: "valid"; kind: CloudWorkspaceConnectionKind }>
+  | Readonly<{ mode: "malformed" }>;
+
+const CONNECTION_COPY: Readonly<Record<CloudWorkspaceConnectionKind, string>> =
+  Object.freeze({
+    cached: "Showing notes cached on this device.",
+    syncing: "Syncing with Cloud\u2026",
+    offline: "Offline. New edits stay pending on this device.",
+    paused: "Cloud sync is paused. Your pending drafts remain on this device.",
+    "sign-in-required":
+      "Sign in again to resume Cloud sync. Your pending drafts remain on this device.",
+  });
+
+const MALFORMED_CONNECTION_COPY =
+  "Cloud sync status unavailable. Your pending drafts remain on this device.";
+
+const RECOVERY_ERROR_COPY: Readonly<
+  Record<"paused" | "sign-in-required", string>
+> = Object.freeze({
+  paused:
+    "Could not resume Cloud sync. Your pending drafts remain on this device.",
+  "sign-in-required":
+    "Could not start Cloud sign-in. Your pending drafts remain on this device.",
+});
+
+function isConnectionKind(
+  value: unknown,
+): value is CloudWorkspaceConnectionKind {
+  return (
+    value === "cached" ||
+    value === "syncing" ||
+    value === "offline" ||
+    value === "sign-in-required" ||
+    value === "paused"
+  );
+}
+
+function parseConnection(input: unknown): ParsedConnection {
+  if (input === undefined) {
+    return { mode: "omitted" };
+  }
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { mode: "malformed" };
+  }
+  try {
+    const proto = Object.getPrototypeOf(input);
+    if (proto !== Object.prototype && proto !== null) {
+      return { mode: "malformed" };
+    }
+    const ownNames = Object.getOwnPropertyNames(input);
+    if (ownNames.length !== 1 || ownNames[0] !== "kind") {
+      return { mode: "malformed" };
+    }
+    if (Object.getOwnPropertySymbols(input).length !== 0) {
+      return { mode: "malformed" };
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(input, "kind");
+    if (!descriptor || !descriptor.enumerable || !("value" in descriptor)) {
+      return { mode: "malformed" };
+    }
+    const kind = descriptor.value;
+    if (!isConnectionKind(kind)) {
+      return { mode: "malformed" };
+    }
+    return { mode: "valid", kind };
+  } catch {
+    return { mode: "malformed" };
+  }
+}
 
 type ActiveEditor = {
   readonly context: CloudLibraryContext;
@@ -137,12 +219,20 @@ export function CloudWorkspace(props: CloudWorkspaceProps) {
       </div>
     );
   }
+  const parsedConnection = parseConnection(props.connection);
   return (
     <SelectedWorkspace
       key={selected.serial}
-      {...props}
       store={selected.store}
       scope={selected.scope}
+      signal={props.signal}
+      refreshKey={props.refreshKey}
+      parsedConnection={parsedConnection}
+      onOpen={props.onOpen}
+      onCreate={props.onCreate}
+      onPutAway={props.onPutAway}
+      onRetrySync={props.onRetrySync}
+      onSignIn={props.onSignIn}
     />
   );
 }
@@ -152,12 +242,16 @@ function SelectedWorkspace({
   scope,
   signal,
   refreshKey,
+  parsedConnection,
   onOpen,
   onCreate,
   onPutAway,
-}: CloudWorkspaceProps & {
+  onRetrySync,
+  onSignIn,
+}: Omit<CloudWorkspaceProps, "context" | "connection"> & {
   store: CloudLibraryStateStore;
   scope: CloudScope;
+  parsedConnection: ParsedConnection;
 }) {
   const scopeKey = useMemo(() => JSON.stringify(scope), [scope]);
   const workspaceContext = useMemo<CloudLibraryContext>(
@@ -171,9 +265,49 @@ function SelectedWorkspace({
     [workspaceIssue, setWorkspaceIssue] = useState<string | null>(null),
     [returnFocus, setReturnFocus] = useState<ReturnFocusTarget | null>(null);
 
+  const validRefreshKey = Number.isSafeInteger(refreshKey) && refreshKey >= 0;
+  const usable = !aborted && !signal.aborted && validRefreshKey;
+  const visibleEditor = usable ? activeEditor : null;
+  const hasRetryAction =
+    parsedConnection.mode === "valid" &&
+    parsedConnection.kind === "paused" &&
+    typeof onRetrySync === "function";
+  const hasSignInAction =
+    parsedConnection.mode === "valid" &&
+    parsedConnection.kind === "sign-in-required" &&
+    typeof onSignIn === "function";
+  const connectionStateKey = !usable
+    ? "unusable"
+    : parsedConnection.mode === "valid"
+      ? `valid:${parsedConnection.kind}:${hasRetryAction || hasSignInAction ? "action" : "plain"}`
+      : parsedConnection.mode;
+
+  const [connectionState, setConnectionState] = useState(() => ({
+    key: connectionStateKey,
+    epoch: 0,
+  }));
+  let currentRecoveryEpoch = connectionState.epoch;
+  if (connectionState.key !== connectionStateKey) {
+    currentRecoveryEpoch = connectionState.epoch + 1;
+    setConnectionState({
+      key: connectionStateKey,
+      epoch: currentRecoveryEpoch,
+    });
+  }
+  const [recoveryPendingEpoch, setRecoveryPendingEpoch] = useState<
+      number | null
+    >(null),
+    [recoveryError, setRecoveryError] = useState<Readonly<{
+      epoch: number;
+      message: string;
+    }> | null>(null);
+
   const mounted = useRef(false),
     transitioning = useRef(false),
     latestRequest = useRef(0),
+    recoveryEpochRef = useRef(0),
+    recoveryInFlightEpochRef = useRef<number | null>(null),
+    validRefreshKeyRef = useRef(validRefreshKey),
     activeEditorRef = useRef<ActiveEditor | null>(null),
     desiredCardTitleRef = useRef<string | null>(null),
     provisionalFocusRef = useRef(false),
@@ -182,21 +316,35 @@ function SelectedWorkspace({
     editorPaneRef = useRef<HTMLDivElement>(null);
 
   activeEditorRef.current = activeEditor;
+  validRefreshKeyRef.current = validRefreshKey;
 
-  const validRefreshKey = Number.isSafeInteger(refreshKey) && refreshKey >= 0;
-  const usable = !aborted && !signal.aborted && validRefreshKey;
-  const visibleEditor = usable ? activeEditor : null;
+  useLayoutEffect(() => {
+    recoveryEpochRef.current = Math.max(
+      recoveryEpochRef.current,
+      currentRecoveryEpoch,
+    );
+    if (
+      recoveryInFlightEpochRef.current !== null &&
+      recoveryInFlightEpochRef.current !== currentRecoveryEpoch
+    ) {
+      recoveryInFlightEpochRef.current = null;
+    }
+  }, [currentRecoveryEpoch]);
 
   useLayoutEffect(() => {
     mounted.current = true;
     const handleAbort = () => {
       latestRequest.current++;
+      recoveryEpochRef.current++;
+      recoveryInFlightEpochRef.current = null;
       activeEditorRef.current = null;
       desiredCardTitleRef.current = null;
       provisionalButtonRef.current = null;
       setAborted(true);
       setActiveEditor(null);
       setWorkspaceIssue(null);
+      setRecoveryPendingEpoch(null);
+      setRecoveryError(null);
       setReturnFocus(null);
     };
     if (signal.aborted) {
@@ -206,6 +354,7 @@ function SelectedWorkspace({
     }
     return () => {
       mounted.current = false;
+      recoveryInFlightEpochRef.current = null;
       signal.removeEventListener("abort", handleAbort);
     };
   }, [signal]);
@@ -213,11 +362,15 @@ function SelectedWorkspace({
   useEffect(() => {
     if (!validRefreshKey) {
       latestRequest.current++;
+      recoveryEpochRef.current++;
+      recoveryInFlightEpochRef.current = null;
       activeEditorRef.current = null;
       desiredCardTitleRef.current = null;
       provisionalButtonRef.current = null;
       setActiveEditor(null);
       setWorkspaceIssue(null);
+      setRecoveryPendingEpoch(null);
+      setRecoveryError(null);
       setReturnFocus(null);
     }
   }, [validRefreshKey]);
@@ -634,6 +787,70 @@ function SelectedWorkspace({
     });
   };
 
+  const handleRecovery = async (
+    kind: "paused" | "sign-in-required",
+    callback: (context: CloudLibraryContext) => void | Promise<void>,
+  ) => {
+    const requestEpoch = currentRecoveryEpoch;
+    if (
+      !mounted.current ||
+      signal.aborted ||
+      !validRefreshKey ||
+      parsedConnection.mode !== "valid" ||
+      parsedConnection.kind !== kind ||
+      recoveryInFlightEpochRef.current === requestEpoch
+    ) {
+      return;
+    }
+    recoveryInFlightEpochRef.current = requestEpoch;
+    setRecoveryPendingEpoch(requestEpoch);
+    setRecoveryError(null);
+    try {
+      await callback(workspaceContext);
+      if (recoveryInFlightEpochRef.current === requestEpoch) {
+        recoveryInFlightEpochRef.current = null;
+      }
+      if (
+        !mounted.current ||
+        signal.aborted ||
+        !validRefreshKeyRef.current ||
+        recoveryEpochRef.current !== requestEpoch
+      ) {
+        return;
+      }
+      setRecoveryPendingEpoch((previous) =>
+        previous === requestEpoch ? null : previous,
+      );
+    } catch {
+      if (recoveryInFlightEpochRef.current === requestEpoch) {
+        recoveryInFlightEpochRef.current = null;
+      }
+      if (
+        !mounted.current ||
+        signal.aborted ||
+        !validRefreshKeyRef.current ||
+        recoveryEpochRef.current !== requestEpoch
+      ) {
+        return;
+      }
+      setRecoveryPendingEpoch((previous) =>
+        previous === requestEpoch ? null : previous,
+      );
+      setRecoveryError({
+        epoch: requestEpoch,
+        message: RECOVERY_ERROR_COPY[kind],
+      });
+    }
+  };
+
+  const libraryInert = isNarrow && visibleEditor !== null;
+  const activeRecoveryPending =
+    usable && recoveryPendingEpoch === currentRecoveryEpoch;
+  const activeRecoveryError =
+    usable && recoveryError?.epoch === currentRecoveryEpoch
+      ? recoveryError.message
+      : null;
+
   return (
     <div
       className="cloud-workspace"
@@ -642,10 +859,56 @@ function SelectedWorkspace({
       <div
         ref={libraryPaneRef}
         className="cloud-workspace-library"
-        inert={isNarrow && visibleEditor !== null}
+        inert={libraryInert}
         onFocusCapture={handleLibraryFocusCapture}
         onBlurCapture={handleLibraryBlurCapture}
       >
+        {usable && parsedConnection.mode === "valid" && (
+          <div
+            className="cloud-workspace-connection"
+            data-connection-kind={parsedConnection.kind}
+          >
+            <p
+              className="cloud-workspace-connection-text"
+              role="status"
+              aria-live={libraryInert ? "off" : "polite"}
+            >
+              {CONNECTION_COPY[parsedConnection.kind]}
+            </p>
+            {hasRetryAction && typeof onRetrySync === "function" && (
+              <button
+                type="button"
+                className="cloud-workspace-connection-action"
+                disabled={activeRecoveryPending}
+                onClick={() => void handleRecovery("paused", onRetrySync)}
+              >
+                Retry sync
+              </button>
+            )}
+            {hasSignInAction && typeof onSignIn === "function" && (
+              <button
+                type="button"
+                className="cloud-workspace-connection-action"
+                disabled={activeRecoveryPending}
+                onClick={() =>
+                  void handleRecovery("sign-in-required", onSignIn)
+                }
+              >
+                Sign in again
+              </button>
+            )}
+          </div>
+        )}
+        {usable && parsedConnection.mode === "malformed" && (
+          <p className="cloud-workspace-unavailable" role="alert">
+            {MALFORMED_CONNECTION_COPY}
+          </p>
+        )}
+        {activeRecoveryError && (
+          <p className="cloud-workspace-alert" role="alert">
+            {activeRecoveryError}
+          </p>
+        )}
         {usable && workspaceIssue && (
           <p className="cloud-workspace-alert" role="alert">
             {workspaceIssue}
