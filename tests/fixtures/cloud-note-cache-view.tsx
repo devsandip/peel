@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { flushSync } from "react-dom";
 import { deleteDB, openDB } from "idb";
 import { CloudNoteCacheView } from "../../apps/web/src/cloud-note-cache-view";
+import { CloudDraftSession } from "../../apps/web/src/cloud-draft-session";
 import {
   DurableCloudClient,
   type CloudScope,
@@ -17,8 +18,17 @@ import { cloudDraft, cloudScope } from "./cloud-durable-contract";
 const prefix = new URL(location.href).searchParams.get("db");
 if (!prefix || !/^peel-m0-cloud-panel-[a-z0-9-]+$/.test(prefix))
   throw Error("An explicit synthetic database namespace is required");
+let failDraftWrites = false,
+  holdDraftWrites = false;
+const heldWrites: Array<() => void> = [];
+let draftSession: CloudDraftSession | null = null;
 const names = [`${prefix}-a`, `${prefix}-b`],
-  stores = names.map((name) => new IndexedDBCloudStateStore(name)),
+  stores = names.map(
+    (name) =>
+      new IndexedDBCloudStateStore(name, () => {
+        if (failDraftWrites) throw Error("synthetic private retention error");
+      }),
+  ),
   scopes: CloudScope[] = [
     { ...cloudScope, ownerSubject: "synthetic-panel-owner-a" },
     { ...cloudScope, ownerSubject: "synthetic-panel-owner-b" },
@@ -43,7 +53,11 @@ const wrappers: CloudStateStore[] = stores.map((store, i) => ({
     if (fail) throw Error("synthetic private error payload");
     return value;
   },
-  commit: (...args) => store.commit(...args),
+  async commit(...args) {
+    if (holdDraftWrites)
+      await new Promise<void>((resolve) => heldWrites.push(resolve));
+    return store.commit(...args);
+  },
   close: () => store.close(),
 }));
 for (let i = 0; i < clients.length; i++) {
@@ -166,9 +180,45 @@ const api = {
     shown = false;
     render();
   },
+  async draftOpen() {
+    draftSession = await CloudDraftSession.open(wrappers[selected], scope, id);
+  },
+  draftEdit(body: string) {
+    draftSession!.edit(body);
+  },
+  draftSnapshot: () => draftSession!.snapshot(),
+  async draftFlush() {
+    try {
+      return await draftSession!.flush();
+    } finally {
+      api.refresh();
+    }
+  },
+  async draftPutAway() {
+    try {
+      return await draftSession!.putAway();
+    } finally {
+      api.refresh();
+    }
+  },
+  draftRefresh: () => draftSession!.refresh(),
+  draftFail(value: boolean) {
+    failDraftWrites = value;
+  },
+  draftHold() {
+    holdDraftWrites = true;
+  },
+  draftHeld: () => heldWrites.length,
+  draftRelease() {
+    holdDraftWrites = false;
+    for (const release of heldWrites.splice(0)) release();
+  },
   async destroy() {
+    api.draftRelease();
+    failDraftWrites = false;
     api.release();
     root.unmount();
+    await draftSession?.flush().catch(() => {});
     await Promise.all(stores.map((store) => store.close()));
     await Promise.all(names.map((name) => deleteDB(name)));
   },
