@@ -191,6 +191,28 @@ function worker(f: ReturnType<typeof fixture>, mode: string, input = f.input) {
   }
   return { child, line };
 }
+async function contend(
+  f: ReturnType<typeof fixture>,
+  release: "loser-first" | "writer-first",
+) {
+  const a = worker(f, "race-writer");
+  await a.line("prepared");
+  const b = worker(f, "race-reader", {
+    ...f.input,
+    workspaceDirectory: join(f.parent, "other"),
+  });
+  await b.line("reader-open");
+  const [first, second] = release === "loser-first" ? [b, a] : [a, b];
+  first.child.stdin!.end();
+  await first.line("result");
+  // The expected writer must not COMMIT against the contender's live read lock.
+  await exited(first.child);
+  second.child.stdin!.end();
+  const results = (await Promise.all([a.line("result"), b.line("result")])).map(
+    (s) => JSON.parse(s),
+  );
+  return { a, b, results };
+}
 afterEach(async () => {
   effects.syncFailure = undefined;
   effects.closeFailure = undefined;
@@ -601,21 +623,31 @@ it("preserves an acknowledged recipe when its publication return is lost, withou
 
 it("lets only one actual competing process acknowledge the shared reservation", async () => {
   const f = fixture(),
-    a = worker(f, "race"),
-    b = worker(f, "race", {
-      ...f.input,
-      workspaceDirectory: join(f.parent, "other"),
-    });
-  await Promise.all([a.line("ready"), b.line("ready")]);
-  a.child.stdin!.end("go\n");
-  b.child.stdin!.end("go\n");
-  const results = (await Promise.all([a.line("result"), b.line("result")])).map(
-    (s) => JSON.parse(s),
-  );
+    { a, b, results } = await contend(f, "loser-first");
   expect(results.filter((r) => r.kind === "acknowledged")).toHaveLength(1);
   expect(results.filter((r) => r.kind === "refused")).toHaveLength(1);
   await Promise.all([exited(a.child), exited(b.child)]);
   expect(f.ledger.read().runs.length).toBe(1);
+}, 20000);
+
+it("refuses both processes when COMMIT precedes release of the competing reader", async () => {
+  const f = fixture(),
+    { a, b, results } = await contend(f, "writer-first");
+  expect(results).toEqual([
+    { kind: "refused", code: "recovery-required" },
+    { kind: "refused", code: "recovery-required" },
+  ]);
+  await Promise.all([exited(a.child), exited(b.child)]);
+  expect(f.ledger.read().runs).toEqual([]);
+  expect(readdirSync(f.workspaceDirectory)).toEqual([]);
+  expect(readdirSync(join(f.parent, "other"))).toEqual([]);
+  refused(() => CloudPreparationSession.start(f.input));
+  refused(() =>
+    CloudPreparationSession.start({
+      ...f.input,
+      workspaceDirectory: join(f.parent, "other"),
+    }),
+  );
 }, 20000);
 
 it("preserves actual process-loss states before and after reserve/genesis COMMIT without a restart session", async () => {
