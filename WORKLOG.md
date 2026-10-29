@@ -1971,3 +1971,21 @@
 
 **Next:**
 - Finish141 focused review/scans/exact-head hosted gates and normal integration, actual closure/Project/main proof. Then scope protected v2 initial storage separately, preserving v1 and original ACK/current-gate requirements. M2.2 and actual managed/independent teardown remain unmet; keep immutable resumes current.
+
+
+## 2026-10-29 - Move the fixed journal engine while preserving v1
+
+**Did:**
+
+- Integrated PR142/source2bca39a after all three40822868058 gates/review6488715728 as1a0a83c. Actual141closure, both ProjectDone, progress label removal and safe primary advancement verified. Its passive catalog still grants no v2 store or execution permission; all three actual-main40823741664 gates passed at exact1a0a83c (proof recorded on PR142).
+- Created issue143/current Project and committed plan1e65132 before a fresh actual-Node24 synthetic compatibility experiment and code. Moved the entire old implementation byte-for-byte (SHA74c72545a272a6ca0721ebb4c93c822039d73587f556416f89e3aa4720e959a2) to journal-sqlite.ts, leaving the exact original public class/error re-exports in journal-storage.ts. No existing tests/workflow/dependencies/callers or transaction/ACK/close ordering changed.
+- Reopened the actual pre-move synthetic database through the post-move public API in a fresh process. Exact original genesis, DB/marker/header/catalog/persistent page metadata and constructor/error identities matched. Removed only that newly owned temporary workspace. No actual/default operator/note DB/account/funding/source ACK.
+- Passed actual Node24 direct/394Cloud31files then609shared69/type/format/build sequentially with unchanged defaults. Existing namespace/ACK/process-race/SIGKILL suites remain unchanged. Focused review finds no remaining issue; no failed positive143 run. Existing browser chunk warning remains.
+
+**State now:**
+
+- Internal compatibility refactor only. No v2 namespace/store/initializer/general schema factory/migration/current assessment/preparation/fence/provider permission. Existing SQLite inspection is not certified physically write-free. App/branding/stored IDs and actual stopped gates/expired allowances remain unchanged.
+
+**Next:**
+
+- Finish143 focused review/scans/all exact-head hosted gates, normal integration, actual main/closure/Project proof. Then scope a separate fixed-v2 initial store with strict empty-state/catalog/header/ACK evidence. M2.2 and actual managed/independent teardown remain unmet; keep immutable resumes current.

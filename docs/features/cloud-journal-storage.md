@@ -40,3 +40,7 @@ All required final-head hosted checks and focused review still precede merge. Ac
 ## Integration follow-up, 28 October 2026
 
 The fixed persistence primitive merged in PR122 as a6061ab, after all three source checks40701061350 and all three exact-main checks40702504975 passed. [Actual funding/source binding](cloud-journal-sources.md) is issue123. The initial concurrent local timeout remains failed historical evidence; later passing source/main checks do not erase it. This storage layer still returns no execution capability.
+
+## Internal engine extraction, 29 October 2026
+
+[Issue143](https://github.com/devsandip/peel/issues/143) moves the existing fixed v1 implementation byte-for-byte to [journal-sqlite.ts](../../infra/cloud/journal-sqlite.ts), with exact original re-exports through [journal-storage.ts](../../infra/cloud/journal-storage.ts). The [extraction plan/evidence](cloud-journal-engine.md) records an actual pre-move synthetic database reopened without byte changes, original constructor/error identity and passing unchanged namespace/ACK/process suites. The storage API, catalog/settings, transaction/sync/close ordering and source/session behavior stay intact. This is no v2 store, format generalization or current permission. Existing inspection still has its reviewed SQLite recovery/settings behavior and is not certified physically write-free.
