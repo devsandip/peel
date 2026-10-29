@@ -259,6 +259,7 @@ it("rejects logically expired needed changes even while the checkpoint and physi
     const reached = new Promise<void>((done) => (entered = done)),
       gate = new Promise<void>((done) => (release = done));
     const wrapped: CloudServerStore = {
+      readAccount: (subject) => store.readAccount(subject),
       read: (o, n, op) => store.read(o, n, op),
       close: async () => {},
       commit: async (o, n, tx) => {

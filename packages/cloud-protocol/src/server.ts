@@ -61,6 +61,7 @@ export interface CloudServerCommit {
   change?: CloudChange;
 }
 export interface CloudServerStore {
+  readAccount(ownerSubject: string): Promise<CloudAccount | null>;
   read(
     ownerSubject: string,
     noteId: string,
@@ -246,26 +247,36 @@ export function validateCloudChange(input: CloudChange): CloudChange {
     fail("unrecognized-change");
   return change;
 }
-export function requireCloudAccount(
+function requireActiveCloudAccount(
   account: CloudAccount | null,
   subject: string,
-  scope: { version: 1; collectionId: string; modeGeneration: number },
-  now: number,
 ) {
   if (!account || account.ownerSubject !== subject)
     fail("account-unavailable", 401);
   validateCloudAccount(account);
   if (account.status !== "active") fail("account-deleted", 410);
   if (account.entitlement !== "active") fail("cloud-entitlement-inactive", 403);
+  return account;
+}
+function requireCloudAccountTime(account: CloudAccount, now: number) {
+  time(now);
+  if (now < account.wall) fail("server-clock-moved-backwards", 503);
+  time(now + CLOUD_RECEIPT_MS);
+}
+export function requireCloudAccount(
+  input: CloudAccount | null,
+  subject: string,
+  scope: { version: 1; collectionId: string; modeGeneration: number },
+  now: number,
+) {
+  const account = requireActiveCloudAccount(input, subject);
   if (
     scope.version !== 1 ||
     scope.collectionId !== account.collectionId ||
     scope.modeGeneration !== account.modeGeneration
   )
     fail("collection-generation-mismatch", 409);
-  time(now);
-  if (now < account.wall) fail("server-clock-moved-backwards", 503);
-  time(now + CLOUD_RECEIPT_MS);
+  requireCloudAccountTime(account, now);
   return { account, now };
 }
 export class CloudMutationService {
@@ -273,6 +284,21 @@ export class CloudMutationService {
     private store: CloudServerStore,
     private clock = () => Date.now(),
   ) {}
+  /** Discovery metadata only; each data request must still enforce current access. */
+  async libraryContext(subject: string) {
+    validateServerSubject(subject);
+    const account = requireActiveCloudAccount(
+      await this.store.readAccount(subject),
+      subject,
+    );
+    requireCloudAccountTime(account, this.clock());
+    return {
+      version: 1 as const,
+      ownerSubject: account.ownerSubject,
+      collectionId: account.collectionId,
+      modeGeneration: account.modeGeneration,
+    };
+  }
   private current(
     read: CloudServerRead,
     subject: string,

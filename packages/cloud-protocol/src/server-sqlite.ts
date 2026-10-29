@@ -135,6 +135,19 @@ export class SQLiteCloudServerStore
     if (receipt.opId !== opId) throw Error("Cloud server receipt key mismatch");
     return receipt;
   }
+  async readAccount(owner: string) {
+    validateServerSubject(owner);
+    this.db.exec("BEGIN");
+    try {
+      this.schema();
+      const account = this.account(owner);
+      this.db.exec("COMMIT");
+      return account;
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
   async read(owner: string, noteId: string, opId?: string) {
     validateServerSubject(owner);
     if (

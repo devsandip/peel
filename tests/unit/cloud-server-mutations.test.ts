@@ -231,6 +231,7 @@ describe("isolated Cloud server conditional mutation contract, AC-09/10/12/13/22
         reached = new Promise<void>((done) => (entered = done));
       let hold = true;
       const wrapped: CloudServerStore = {
+        readAccount: (subject) => store.readAccount(subject),
         read: (subject, noteId, opId) => store.read(subject, noteId, opId),
         close: async () => {},
         commit: async (subject, noteId, transition) => {

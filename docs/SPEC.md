@@ -333,6 +333,7 @@ API surface:
 
 | Route                         | Behavior                                                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `GET /v1/library-context`     | Discover only the authenticated caller's active paid library scope; no client-selected owner or library, and no access grant for later requests. See [implementation plan](features/cloud-library-context.md). |
 | `POST /v1/sync/bootstrap`     | Capture the current server sequence and start a paginated current-state download                                   |
 | `GET /v1/notes?pageToken=...` | Return current snapshots and tombstones for the authenticated account only                                         |
 | `GET /v1/sync?after=...`      | Validate a completed checkpoint and start a change round with a stable upper sequence                              |

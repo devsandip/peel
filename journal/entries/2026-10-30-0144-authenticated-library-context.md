@@ -1,0 +1,11 @@
+# Authenticated library context stays metadata
+
+30 October 2026, 01:44 IST. Frozen pre-source-gate checkpoint.
+
+PR182/179 is fully complete at7793dfb: exact source40942462103/main40943093029 all3 first attempts, review5703971070/Ready6506702122/proof6506883860. Actual closure/bothProjectDone/labels/guarded primary/unknown paths/scanned Root-only source and merge cleanup verified. Hosted Cloud576/40 passes without relabeling the two failed local runs. Peer181 remains independently active on its own conflict-preview files; all original peer refs/checkouts are preserved.
+
+Issue183 pre-code planb06af70 adds one read-only authenticated scope discovery route. The caller's actual active paid account selects owner/library/generation; request selectors cannot choose another context. Read only recognized account metadata through SQLite or one existing DynamoDB META transaction, with physical/record integrity validation. Existing auth/policy/time/scope guards and no-store errors remain; a returned context never grants later access. Actual policy/generation changes still refuse old-context data reads. No schema, dependency, IAM expansion, UI or default activation is included.
+
+Final51 focused Node24 cases (20 new), full shared811/79, type/full formatting/deterministic artifact smoke/build/default-bundle checks pass. The first new fixture's invalid initial revision/sequence setup and TypeScript inference mistakes remain separately recorded and corrected. Owned failed-setup temporary directories were removed using exact creation metadata without reading DB contents. Local DynamoDB Local tests are unrun: the existing pinned official runtime download timed out before Java/tests started. Fresh exact-source hosted gates must provide actual29-case adapter/Lambda and41-suite Node24 evidence before normal integration/separate main proof. Original controls remain unchanged.
+
+Default Cloud remains unavailable. This is a server development prerequisite, not real login/paid activation/full web/live/reconnect/native/iPhone/performance or M2.2 managed/independent teardown acceptance. No actual/default notes/operator DB/profile/provider/native launch/stopped probe/expired allowance or private archive import was used.
