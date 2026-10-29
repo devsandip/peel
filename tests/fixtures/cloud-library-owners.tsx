@@ -149,14 +149,12 @@ const api = {
     failures[owner] = value;
   },
   retained: (owner: number) =>
-    owners[owner]
-      .retainedOwners()
-      .map((upload) => ({
-        noteId: upload.session.snapshot().noteId,
-        body: upload.session.snapshot().bodyMarkdown,
-        retained: upload.session.snapshot().retained,
-        status: upload.session.snapshot().status,
-      })),
+    owners[owner].retainedOwners().map((upload) => ({
+      noteId: upload.session.snapshot().noteId,
+      body: upload.session.snapshot().bodyMarkdown,
+      retained: upload.session.snapshot().retained,
+      status: upload.session.snapshot().status,
+    })),
   createdOwners: () => seen.length,
   latestNoteId: () => seen.at(-1)?.session.snapshot().noteId,
   read: (owner: number, noteId: string) => clients[owner].get(noteId),

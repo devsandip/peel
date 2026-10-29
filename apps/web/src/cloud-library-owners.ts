@@ -197,8 +197,9 @@ export class CloudLibraryOwners {
     slot.task = Promise.resolve()
       .then(async () => {
         this.signal.throwIfAborted();
+        const wasClosed = existing?.upload.session.snapshot().closed;
         const upload = existing
-          ? existing.upload.session.snapshot().closed
+          ? wasClosed
             ? await existing.upload.reopen()
             : existing.upload
           : await CloudNoteUpload.open(
@@ -209,7 +210,7 @@ export class CloudLibraryOwners {
               AbortSignal.any([this.signal, abort.signal]),
             );
         if (this.signal.aborted || slot.intent !== this.intent) {
-          if (existing && !upload.session.snapshot().closed)
+          if (existing && wasClosed && !upload.session.snapshot().closed)
             await upload.session.putAway();
           throw unavailable();
         }

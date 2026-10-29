@@ -522,3 +522,17 @@ it("context abort retains a closed pending owner and refuses the later server AC
     );
     expect(remote.kind).toBe("note");
   }));
+
+it("superseding a focus request never closes an already active editing session", async () =>
+  fixture(async (f) => {
+    const upload = f.track(await f.owners.open(f.selection()));
+    const focused = f.owners.open(f.selection()),
+      rejected = expect(focused).rejects.toThrow("Could not open");
+    const other = f.track(f.owners.create(f.owners.context));
+    await rejected;
+    expect(upload.session.snapshot()).toMatchObject({
+      closed: false,
+      canEdit: true,
+    });
+    expect(f.owners.retainedOwners()).toEqual([upload, other]);
+  }));
