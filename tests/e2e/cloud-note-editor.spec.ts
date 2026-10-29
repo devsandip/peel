@@ -34,6 +34,82 @@ test.afterEach(async ({ page }) => {
   expect(errors.get(page)).toEqual([]);
 });
 
+test("untouched capture puts away with no stored row and keeps the existing cached note", async ({
+  page,
+}) => {
+  const before = await page.evaluate(() => window.cloudEditorFixture.read(0)),
+    noteId = await page.evaluate(() => window.cloudEditorFixture.capture(0));
+  // CodeMirror's empty document contains its placeholder widget, not empty DOM.
+  await expect(page.locator(".cm-placeholder")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => window.cloudEditorFixture.snapshot().bodyMarkdown,
+    ),
+  ).toBe("");
+  await expect(page.getByRole("button")).toHaveCount(1);
+  await expect(page.getByRole("status")).toHaveText("Pending upload");
+  await page.getByRole("button", { name: "Put away note" }).click();
+  await expect(page.getByText("Note put away", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate((id) => window.cloudEditorFixture.read(0, id), noteId),
+  ).toBeNull();
+  expect(await page.evaluate(() => window.cloudEditorFixture.read(0))).toEqual(
+    before,
+  );
+});
+
+test("new typed capture survives immediate Put away and actual reload as pending", async ({
+  page,
+}) => {
+  const noteId = await page.evaluate(() =>
+      window.cloudEditorFixture.capture(0),
+    ),
+    editor = page.getByRole("textbox", { name: "Note text" });
+  await editor.fill("# New Cloud draft\nPending after reload 原文 ##work");
+  await page.getByRole("button", { name: "Put away note" }).click();
+  await expect(page.getByText("Note put away", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.waitForFunction(() => !!window.cloudEditorFixture);
+  await page.evaluate((id) => window.cloudEditorFixture.select(0, id), noteId);
+  await expect(editor).toContainText("Pending after reload 原文 ##work");
+  await expect(page.getByRole("status")).toHaveText("Pending upload");
+  const state = await page.evaluate(
+    (id) => window.cloudEditorFixture.read(0, id),
+    noteId,
+  );
+  expect(state!.baseRevision).toBe(0);
+  expect(state!.pending!.snapshot!.noteId).toBe(noteId);
+});
+
+test("failed first capture retention keeps text open for Retry and stubbed Copy", async ({
+  page,
+}) => {
+  const noteId = await page.evaluate(() =>
+      window.cloudEditorFixture.capture(1),
+    ),
+    editor = page.getByRole("textbox", { name: "Note text" });
+  await page.evaluate(() => window.cloudEditorFixture.fail(true));
+  await editor.fill("New text after an aborted first insert");
+  await page.getByRole("button", { name: "Put away note" }).click();
+  await expect(page.getByRole("alert")).toContainText("Could not retain draft");
+  await expect(editor).toHaveAttribute("contenteditable", "true");
+  expect(
+    await page.evaluate((id) => window.cloudEditorFixture.read(1, id), noteId),
+  ).toBeNull();
+  await page.getByRole("button", { name: "Copy text" }).click();
+  expect(
+    await page.evaluate(() => Reflect.get(window, "syntheticCopiedText")),
+  ).toBe("New text after an aborted first insert");
+  await page.evaluate(() => window.cloudEditorFixture.fail(false));
+  await page.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveText("Pending upload");
+  await page.getByRole("button", { name: "Put away note" }).click();
+  await expect(page.getByText("Note put away", { exact: true })).toBeVisible();
+  await page.evaluate((id) => window.cloudEditorFixture.select(1, id), noteId);
+  await expect(editor).toContainText("New text after an aborted first insert");
+});
+
 test("one green minus puts away the latest retained draft and actual reload keeps it pending", async ({
   page,
 }) => {
