@@ -2078,3 +2078,18 @@
 
 **Next:**
 - Finish156 focused review/scans/all3 exact-source hosted gates, normal merge and actual main/closure/Project proof. Continue one small requirement-linked slice without claiming fixtures are enabled app acceptance or reviving expired budgets/stopped probes.
+
+
+## 2026-10-29 - Specify the Cloud preparation race before COMMIT
+
+**Did:**
+- Completed157 source40849408185/review6492956076/ready6493127846/normal merge d3cd239 and actual closure/ProjectDone/primary/owned cleanup. Preserved main40850706587 attempt1 FAILURE419pass/1fail and original web/native successes. One inspected failed-job recheck passed with prior successful timestamps retained, proof6493475426; it did not resolve158.
+- Started158/current Project and committed planb27fa77 before diagnostic/code. Bounded free-race probes did not trace the original failure. A deterministic actual SQLite/public-API probe and real independent processes demonstrate permitted busy/uncertain double refusal when COMMIT precedes reader release. Original CI exact schedule remains unobserved, not labeled timeout or issue18 cause.
+- Corrected only test/worker coordination through raw stdin EOF: contender fully refuses/closes before expected writer COMMIT. Original exact1ACK/1refusal/one-row/exit assertions and20s deadline byte-identical. Added opposite-order zero-row/preserved-workspace/restart-refusal case. No production/API/schema/default/timeout/retry/isolation/worker change.
+- Wrong-order control fails original zero-ACK assertion; exact test4e68e3bc/worker4b375099 restored. Actual Node24 preparation24/Cloud421files34, then shared636files72/type/full checked-source format/build pass sequentially. Production/config bytes and bundle hashes/warning unchanged. All owned children/temp stores cleaned, no actual/default DB/native/provider/stopped probe.
+
+**State now:**
+- A specified positive fixture and additional fail-closed process coverage only. No new local browser/native interaction claim or enabled Cloud/milestone acceptance. Historical CI failure and diagnostic output limits remain recorded.
+
+**Next:**
+- Finish158 focused review/scans/all3 exact-source hosted gates and normal integration, actual main/closure/Project proof and owned cleanup. Retain all original failure evidence; no blind rerun or guard-policy relaxation. Actual managed/teardown/native and full app gates remain.
