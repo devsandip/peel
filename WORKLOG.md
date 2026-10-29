@@ -2152,3 +2152,21 @@
 
 **Next:**
 - Finish164 focused review/scans/no-reply/all3 exact-source gates, normal merge and actual main/closure/Project proof/owned cleanup. Preserve all recorded failures, cached-versus-server limits and expired/stopped safety boundaries.
+
+## 2026-10-29 — Resume scoped library downloads
+
+**Did:**
+- Completed PR165/issue164 with source40880893267 and separate actual-main40883549198, all three gates on first attempts; proof6498371141, actual closure/Project/guarded primary/owned-ref cleanup verified.
+- Planned issue166 in8dec760 before code and implemented a captured download owner around existing atomic pull/storage, with eight-page passes, durable continuation/checkpoints and explicit expiry recovery.
+- Added19 actual HTTP/SQLite cases for signed pagination/change rounds, pending/conflict preservation, cancellation, corruption and failure boundaries.
+- Node24 Cloud485/37 then shared700/75, focused21/2, type/format/whitespace/build and unchanged default bundle pass.
+
+**State now:**
+- A development owner can download committed notes into an explicit cache and resume after reopen; cached completion never acknowledges pending drafts. Default Cloud remains unavailable.
+- No real auth/provider/full-web/live/native/iPhone or M2.2 managed/independent teardown acceptance. Source review/hosted gates and normal integration/main proof still follow.
+
+**Next:**
+- Finish issue166 exact-source review/gates, normal no-reply/scanned merge, actual-main proof/tracking and owned cleanup. Compose authenticated parent/transport and actual browser download integration in later focused work.
+
+**Decisions:**
+- Bound each explicit pass rather than invent a library quota; pause failures without destructive reset or automatic failed retry. Antigravity remains only Sandip's proposed split, with an ignored draft handoff and no delegated work.
