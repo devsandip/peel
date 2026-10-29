@@ -2247,3 +2247,21 @@
 
 **Decisions:**
 - Preserve the same transport owner and immutable operation while replacing only its locally closed editing session. Keep current-session history stable across later parent renders and preserve pause on incidental mount; established explicit Put-away flush remains unchanged.
+
+## 2026-10-30 - Bind workspace views to retained Cloud owners
+
+**Did:**
+- Completed177/176 at1166: source40931171087/main40932900362 all3 first attempts, review6505089562/Ready6505282000/proof6505545151; actual closure/ProjectDone/labels/guarded primary/unknown paths and scanned Root-only cleanup verified. Frozen2356 remains unchanged.
+- Reviewed and integrated peer180/178 frozen6e30 after Ready6506331443/1786506330210. Independent12 workspace browser cases and desktop/mobile screenshot inspection passed; review5703782532, source40939021015/main40940540371 all3 first attempts, mergeb95870a/proof6506524242. Actual closure/bothProjectDone/labels/guarded primary/scanned Root-only cleanup verified; peer100153/6e30 refs/checkout preserved. Queued181 read-only conflict preview with exact new-file/interface ownership, no resolution/default activation.
+- Planned179 in270a96c before code (rebased plan08c8c3e). Added original-context workspace callbacks, one retained owner per note, coalesced/superseded opens, same-owner reopening, exact idempotent Put-away acknowledgements, metadata refresh and derived-signal revocation before safe retirement. Pending/auth/conflict/failed-retention recovery remains owned after view close/account abort; parent retains storage lifetime.
+- Added18 actual SQLite/service controller cases and4 M0 IndexedDB/HTTP/workspace flows. A stronger review first failed superseded focus closing an already active editor; restrict restoration of closure to a session actually reopened by that request. Final67 focused, shared791/78,75 browser/type/build/default-bundle checks pass. Corrected a new-fixture request recorder and whitespace warning separately, without changing old assertions/defaults/workers/timeouts/retries/isolation.
+- Two local full Node24 Cloud sweeps each passed571/575 with4 failures in different unchanged operator deadline/child fixtures; stages after those failures were unrun. The first-failing3 suites passed57/57 separately. Preserve all failures; host contention is an inference. Fresh exact-source hosted all3 gates must supply the full matrix evidence, and no local full Cloud pass is claimed.
+
+**State now:**
+- The scoped parent supplies real development workspace open/create/Put-away/catalog callbacks while retaining safe background ownership and recovery. Default Cloud remains unavailable. Real auth/paid activation/full web inventory/live/reconnect/native/iPhone/performance and M2.2 managed/independent teardown acceptance remain open.
+
+**Next:**
+- Finish179 source review/all3 hosted gates, normal integration/separate actual-main/closure/Project/guarded primary proof and scanned Root-only cleanup. Check169/181 for the manually run peer's STARTED/interface/frozen Ready; keep peer refs/checkouts and stopped/expired probes untouched.
+
+**Decisions:**
+- Abort each safe-to-forget owner's derived signal before eviction because idle notification can precede its queued timer. Keep failed or uncertain storage conservative and copyable; close/reopen never invents a Cloud confirmation or grants auth.
