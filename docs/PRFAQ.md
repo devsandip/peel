@@ -1,123 +1,85 @@
-# Synkies PRFAQ
+# Synkies press release and FAQ
 
-Version 0.7 | 26 October 2026 | Intended product, implementation underway
+Version 0.8 | 29 October 2026 | Confirmed two-tier product direction
 
-Brand update: 28 October 2026. Synkies replaces the name Peel and adopts Antigravity v2 Folded Horizon. Functional version 0.7 and requirement IDs stay unchanged; repository, storage and protocol identifiers retain their compatible names. See [brand plan](features/synkies-brand.md).
+This is a proposed customer narrative, not a launch announcement. Synkies/Folded Horizon and compatible stored identifiers remain. Sandip's 29 October decision replaces the earlier peer-sync model: Local libraries are independent; Cloud is authoritative across devices and the web. Implementation and acceptance status live in [SPEC.md](SPEC.md).
 
-[PRD.md](PRD.md) defines the product scope; [SPEC.md](SPEC.md) owns behavior and acceptance. This launch narrative is a future promise, not a claim that all features have shipped.
+## Proposed announcement
 
-## Proposed press release
+Synkies puts small, independent notes on your Mac desktop, with a searchable library and simple editing on iPhone and the web. Capture without a title or saving ritual, put a note away when finished, and find it again by words or tags. Optional meaning search runs locally.
 
-### Synkies keeps a thought close, on your terms
+Choose one storage tier for the whole library. **Local storage** keeps an independent library on this device. **Cloud storage** saves the authoritative library in Synkies Cloud, makes it available through the web and pushes confirmed changes to online devices. The source device does not have to stay online after a Cloud save.
 
-Synkies combines the immediacy of a Mac sticky note with a searchable library for Mac, iPhone, and the browser. One shortcut opens a note with a ready cursor. Type, put it away, and carry on. Saving happens automatically on the device.
+Local notes display Saved on this device after local persistence. Cloud notes display Saved in Cloud only after the server confirms the current edit. You can edit cached Cloud notes offline: Synkies retains a pending draft on the device and uploads it when connected. Pending drafts remain clearly separate from confirmed Cloud notes.
 
-Choose one of two modes for your library. Free On-device mode keeps notes in local databases on your devices and periodically syncs paired devices, including across different networks. The latest edit becomes the current note after a peer sync. Synkies stores no note content on a server in this mode. Encrypted transient relays help devices connect when a direct connection is unavailable; changes wait on a device until paired devices have an overlapping online opportunity.
+## What does Local storage mean?
 
-Paid Synkies Cloud stores the complete library in DynamoDB and keeps local copies on connected devices. Edits sync live between online devices, and the cloud can deliver saved changes after the originating device goes offline. Offline work still saves locally and catches up when a device reconnects.
+Each installation has its own library. Your laptop and phone do not discover, pair with or synchronize with one another. A browser's Local library belongs to that browser profile. There is no device list, relay, connection service or background peer transfer. Export/import is an explicit way to move a copy yourself.
 
-On Mac, notes are independent, draggable windows outside the separate Notes Library. The only top-left control is a green minus: Save and put away. It finishes the local save and closes that note window while keeping the note in the library. Drag cards out of the library or right-click to pin them. Keyboard commands arrange open notes against any screen edge, with Undo.
+## What does Cloud storage mean?
 
-Synkies supports one Markdown heading level, bold, checkboxes, bullets, numbering, and ##tags. Find notes by words or with optional on-device search by meaning. Archive puts notes out of the way; Trash allows recovery for 30 days. Export portable Markdown and metadata whenever you want.
+Your complete library belongs to one authenticated Synkies account and is stored in app-managed DynamoDB. Devices submit changes to that authoritative service first. After commit, the service pushes updates to online clients, which reconcile their caches. You can sign into the web interface to access all confirmed Cloud notes without needing the original laptop or phone online.
 
-Sandip dogfoods Synkies before public beta. Pricing and the launch date remain undecided. The intended public release includes both storage modes, remote periodic device sync, paid live Cloud sync, Mac, iPhone, browser access including Android, and local retrieval.
+Cloud remains the paid tier; the price, billing provider and terms are not finalized. Users do not configure their own AWS account.
 
-## Customer FAQ
+## Can I write without an internet connection?
 
-### How do I capture and save a note?
+Yes. Local notes save directly on the device. Cloud clients can read cached notes and retain offline edits or new notes as durable pending drafts. They upload on reconnect, and display Saved in Cloud only after confirmation. An offline draft cannot appear on another device or the web before its source uploads it. A new browser/device needs a connection to authenticate and download its Cloud library.
 
-Use the Mac global shortcut, menu bar, or New Note. The proposed capture shortcut is Control Option N. On iPhone and web, tap New Note. Start in the body without entering a title. Every edit saves locally in both modes; cloud or peer availability never gates typing.
+## Does a local draft count as a Cloud save?
 
-### Does the green minus delete my note?
+No. A local write, sent request or push notification does not establish a server save. Pending upload remains visible until the server confirms the matching current edit. If you keep typing while an earlier edit is acknowledged, the newer draft remains pending. Failed authentication, conflict or quota must preserve that draft and offer recovery.
 
-It saves and puts the window away. The note remains in Notes Library. The tooltip says Save and put away note. A failed save keeps the editor open with Retry and Copy text. Archive and deletion are separate menu actions.
+## What happens if devices edit a Cloud note while offline?
 
-### How do free On-device and paid Cloud differ?
+The server checks note revisions. Concurrent drafts preserve both versions for explicit resolution rather than silently overwriting one by device time. Resolving a conflict produces a new server mutation. Nothing in Local storage merges across devices because those libraries are independent.
 
-On-device stores notes on paired devices only. It syncs periodically whenever devices can reach one another, including remotely. Cloud stores the whole library in Synkies Cloud and pushes committed updates to connected devices as they happen. Cloud is paid; the price is not set yet.
+## How do Mac notes work?
 
-### Will free sync work when I am away from home?
+Use the global capture shortcut, menu bar or New Note. Start in the body without entering a title. Each note is an independent floating macOS window outside the separate Notes Library. Closing or minimizing the library leaves those notes visible.
 
-Yes, remote sync is required. Pair your devices once. Synkies first attempts an encrypted direct connection and can use an encrypted transient relay when network restrictions require it. A relay passes packets without keeping your notes. Both devices, or a chain of paired devices holding the latest copy, must have overlapping online opportunities. If your phone is offline, your Mac keeps pending changes until a peer can receive them.
+Each note has one top-left green minus Put away control. A Local note commits before closing. A Cloud note may close after its pending draft is durably retained, while the library continues to show Pending upload until server confirmation. Failure to retain the latest text keeps the editor open with Retry and Copy text. Putting away does not archive or delete a note.
 
-### Does “periodic” mean my iPhone always wakes on a fixed schedule?
+## Can I pin and arrange notes?
 
-No. While apps are active and peers are reachable, the proposed default is an attempt every minute, plus foreground, reconnect, and Sync now. iOS controls background execution, so a suspended phone can catch up when Synkies opens. Last sync and Waiting for a device make that visible.
+Drag a library card out or choose Pin to desktop from its menu. Drag a note by its title bar. Device-local shortcuts and Window menu actions arrange notes along an edge; Undo last arrangement restores geometry without reverting text. These desktop interactions do not change the selected storage tier.
 
-### What if I change the same note on two devices in On-device mode?
+## Can I change tiers?
 
-The latest edit becomes the current version automatically after sync. The app uses a deterministic edit ordering shared by peers and records clock uncertainty; it does not ask you to merge every concurrent edit. The replaced text is kept in local recent-version recovery for seven days. Recovery makes a new edit or separate note. Unsynchronized changes remain on their device until exchanged.
+Yes, through an explicit whole-library transition. Signing in alone never uploads a Local library. Upgrading previews and authorizes the upload, preserves recoverable originals and confirms accepted Cloud notes. Downgrading downloads a complete confirmed copy for this installation and explains pending drafts before its library becomes independent. Cancelling a subscription, removing Cloud data and deleting an account are separate actions.
 
-### Is the latest real-world edit always knowable offline?
+## Do I need an account?
 
-Device clocks can disagree. Synkies combines edit time with a logical counter and stable device identity to converge, calibrates clocks during sync, and explains a clock problem when one is detected. Causally later edits win; truly concurrent offline edits use the agreed ordering. A recovery copy protects against an unwanted winner.
+Local storage does not require a Cloud account or subscription. Cloud access needs sign-in and a server-verified entitlement. Account switching must keep cached notes and pending drafts isolated; it must never upload one account's draft under another identity.
 
-### How does Cloud behave offline?
+## Where are notes stored?
 
-Your local cache remains editable and durable. Connected active devices receive live changes after the cloud accepts them. An offline or suspended device reconciles on return. Concurrent offline Cloud edits retain both versions for explicit resolution; the automatic latest-edit rule currently applies to On-device mode.
+Local native libraries use SQLite; browser-local libraries use IndexedDB. Local notes are not uploaded. Cloud's authoritative library uses DynamoDB, with device-local caches and pending drafts for responsiveness and recovery. Search indexes and embeddings remain local. Clearing browser data can remove local-only notes and unuploaded drafts, so export important work.
 
-### Is storage chosen per note?
+## How do search and formatting work?
 
-No. The selected mode applies to the whole linked library. Cloud mode includes every note, including Archive and recoverable Trash. There is no per-note destination picker. This replaces the earlier proposal for separate local and cloud collections.
+Word, phrase, prefix and ##tag search operate over available notes, including Archive and excluding Trash. Meaning search is optional local retrieval with a disclosed model download; it returns source notes/excerpts rather than generated answers. Note bodies support one Markdown heading level, bold, checkboxes, bullets and numbered lists. Unsupported source remains editable text.
 
-### Do I need an account or payment for On-device mode?
+## How do archive and deletion work?
 
-No cloud account or subscription is required. Capture is available immediately; adding another device requires explicit pairing. Pairing authenticates devices to each other and does not sign up for paid Cloud.
+Archive keeps a note searchable. Trash is excluded from ordinary search and recoverable for30 days. Permanent deletion leaves a body-free marker to prevent stale Cloud clients or imports from reviving that identity; explicit recovery creates a new note. Offline caches and user exports can retain copies until reconnected or separately cleaned. Backups have published retention; deletion must not claim instantaneous physical erasure.
 
-### Does signing in upload my existing notes?
+## What is encrypted?
 
-Signing in alone does not. Enabling paid Cloud includes a separate review showing that all notes will upload, the plan terms, and the linked library. Source data remains on devices until cloud durability is verified. A failed or interrupted upgrade keeps recoverable local copies.
+Cloud uses authenticated HTTPS and AWS encryption at rest. It is not currently promised to be end-to-end encrypted; the service processes Cloud note text. Local databases, caches, drafts and exports depend on the device/browser security context. Notes, titles, tags, queries, credentials and draft payloads must stay out of telemetry.
 
-### Can I switch back to On-device mode?
+## What does the operator pay for?
 
-Yes. Download and verify the complete collection before leaving Cloud. Keep paired-device copies and continue periodic peer sync. Subscription cancellation and cloud-data removal are explicit, separate actions with published retention. Switching mode does not silently delete cloud data, other devices, or backups. An expired subscription keeps local capture and export usable and explains the cloud retention grace period.
+Cloud hosting, authentication, API requests, DynamoDB, live connections/notifications, transfer, backups, billing integration and bounded operational logs. Local storage needs no peer signaling or relay service. Verify current rates and measured usage before deployment; no price or cost allowance is invented by this document.
 
-### Where does each device store notes?
+## What exists today?
 
-Mac and iPhone use a small SQLite database. Mac can use a chosen local directory; iPhone uses private app storage. Web uses IndexedDB in its browser profile. Clearing browser data can remove its local copies, so export important notes. Free browser peer-sync compatibility is an M0 gate and remains part of the intended public product.
+Local Mac/browser development clients and tested Cloud backend/recovery foundations exist. The complete new Cloud login, authoritative save status, hosted web access, live delivery, billing, iPhone and release acceptance are not enabled by a specification or mockup. There is a known native dragging gate and broader platform validation remains. See [README](../README.md), SPEC and current milestone evidence.
 
-### What is kept on Synkies's servers in free mode?
+## What must pass before public release?
 
-No note bodies, titles, tags, embeddings, recovery versions, or offline note queue. A remote connectivity service may keep limited pairing/public-key and connection metadata; transient relay buffers exist only for delivery. The privacy policy must distinguish that metadata from note storage. Server logs must exclude note payloads and credentials.
+Durability and honest save states; Local isolation; Cloud authentication/entitlement/account isolation; server-confirmed mutation, complete web library, push/reconnect and offline draft recovery; mode transitions; Mac/iPhone/browser parity; search/accessibility/performance; export/restore; signed distribution, operating budgets and at least14 days of dogfooding. Peer pairing, TURN relays and peer clock convergence are no longer launch gates.
 
-### How does the desktop work?
+## What remains undecided?
 
-Each note is an independent window outside Notes Library. Closing or minimizing the library leaves notes visible. Drag the title bar to move a note, or drag a library card out/right-click Pin to desktop to open it. Keep on top is separate from pinning. Quit preserves pinned placements for the next launch; putting a note away removes it from the current desktop set.
-
-### Can I arrange all open notes?
-
-Use Window or the proposed Control Option Command plus Left, Right, Up, or Down. It arranges notes on the active display, keeps other displays unchanged, and offers Undo last arrangement without changing text.
-
-### What Markdown and tags are supported?
-
-Use # Heading for the sole heading level, **bold**, - [ ] and - [x] for tasks, - for bullets, and 1. for numbering. Type ##work after whitespace to add a tag. Other syntax remains literal and editable. Source mode stays available.
-
-### Does AI search send my notes to an AI company?
-
-No. Optional search by meaning downloads a local model and returns real notes and excerpts. It does not invent answers or act as a chatbot. Word search stays available without the model. Meaning search is not being made a paid Cloud-only feature by this change.
-
-### What happens to archived or deleted notes?
-
-Archive remains searchable. Trash is excluded from normal search and recoverable for 30 days. Lifecycle changes sync according to the selected mode. Permanent deletion leaves a body-free marker so a stale peer cannot revive that identity. Offline devices and exported copies can retain content until they reconnect or are cleaned up.
-
-### Is Cloud end to end encrypted?
-
-The initial Cloud design uses HTTPS, device security, and AWS encryption at rest. It is not end to end encrypted. Free peer transport authenticates paired devices and encrypts note transfer through relays. Local databases and exports rely on the device's security. Cloud encryption requirements remain a public-launch decision.
-
-## Internal FAQ
-
-### What changes in the plan?
-
-The product now has a free device-resident library with remote periodic peer sync and a paid cloud-backed library with live sync. It no longer offers per-note storage destinations. Free peer connectivity, clock/convergence rules, paid entitlements and real-time delivery are explicit engineering work. A local-only build does not complete On-device mode.
-
-### Who pays for free remote sync infrastructure?
-
-The operator still pays for signaling and any relayed bandwidth. No cloud note storage does not mean zero network cost. Measure direct versus relayed sessions and set abuse/bandwidth protections without logging note content. Public pricing must sustain the free tier alongside paid Cloud.
-
-### What must be proven before public launch?
-
-Native durability and window behavior; remote peer sync across different networks; latest-edit convergence and recovery; live cloud delivery; payment/entitlement isolation; offline and mode-transition recovery; browser and iPhone parity; local search; accessibility; export/restore; signing and rollback; operating budgets; and at least 14 days of daily dogfooding. SPEC owns the acceptance evidence.
-
-### What remains undecided?
-
-Subscription price, billing provider, trial and quota policy, cancellation grace/retention periods, peer transport/runtime and relay deployment, semantic model, exact supported versions, Apple distribution access, and whether Cloud needs end to end encryption before launch. These open decisions do not remove the confirmed features from scope.
+Subscription price, billing provider, trial/quota/grace/retention policy, exact supported versions, semantic model and Apple distribution access. These are implementation and launch decisions. They do not restore the retired peer-sync scope.

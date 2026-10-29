@@ -1,6 +1,6 @@
-# Synkies screen mockups
+# Synkies screen mockups (historical v0.7)
 
-This is a local, presentation-only gallery of 110 canonical screens, plus five representative dark exports. It contains synthetic content and does not implement the app, call APIs, authenticate, persist notes, or provision infrastructure.
+This is a historical v0.7 presentation-only gallery of 110 screens, plus five representative dark exports. The current v0.8 contract is independent Local storage and cloud-authoritative Cloud storage with pending offline drafts and Saved only after server confirmation. Peer pairing/relay/device-sync screens and earlier save labels are retired; the gallery is not v0.8 acceptance. See the [current tier/status specification](../ui-spec.md). It contains synthetic content and does not implement the app, call APIs, authenticate, persist notes, or provision infrastructure.
 
 ## Open
 
@@ -30,7 +30,6 @@ Then open http://127.0.0.1:4319. Direct links use a screen ID, for example `inde
 
 Requires Node.js, Playwright, and a supported browser. Set `PEEL_BROWSER_PATH` to a browser executable when the Playwright-managed browser is unavailable. Run `node docs/mockups/render-mockups.cjs` from the repository root with Playwright resolvable by Node. This is design-export tooling, not a production dependency or test of the app.
 
-Version 0.7 adds free On-device remote periodic sync and paid whole-library live Cloud screens. Start at #storage-destination, #peer-devices, #cloud-plan or #cloud-live. The sole floating-note window control is a green minus with unchanged save-and-close behavior.
+Historical version 0.7 added free On-device remote periodic sync and paid whole-library live Cloud screens; those peer flows are removed by v0.8. Start at #storage-destination, #peer-devices, #cloud-plan or #cloud-live. The sole floating-note window control is a green minus with unchanged save-and-close behavior.
 
-
-Brand update,28 October2026: Synkies uses Antigravity v2 Folded Horizon. The self-contained gallery includes exact SVG copies from the [canonical selected masters](../../ux/brand/folded-horizon/README.md). Its internal PEEL_* export hooks and stable screen IDs remain compatible. Regeneration uses the declared @playwright/test dependency; render-mockups.cjs also produces brand/logo-light.png for the overview renderer. Functional v0.7 scope and115total screen exports remain unchanged.
+Brand update,28 October2026: Synkies uses Antigravity v2 Folded Horizon. The self-contained gallery includes exact SVG copies from the [canonical selected masters](../../ux/brand/folded-horizon/README.md). Its internal PEEL_* export hooks and stable screen IDs remain compatible. Regeneration uses the declared @playwright/test dependency; render-mockups.cjs also produces brand/logo-light.png for the overview renderer. Those115exports retain the historical v0.7 scope; they do not override the current v0.8 product contract.

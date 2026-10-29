@@ -2,9 +2,9 @@
 
 Formerly Peel. The app now uses **Synkies** and Antigravity's **Folded Horizon** identity. The repository and compatible storage/package identifiers keep their existing names. [Selected brand assets](ux/brand/folded-horizon/README.md).
 
-A Mac app centered on independent floating notes and a searchable Notes Library, with a local browser development client and an iPhone client planned. Two app-wide modes are confirmed: free On-device storage with periodic remote peer sync, and paid DynamoDB-backed Synkies Cloud with live sync.
+A Mac app centered on independent floating notes and a searchable Notes Library, with a local browser development client and an iPhone client planned. Two app-wide tiers are confirmed: independent free Local storage, and paid cloud-authoritative Synkies Cloud with server-confirmed saves, live updates and complete web access.
 
-Implementation has started on a local Mac development build. Peer sync, paid Cloud, live delivery, iPhone and meaning search are not implemented yet. The complete intended product is documented below.
+A local Mac development build and browser-local client exist. The 29 October 2026 v0.8 contract removes peer sync entirely: each Local library is independent. Cloud login/app integration, server-confirmed save states, hosted web access, live delivery, billing, iPhone and meaning search remain incomplete or disabled. Cloud clients may retain offline pending drafts and upload on reconnect, but may show Saved only after matching server confirmation. This is a contract revision, not evidence that those app features are enabled. Current development labels may still say On-device until the focused UI alignment lands.
 
 ## Canonical documents
 
@@ -21,9 +21,9 @@ Track current work in the [Synkies GitHub Project](https://github.com/users/devs
 
 Use spec driven development. Start each milestone with a requirement-linked plan in `docs/features/`. Resolve the feasibility gates in the SPEC, implement a small vertical slice, and attach verification evidence to the matching acceptance criteria. Update the canonical specification when product behavior changes.
 
-The first implementation target is local Mac capture and durable automatic saving. Synkies Remote peer sync, paid live Cloud and the web app follow, then the iPhone app and search by meaning. All are required for the intended public release.
+The first implementation target is local Mac capture and durable automatic saving. Cloud-authoritative save/reconnect, live updates and authenticated web access follow, then the iPhone app and search by meaning. All are required for the intended public release.
 
-Both modes use local persistence for speed. Free peer sync keeps notes only on devices; paid Cloud uses DynamoDB and push delivery. AWS will host the browser shell, signaling and cloud services. This public repository starts from a reviewed snapshot; earlier development history and CI records remain in a private archive. Historical commit/run identifiers in experiment records refer to that archive. Public source access does not mean the application has passed its public-beta or distribution gates.
+Local storage writes only to this installation. Cloud uses DynamoDB as the authoritative library and pushes server-committed changes; local caches and pending drafts provide responsiveness and offline recovery without being labelled Cloud saves. AWS will host the browser shell and Cloud services. There is no peer discovery, pairing, signaling, relay or device-to-device sync. This public repository starts from a reviewed snapshot; earlier development history and CI records remain in a private archive. Historical commit/run identifiers in experiment records refer to that archive. Public source access does not mean the application has passed its public-beta or distribution gates.
 
 ## Run the development app
 
@@ -59,7 +59,7 @@ Settings also configures device-local global capture and four-edge arrangement s
 
 Launch at login is an explicit Settings choice backed by the Mac's reported status, including pending approval. It requires an installed signed app and stays unavailable in development executables and isolated test runs. Automated checks leave actual login items unchanged.
 
-For isolated tests, set `PEEL_DATA_DIR` to a separate directory before launching the native binary. This isolates the database and selection/journal metadata. Never use real notes as test fixtures or commit databases/exports. The relocation picker/runtime, actual global shortcut dispatch and remaining native acceptance/performance checks still need verification on an unlocked Mac. Remote peer sync and paid Cloud are not enabled in this build.
+For isolated tests, set `PEEL_DATA_DIR` to a separate directory before launching the native binary. This isolates the database and selection/journal metadata. Never use real notes as test fixtures or commit databases/exports. The relocation picker/runtime, actual global shortcut dispatch and remaining native acceptance/performance checks still need verification on an unlocked Mac. Cloud is not enabled in this build. Retained peer-protocol experiments are historical and outside v0.8 product scope.
 
 ## Checks
 

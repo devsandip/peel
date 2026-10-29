@@ -1,10 +1,12 @@
 # Synkies visual specification
 
-Version 0.7 | 26 October 2026 | Mockup baseline for review
+Version 0.8 | 29 October 2026 | Current tier/status contract; historical v0.7 exports
 
-Synkies uses a quiet library and small paper notes, with the same content model on Mac, iPhone, and the browser. These mockups follow [SPEC version 0.7](SPEC.md) and [PRFAQ](PRFAQ.md). They are presentation artifacts, not an application implementation.
+Synkies uses a quiet library and independent paper notes, with common editing behavior on Mac, iPhone and browser. The current [SPEC](SPEC.md) and [PRFAQ](PRFAQ.md) define two tiers: independent Local storage and cloud-authoritative Cloud storage. Local installations have no awareness of one another. Cloud commits first on the server, then pushes updates to online clients and exposes all confirmed notes through the web.
 
-## Review the screens
+The existing gallery/PNG exports depict historical v0.7. They include retired peer pairing, waiting-device and relay flows and old save labels. Retain them as design history and reusable layout references, not current requirements or enabled v0.8 behavior. No new v0.8 screen export or UI acceptance is claimed by this document. Stable screen/storage identifiers and Synkies/Folded Horizon assets remain compatible.
+
+## Review the historical screens
 
 - [Open the local gallery](mockups/index.html). Open this file in a browser, or serve the mockups folder as static files.
 - [Overview](mockups/overview.png) shows the floating Mac desktop and iPhone editor.
@@ -18,38 +20,50 @@ The gallery provides navigation, direct links, light/dark appearance, and relate
 
 Use system typography, warm neutral surfaces, compact icon controls, and restrained borders. Pale yellow paper makes floating notes distinct from the library. The adopted Antigravity v2 Folded Horizon icon combines pale-yellow paper with an amber cloud fold on charcoal. Use its outlined Synkies wordmark and light/dark lockups; system typography remains the app UI font. Canonical masters live under `ux/brand/folded-horizon/`. The pale variation between note cards is a visual treatment, not a new color-picker feature.
 
-Mac opens with independently draggable floating notes. Each note is a top-level macOS window outside Notes Library, with wallpaper and the OS Dock behind it. The desktop has no surrounding Synkies app frame. Open Notes Library is an explicit action; closing or minimizing the separate library window leaves the notes visible. Pinning through drag-out or right-click keeps the same note on the desktop and in the library. Always on top is an independent preference. The library organizes a selected collection with Notes, Archive, Trash, tags, and Settings. Each floating note has exactly one top-left title-bar button, a green minus called Put away, which commits local text and closes only that window. The rest of the title bar is draggable. No additional minimize, maximize, pin, overflow, or formatting toolbar appears on the normal floating note. Its footer is noninteractive status. Note actions, Keep on top, and Markdown source live in menus. Save failure keeps the editor open with recovery actions. Close remains separate from archive and delete; the editor has no Save button.
+Mac opens with independently draggable floating notes. Each note is a top-level macOS window outside Notes Library, with wallpaper and the OS Dock behind it. The desktop has no surrounding Synkies app frame. Open Notes Library is an explicit action; closing or minimizing the separate library window leaves the notes visible. Pinning through drag-out or right-click keeps the same note on the desktop and in the library. Always on top is an independent preference. The library organizes a selected collection with Notes, Archive, Trash, tags, and Settings. Each floating note has exactly one top-left title-bar button, a green minus called Put away, which commits a Local note or retains a pending Cloud draft and closes only that window. The rest of the title bar is draggable. No additional minimize, maximize, pin, overflow, or formatting toolbar appears on the normal floating note. Its footer is noninteractive status. Note actions, Keep on top, and Markdown source live in menus. Save failure keeps the editor open with recovery actions. Close remains separate from archive and delete; the editor has no Save button.
 
 The entire Mac capture section uses that same desktop and note-window presentation: quick capture, formatted note, Markdown source, note actions, and menu bar capture. Each note is draggable in the gallery. The menu bar capture scene shows the library and all notes closed, with New note still available.
 
 On iPhone, use a two-column library, a direct new-note action, a full-screen editor, and bottom sheets for collection choice, filters, and actions. On Android, show the responsive browser layout rather than a native Android application.
 
-Saving mode is app-wide. Show On-device · Free and Synkies Cloud · Paid. On-device stores note copies only on paired devices and periodically syncs across different networks; status includes last sync, waiting peers and remote connections. Explain transient encrypted relays without implying a stored cloud note copy. Cloud stores the whole library and pushes live changes to connected devices. Signing in alone does not enable an upload. Replace per-note destination and Move to storage actions with saving-mode settings and sync status.
+Storage tier is app-wide. Show **Local storage · Free** and **Cloud storage · Paid**. Local storage has no device list, pairing, discovery, waiting-peer status, signaling, relay or sync control. Its status describes only this installation. Signing in alone must not upload a Local library.
 
-Pairing, device verification, waiting/offline peers, encrypted relay status and automatic latest-edit recovery have explicit screens. On-device latest-edit convergence does not block on a conflict picker; the previous version is locally recoverable for seven days. Existing conflict comparison screens apply to concurrent offline paid Cloud edits only.
+Cloud stores the authoritative complete library, pushes server-committed changes to online clients and provides complete authenticated web access without the original device online. Account-bound caches provide offline reads; durable offline drafts remain Pending upload until reconnect and matching server confirmation. An unuploaded draft is unavailable on other devices/web. An older receipt cannot mark newer typing Saved. Live/Connecting is separate channel status and never acknowledges an edit.
 
-Paid Cloud screens cover plan review, explicit whole-library activation, upload acknowledgement, live status, billing/payment/expiry, cancellation, complete-download downgrade and separate cloud-data removal. Price/provider/retention terms remain undecided and are labelled as such; no mockup claims a real purchase or executes a charge. Cancellation, account deletion and cloud-note removal are distinct actions. Browser and iPhone mode/device screens use the same vocabulary. DynamoDB and entitlement internals do not appear as customer setup requirements.
+| Tier/state                                      | Customer status and behavior                                            |
+| ----------------------------------------------- | ----------------------------------------------------------------------- |
+| Local write pending                             | Saving on this device                                                   |
+| Local durable commit                            | Saved on this device                                                    |
+| Cloud draft retained locally, offline or queued | Pending upload; explain Offline or sign-in/quota reason when applicable |
+| Cloud request in progress                       | Saving to Cloud; no Saved claim yet                                     |
+| Matching latest Cloud edit confirmed            | Saved in Cloud                                                          |
+| Concurrent Cloud draft                          | Conflict; preserve both versions for explicit resolution                |
+| Local note/draft retention failed               | Could not save/retain draft; keep editor open with Retry/Copy text      |
+
+The sole green minus remains Put away. Local closes after durable commit. Cloud can close after its pending draft is durably retained, with Pending upload visible in the library until server confirmation. Never force a network round trip merely to close a retained draft, and never mistake that close for Cloud Saved. Keep independent native windows and existing note/library geometry behavior.
+
+Paid Cloud still needs plan review, explicit whole-library activation, server upload acknowledgement, live/reconnect, billing/payment/expiry, cancellation, complete-download downgrade and separate data removal. Price/provider/retention remain undecided; no real purchase follows from a mockup. Downgrading creates an independent Local library on this installation and does not switch other clients. Cloud conflict comparisons remain relevant; automatic peer latest-edit recovery screens are retired. DynamoDB/entitlement internals stay out of customer setup.
 
 Word and meaning search are separate modes. Results link to actual note excerpts rather than generated answers. Model size/progress values in the mockups are illustrative until the M0 model experiment. Formatting follows the SPEC's limited Markdown subset and uses ##tag syntax in source content.
 
-Show local-save success separately from cloud sync. Offline, sign-in expiry, service quota, local disk failure, unavailable folders, unsupported schema, note-size limits, and conflicts all have explicit recovery states. A conflict draft is labelled as local until resolution.
+Show Local saves separately from Cloud confirmation. Offline, sign-in expiry, quota, local retention failure, unavailable folders, unsupported schema, note-size limits and conflicts need explicit recovery. A pending/conflict Cloud draft is labelled unconfirmed until server acknowledgement.
 
 ## Appearance tokens
 
-| Token | Light | Dark |
-| --- | --- | --- |
-| Canvas | #eeede8 | #20231f |
-| App surface | #fffefa | #30342e |
-| Sidebar | #f5f4ef | #292d27 |
-| Primary text | #292c28 | #efeee4 |
+| Token          | Light   | Dark    |
+| -------------- | ------- | ------- |
+| Canvas         | #eeede8 | #20231f |
+| App surface    | #fffefa | #30342e |
+| Sidebar        | #f5f4ef | #292d27 |
+| Primary text   | #292c28 | #efeee4 |
 | Secondary text | #777a70 | #b0b4a6 |
-| Note paper | #fff5c7 | #514a2e |
-| Note text | #45412d | #f5eac8 |
-| Amber accent | #efd06b | #d9b657 |
+| Note paper     | #fff5c7 | #514a2e |
+| Note text      | #45412d | #f5eac8 |
+| Amber accent   | #efd06b | #d9b657 |
 
 Use native system font stacks and line icons. Primary actions use a strong neutral fill; destructive actions use red with explicit text. Do not rely on color alone for status. These are proposed design tokens, subject to implementation accessibility checks.
 
-## Screen inventory
+## Historical v0.7 screen inventory
 
 ### Mac capture
 
@@ -191,7 +205,7 @@ Use native system font stacks and line icons. Primary actions use a strong neutr
 | [Arrange notes bottom](mockups/screens/mac-arrange-bottom.png) | mac | FR-16 |
 | [Library closed, notes visible](mockups/screens/mac-library-closed.png) | mac | FR-02 · FR-11 |
 
-### On-device sync
+### Retired v0.7 peer-sync screens
 
 | Screen | Platform | Requirements |
 | --- | --- | --- |
@@ -243,4 +257,4 @@ Sandip replaced the red cross with a green circle containing a minus. Its toolti
 
 ## Two saving modes, version 0.7
 
-The gallery now has 110 canonical screens and five additional dark exports. The updated gallery adds remote On-device pairing/status/recovery and paid live Cloud lifecycle screens. All free-mode notes remain on devices; remote encrypted relay is transient transport. Paid Cloud covers the complete library. Review storage-destination for the mode choice, peer-devices for free sync, cloud-plan for paid activation, and cloud-live for connected live status. The green minus Put away control retains its existing save-before-close behavior. These are presentation artifacts, not proof that remote sync, payment, or cloud storage exists.
+The historical v0.7 gallery has 110 screens and five additional dark exports. The following paragraph describes that retired scope, not v0.8: The updated gallery adds remote On-device pairing/status/recovery and paid live Cloud lifecycle screens. All free-mode notes remain on devices; remote encrypted relay is transient transport. Paid Cloud covers the complete library. Review storage-destination for the mode choice, peer-devices for free sync, cloud-plan for paid activation, and cloud-live for connected live status. The green minus Put away control retains its existing save-before-close behavior. These are presentation artifacts, not proof that remote sync, payment, or cloud storage exists.
