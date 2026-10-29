@@ -1,0 +1,23 @@
+# Fixed journal engine extraction
+
+[Issue143](https://github.com/devsandip/peel/issues/143) is a small internal prerequisite under issue30 / [M2.2](https://github.com/devsandip/peel/milestone/2), supporting [SPEC](../SPEC.md) FR-04/14/20 and AC-04/12/13. The [storage transition](cloud-journal-storage-evolution.md) requires a separately reviewed compatibility-preserving extraction before sharing proven mechanics with a future fixed v2 store. This plan precedes experiments and code edits.
+
+## Exact scope
+
+Move the complete existing `infra/cloud/journal-storage.ts` bytes into `infra/cloud/journal-sqlite.ts` in the same directory. Leave the original public path as explicit re-exports of exactly `CloudJournalGenesisStore` and `CloudJournalStorageError`. Do not change the moved implementation, its imports, dependencies, existing tests, workflow or callers. Verify byte equality against base1a0a83c83aacc39f3195087b61ec2de7f3b0415e, rather than relying on a rename similarity percentage.
+
+This creates a private implementation location for later reviewed fixed formats. It adds no shared public helper, format/schema/version/codec argument, generic store, callback factory, new initializer or v2 database. The later sharing change remains separate. Existing hook arguments, runtime constructor/error identities through the public re-export, schema/header/settings/limits, file ownership checks, errors/messages/codes and transaction/rollback/commit/readback/sync/descriptor-close ordering stay intact. Existing v1 source acknowledgement and private preparation lineage stay intact. Error stack source filenames naturally follow the moved module and are not promised to remain unchanged.
+
+No v1-to-v2 migration, namespace adoption/repair/reset, dispatcher, preparation/fence/current/provider or send permission is added. Current inspection still opens DatabaseSync without readOnly:true; this extraction does not certify physically write-free inspection. Synkies/Folded Horizon, compatible stored identifiers and functional v0.7 stay unchanged. No actual/default operator/note database, credentials, account operation, AWS or stopped-component retry is authorized by this refactor.
+
+## Compatibility experiment before and after the move
+
+After committing this plan but before moving code, execute the actual existing public v1 bootstrap with the historical synthetic `cloudJournalInput` recipe in a newly created mode0700 canonical temporary workspace. No source store, funding reservation, provider or current acknowledgement is claimed. Save the exact selected synthetic input, returned canonical genesis/commitments and database/marker hashes, header, catalog and persistent page information in ignored scratch only. Retain only that newly owned temporary namespace until the after-check; publish no database fixture or private payload.
+
+After the move, reopen the exact same namespace through the unchanged public import path. Compare canonical genesis and commitments, exact database/marker bytes and header/catalog/page information. Compare old-path and internal-module exported constructor/error identities. Close all connections/descriptors, then remove only the recorded newly owned temporary workspace. Refuse cleanup of an unexpected path. This checks an actual pre-extraction database, not one recreated by the moved implementation. It does not prove physical power-loss safety, actual source acknowledgement or current provider readiness.
+
+## Validation and integration
+
+Do not add tests that mirror this relocation. Keep all existing meaningful namespace/ACK-loss/process-race/SIGKILL cases byte-unchanged. Run actual Node24 direct imports and the31-file Cloud consumer set, then shared/type/format/build sequentially under unchanged defaults. Verify the moved file is byte-identical to the base implementation, the wrapper exports exactly the existing names and all other runtime/test/workflow/dependency files are unchanged. Existing mock/spies on the public constructors must continue to exercise the actual engine through the re-export.
+
+Review the final diff and compatibility evidence; verify no-reply author AND committer and staged/range scans before every push. Require all three exact-source hosted gates before normal integration, then record actual main checks separately, GitHub closure and Project Done. Append WORKLOG and an immutable journal entry with an INDEX update; keep the ignored immutable resume current. No M2.2 completion report is due without its actual managed/independent teardown exit evidence. All real stopped gates and expired allowances remain unchanged.
