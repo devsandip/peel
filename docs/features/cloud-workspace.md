@@ -52,3 +52,23 @@ Verify in real headless Chrome:
 - Keyboard focus entry into `Note text`, `Escape` preserving the open editor, `Ctrl+W` / `Meta+W` Put away, narrow-screen `inert` background containment, focus restoration to the refreshed library control, and desktop (`1280x800`) plus narrow (`390x844`) layout geometry and visually inspected screenshots.
 
 Run `pnpm check`, Prettier check on owned and checked paths, `pnpm build` verifying the default bundle remains unchanged, no-reply Git author/committer verification, and `gitleaks` staged and commit-range scans. Real Cognito login, paid entitlement activation, Cloud download/live push scheduling, native Mac/iPhone shells, AWS deployment and M2.2 exit remain outside this slice.
+
+## Validation evidence
+
+Rebased onto verified `main` `0e2dc1d26f8403801058bda1b0918bae6af14b5f` ([issue 169 comment 6500539742](https://github.com/devsandip/peel/issues/169#issuecomment-6500539742)) with zero edits to shared contracts, backend packages, shared fixtures or default routes.
+
+Initial failures and fixes during verification:
+
+- First `cloud-workspace.spec.ts` run (`3 passed, 2 failed`): (1) the first test assumed `server.control.committed` started at `0` before holding responses, whereas `CloudUploadingNoteEditor` uploads the seeded pending draft on mount; updated the test to wait for initial `Saved in Cloud` and assert `committedBeforeEdit + 1` after holding responses. (2) the fifth test lost focus on the renamed card button after `Ctrl+W` Put away because the asynchronous loopback HTTP confirmation incremented parent `refreshKey` a few milliseconds after `localRefresh`, transiently unmounting `.note-grid` while `aria-busy="true"`.
+- Second `cloud-workspace.spec.ts` run (`4 passed, 1 failed`): desktop `Ctrl+W` focus restoration passed across confirmation reload, while `390x844` `Put away` lost provisional `New note` tracking when consecutive effect runs occurred during `aria-busy="true"`. Fixed `CloudWorkspace` by storing both focused card title and provisional `New note` element references in component refs (`desiredCardTitleRef` and `provisionalButtonRef`), clearing card focus only when a still-connected card button genuinely blurs. All 5 workspace tests then passed.
+
+Checks passed on the rebased tree:
+
+- `pnpm check` (`tsc --noEmit`).
+- `pnpm exec prettier --check apps/web/src packages infra tests docs/features/cloud-workspace.md`.
+- `pnpm build`: default bundle outputs unchanged (`dist/assets/index-C2AI2ViB.js` 580.47 kB, `dist/assets/index-BJXYavW2.css` 14.14 kB, `dist/assets/search.worker-B3BfQQXg.js` 19.27 kB); default Cloud remains unavailable and unwired from `apps/web/src/main.tsx`.
+- Cloud web unit suites (`pnpm exec vitest run --maxWorkers=1` on `cloud-note-cache-view`, `cloud-draft-session`, `cloud-note-upload`, `cloud-cached-library`, `cloud-library-download`, `cloud-download-web-transport`): `6` files, `118` tests passed. Unbounded `pnpm test` locally spawned 76 workers and hit 4-5 s child-process timeouts in 3 untouched `infra/cloud` unit suites (`cloud-preparation-session`, `cloud-run-context-storage`, `cloud-stack-create-query`), which run in hosted CI (`web-and-core` and `cloud-artifact`).
+- Real headless Chrome Playwright suites on strict port `65528`: `tests/e2e/cloud-workspace.spec.ts` (`5 passed`), plus regression suites `cloud-cached-library.spec.ts`, `cloud-note-upload.spec.ts`, `cloud-note-editor.spec.ts`, `cloud-download-web.spec.ts` and `local.spec.ts` (`36 passed` total across 6 browser spec files), cleaning up all synthetic `peel-m0-cloud-workspace-*` IndexedDB databases and confirming `peel-local-v1` is never created by workspace tests.
+- Visually inspected `workspace-desktop-split.png` (`1280x800`), `workspace-mobile-library.png` (`390x844`) and `workspace-mobile-editor.png` (`390x844`): verified warm-paper contrast, sole top-left green-minus `Put away` control (`24x24` px on narrow/coarse viewports, no Save button), non-overlapping collection navigation and status text, unclipped `New note` and card status labels, safe literal `<img src=x onerror=...>` rendering, and zero horizontal overflow.
+
+Limits and unrun local checks: DynamoDB Local, Python Cloud IaC rendering/linting, and macOS Rust/Tauri packaging were not executed locally for this web UI slice and run in the 3 required GitHub Actions jobs (`web-and-core`, `cloud-artifact`, `native`) on the exact PR head. Authenticated Cognito session wiring, paid entitlement activation, automatic download/push scheduling, native shells, AWS deployment and M2.2 milestone exit remain outside this PR.
