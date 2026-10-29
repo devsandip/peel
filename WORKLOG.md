@@ -1897,3 +1897,18 @@
 
 **Next:**
 - Verify revised PR132 documentation/gates and normal integration, then scope the non-executable initial-guard facts contract separately from actual private provenance and fencing.
+
+
+## 2026-10-28 - Check supplied initial-guard facts without permission
+
+**Did:**
+- Confirmed PR 132 revised sourcef02bdbd / run40733775116 all three PASS, normal mergee772b77, actual131closure/ProjectDone and safe primary advancement. The docs-only main push triggered no new workflow; tested-tree equality/unchanged runtime were verified, not called passing tests. Proof6475838858; old owned branches cleaned after actual closure.
+- Created issue133 / ProjectInprogress and committed planb958226 before generating safe first/second-slot metadata with actual public APIs in a fresh temporary ledger, removed afterward. Independent Python projection commitments were generated before the checker existed; both actual Node24 outputs match at1204bytes.
+- Implemented pure supplied original/ledger/current-data checks for the initial guard only, preserving consumed accounting, original birth/deadline/quote bindings and strict privacy/shape. Every current/run/ownership authority stays unproven. No actual source sync, current journal/intent inspection, adequate runway proof, key/token generation or permission.
+- Passed27focused cases with filesystem/SQL/process/network/RNG effects denied, plus actualNode24direct/361Cloud29files then576shared67files/type/format/build under unchanged defaults. Omitting the active-pending requirement fails the coherently rehashed cleaned-run refusal; exact source restored. No failed positive run in this slice. Existing chunk warning remains.
+
+**State now:**
+- One pure facts contract; final-head hosted gates and focused review precede merge. Existing stores/schema/error/app behavior, dependencies and test scheduling/deadlines are unchanged. No actual/default operator/note data, credentials, AWS/account/resource/budget/billing/app activation or stopped retry.
+
+**Next:**
+- Finish issue133 review/all exact-head checks and normal integration, actual issue/Project/main proof. Keep actual private current provenance/source ACK/journal-state/runway requirements separate before trusted preparation/fencing. Preserve all stopped M2.2/managed/teardown/app gates and keep immutable resumes current.
