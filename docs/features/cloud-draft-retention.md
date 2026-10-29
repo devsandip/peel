@@ -1,0 +1,21 @@
+# Retain a Cloud draft before Put away
+
+[Issue154](https://github.com/devsandip/peel/issues/154) implements a disabled app-session prerequisite for [SPEC](../SPEC.md) FR-02/08/11/13/14 and AC-02/09/12/13/20 under the [confirmed v0.8 contract](two-tier-cloud-first.md). This plan precedes code. Cloud remains unavailable in the default app; existing Local/native UI and all protocol/store implementations stay unchanged.
+
+## Scope and decisions
+
+Add an explicitly scoped session for an already cached active Cloud note. Capture validated account/library/mode/note values before its async read. Use the existing DurableCloudClient, strict state codec and atomic state row; no default Local repository/database, transport, auth/entitlement grant, schema/dependency or actual provider action. Return only frozen current text/status/recovery/lifecycle scalars. Cached data is not independent authentication authority.
+
+Edits validate the body and immediately start local retention, without a network/hash/credential dependency. Drain newer typing before flush settles; a completed older write cannot mark newer text retained or Saved. Retention failure preserves volatile text for copy/retry and reports a generic body-free error. Retained drafts remain Pending upload or Conflict until a matching verified Cloud response changes stored state. Explicit refresh can observe that state but must not overwrite typing or accept an older read. Do not invent a server acknowledgement.
+
+Pin the current projection across concurrent generation changes. Preparation/ACK changes with identical current text/metadata can advance generation. Refuse a competing editor or remote lifecycle/projection change rather than silently overwriting it. Preserve the exact attempted snapshot across a lost local commit response; a later actual read can establish whether that snapshot was retained, without an unnecessary duplicate write. Preserve immutable in-flight operations and both conflict branches through existing reducer behavior. Initial missing, malformed, future, foreign, purged, archived or trashed cache refuses without writes. New-note capture and explicit merge/resolution are separate slices.
+
+Put away freezes editing synchronously, awaits flush of the latest draft, then settles as closed. Failure reopens editing and retains the latest copyable text; duplicate close calls share the same attempt. This API does not close a native/browser window. Future UI composition must await it before the sole green minus closes its note. The caller owns the store; sessions never retarget to a later account or close shared storage.
+
+## Verification and boundaries
+
+Use fresh synthetic SQLite client/server stores for automatic retention/reopen, held writes/newer typing/Put-away freeze, failure/retry, actual server acknowledgement with later typing, existing conflict preservation, competing editors, immutable scope capture, lost local commit reply and late refresh. Only actual service receipts establish local server-path evidence; browser-controlled ACKs remain fixture evidence.
+
+Extend the existing test-only panel fixture with actual explicit M0 IndexedDB/session controls. Verify retained pending reload, actual transaction failure and recovery, held Put-away retention and no default DB. No default app route or native launch. Remove only the await-before-closed guard, prove the held-commit refusal fails and restore/hash exact source before positives. Preserve legacy assertions/defaults/worker/retry/timeouts. Run focused actual Node24, relevant shared/browser/type/format/build and all3 exact-source hosted gates, focused review/no-reply/scans/normal integration and actual main/closure/Project evidence. Append153 finalproof6491628289 with all3 source40838877679 and actual-main40840091152 success, new immutable journal/WORKLOG/INDEX and ignored resumes.
+
+This is a local-retention session only, not enabled Cloud, a complete editor, account activation/authentication, reconnect upload, full-library web inventory, live push, new-note/untouched-empty handling, native/iPhone or M2.2 managed/independent teardown acceptance. Those gates and stopped31/51/72 probes/expired allowances remain unchanged. No milestone exit is claimed.
