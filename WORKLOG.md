@@ -2188,3 +2188,25 @@
 
 **Decisions:**
 - Bound one whole response operation instead of registering one abort race per chunk. The browser proxy and smaller page requests are explicit test scaffolding, not real authentication/hosting or production performance evidence.
+
+
+## 2026-10-29 - Bound browser uploads and review the parallel workspace
+
+**Did:**
+
+- Completed PR170/issue168: all3 first-attempt source40895731617 and actual-main40896979983 gates, merge0e2dc1d/proof6500447037, actual closure/Project/guarded primary and owned-ref cleanup. Frozen2020 remains unchanged.
+- Planned issue171 in2c62d80 before implementation. Added a captured bounded web mutation sender with actual envelope/hash verification and shared download transport internals; existing download API/39 cases remain unchanged. Default application bundle hashes remain equal.
+- Verified57 focused transport cases and3 actual IndexedDB/HTTP/SQLite upload flows. The first full Cloud run passed538/542 with three existing5000ms timeouts and an existing bounded SDK child failure; subsequent stages were unrun. In a peer-released window, one unchanged sequential Node24 Cloud542/39/shared757/77/fullbrowser54/type/format/build run passed. Retained initial failures separately; contention is an inference.
+- Reviewed peer PR172 exact c5 after its all3 hosted gates. Two controlled regressions exposed duplicate per-editor Put-away callbacks and wrong-note focus for duplicate titles. Posted review5701065953/revision6502084667 and released the local test window6502201974. Peer owns fixes/new Ready; its checkout/refs stay untouched.
+
+**State now:**
+
+- Explicit scoped browser upload/download compositions work with synthetic owned service fixtures. Saved follows the matching current server confirmation; offline pending/immutable retry remain durable. Default Cloud is unavailable. Real login/paid activation/full-web/live/reconnect/native/iPhone/performance and M2.2 managed/independent teardown remain unmet.
+
+**Next:**
+
+- Finish issue171 exact-source hosted gates/normal integration/separate main proof/tracking and owned cleanup. Check169 for a freshly frozen corrected172 head and review its regressions before integration. No actual/default DB/profile/provider/native launch or stopped/expired probe is authorized.
+
+**Decisions:**
+
+- Coordinate local validation windows rather than changing existing tests or stopping unrelated processes. Green hosted checks do not replace focused behavioral review.
