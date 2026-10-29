@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-29 16:32 IST.
+Last refreshed: 2026-10-29 17:35 IST.
 
-Latest entry: [New Cloud notes stay pending](entries/2026-10-29-1632-new-cloud-notes-stay-pending.md).
+Latest entry: [Automatic edits are batched](entries/2026-10-29-1735-automatic-edits-are-batched.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free independent Local storage and optional paid cloud-authoritative storage. It was called Peel until 28 October 2026.
 
@@ -10,11 +10,15 @@ Synkies is a fast sticky-note app with independent Mac notes, a searchable libra
 
 I have local Mac and browser development clients and tested backend foundations. I do not yet have a complete desktop/Cloud beta, enabled Cloud login/live delivery, real billing or an iPhone app. The [PRD](../docs/PRD.md) and [SPEC](../docs/SPEC.md) define the active scope; mockups and infrastructure PRs are not app acceptance.
 
-I adopted Sandip's 29 October v0.8 simplification under issue148: Local libraries are independent, with no pairing, discovery, relay or sync. Cloud is authoritative, pushes server-committed updates to online clients and provides the complete confirmed web library. Offline Cloud edits remain durable pending drafts and are Saved only after matching server confirmation. The v0.7 gallery and peer experiments remain historical. PR149 integrated that contract with passing source gates and honest docs-only main proof. PR151 integrated the visible Local/Cloud tier copy with passing source and actual-main gates, proof6490662321. PR153 integrated the disabled scoped cached-note panel with passing source and actual-main gates, proof6491628289. PR155 integrated the disabled pending-draft session with passing source and actual-main gates, proof6492415014. PR157 integrated the disabled Markdown/Put-away editor with source gates and current main verification, proof6493475426. Main first failed the old preparation race419pass/1fail, then one inspected failed-job recheck passed while retaining prior web/native timestamps; that failure remains evidence. PR159 integrated the fixture correction after all3 source40858493017/main40859641351 gates, proof6494678079; the original failure and unknown exact schedule remain recorded. Issue160 adds synchronous fresh-note capture with no untouched empty row and durable pending retention after typing. Actual Node24/SQLite/service and37 browser cases pass; its own hosted gates still precede integration. Actual default Cloud activation/authentication/parent loading/transport/full-web/live composition remains.
+I adopted Sandip's 29 October v0.8 simplification under issue148: Local libraries are independent, with no pairing, discovery, relay or sync. Cloud is authoritative, pushes server-committed updates to online clients and provides the complete confirmed web library. Offline Cloud edits remain durable pending drafts and are Saved only after matching server confirmation. The v0.7 gallery and peer experiments remain historical. PR149 integrated that contract with passing source gates and honest docs-only main proof. PR151 integrated the visible Local/Cloud tier copy with passing source and actual-main gates, proof6490662321. PR153 integrated the disabled scoped cached-note panel with passing source and actual-main gates, proof6491628289. PR155 integrated the disabled pending-draft session with passing source and actual-main gates, proof6492415014. PR157 integrated the disabled Markdown/Put-away editor with source gates and current main verification, proof6493475426. Main first failed the old preparation race419pass/1fail, then one inspected failed-job recheck passed while retaining prior web/native timestamps; that failure remains evidence. PR159 integrated the fixture correction after all3 source40858493017/main40859641351 gates, proof6494678079; the original failure and unknown exact schedule remain recorded. PR161 integrated new pending-note capture after all3 source40862463586/main40863710699 checks, proof6495297819. Issue162 now joins the editor/session to actual server mutation upload, retained recovery and scoped confirmation. Every edit now autosaves with immediate local retention and fixed200ms Cloud batching, without a Save button. Actual browser/HTTP/SQLite and independent reads pass with41 browser cases; the changed head still needs its hosted gates. Actual default Cloud activation/authentication/parent loading/full-web/reconnect/live composition remains.
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). PR146's fixed initial-state store passed source/main checks, but actual managed smoke/independent teardown remains unproven. Issue147 was canceled after planning, removed from the milestone and is not shipped progress. Audit51, managed31 and native72 remain stopped or blocked. The continuing automation now follows v0.8; no expired allowance or stopped probe is revived.
 
 ## Recent entries
+
+- [2026-10-29 17:35 IST: Automatic edits are batched](entries/2026-10-29-1735-automatic-edits-are-batched.md)
+
+- [2026-10-29 17:17 IST: Editing reaches server confirmation](entries/2026-10-29-1717-editing-reaches-server-confirmation.md)
 
 - [2026-10-29 16:32 IST: New Cloud notes stay pending](entries/2026-10-29-1632-new-cloud-notes-stay-pending.md)
 

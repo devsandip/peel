@@ -7,6 +7,8 @@ type Props = {
   session: CloudDraftSession;
   refreshKey: number;
   onPutAway: (session: CloudDraftSession) => void | Promise<void>;
+  onRetained?: () => void;
+  uploadNotice?: { message: string; onRetry: () => void };
   source?: boolean;
 };
 
@@ -27,6 +29,8 @@ function SelectedEditor({
   session,
   refreshKey,
   onPutAway,
+  onRetained,
+  uploadNotice,
   source = false,
 }: Props) {
   const [view, setView] = useState(() => session.snapshot()),
@@ -60,7 +64,20 @@ function SelectedEditor({
       setIssue(null);
       setCopyResult("");
       sync();
-      void session.flush().then(sync, sync);
+      void session.flush().then(() => {
+        sync();
+        if (active.current)
+          void Promise.resolve()
+            .then(() => {
+              if (active.current) onRetained?.();
+            })
+            .catch(() => {
+              if (active.current)
+                setIssue(
+                  "Cloud upload could not start. Your draft remains on this device.",
+                );
+            });
+      }, sync);
     } catch {
       if (active.current)
         setIssue("Could not edit this draft. Copy the text before reopening.");
@@ -94,7 +111,10 @@ function SelectedEditor({
     if (session.snapshot().closed) return putAway();
     try {
       await session.flush();
-      if (active.current) setIssue(null);
+      if (active.current) {
+        setIssue(null);
+        onRetained?.();
+      }
     } catch {
       /* Session exposes only its generic recovery state. */
     }
@@ -146,6 +166,14 @@ function SelectedEditor({
           </button>
           <button onClick={() => void copy()}>Copy text</button>
           <span aria-live="polite">{copyResult}</span>
+        </div>
+      )}
+      {uploadNotice && (
+        <div className="note-notice" role="alert">
+          <p>{uploadNotice.message}</p>
+          <button disabled={closing} onClick={uploadNotice.onRetry}>
+            Retry upload
+          </button>
         </div>
       )}
       <MarkdownEditor

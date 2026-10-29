@@ -2108,3 +2108,32 @@
 
 **Next:**
 - Finish160 focused review/scans/no-reply/all3 exact-source hosted gates, normal integration and actual main/closure/Project proof. Preserve the initial DOM-test failure and negative control separately, and leave stopped probes/expired allowances unchanged.
+
+
+## 2026-10-29 - Connect editing to server confirmation
+
+**Did:**
+- Verified161 source40862463586/main40863710699 all3PASS first attempts, review6494941687/ready6495118233/mergeaa601d2/proof6495297819, actual160closure/ProjectDone/label/primary/owned cleanup. Preserved prior failures and unknown user paths.
+- Created162/current Project and plan97ee278 before code. Added scoped upload/session ownership, immutable prepare/retry and validated receipt dispatch, account cancellation/commit guards, queued success draining and failure/conflict pause. Wired retention/mount/Put away through the existing editor without waiting for network or changing default Cloud/Local/native routes.
+- Added actual browser-fetch/loopback HTTP/SQLite fixture and independent API read. Twelve new unit cases, Node24 focused29/2, exactCloud440/35 then shared655/73 sequential, all41browser/type/full checked-source format/whitespace/build PASS; default bundle hashes/580kB warning unchanged. Legacy test assertions/defaults preserved; workflow only adds new Node24 suite.
+- Recorded genuine review regression: cancellation from upload-start observer initially still sent1request instead of0. Recheck after notification fixes it; final positives include abort during held ACK read, old retry revealing newer remote head, lost successful response/reopen, real401/conflict, receipt/status mismatch and captured scope. Earlier smaller positives do not erase that failing strengthened test. Owned fixtures/DBs/processes closed/removed; no actual user/operator DB/profile/native/provider/OS clipboard or stopped retry.
+
+**State now:**
+- The scoped editor can upload through its explicit authenticated sender and observe durable confirmation; a separate fixture client reads committed text. Default app Cloud remains unavailable. Real authenticated parent/context binding, bounded sender/deadlines, full inventory/reconnect/live and actual platform/managed teardown remain unmet.
+
+**Next:**
+- Finish162 focused review/scans/no-reply/all3 exact-source gates and normal merge/main/closure/Project proof. Keep the cancellation failure and prior historical failures explicit, preserve unrelated changes and do not renew expired allowances.
+
+
+## 2026-10-29 - Confirm automatic save and batch Cloud edits
+
+**Did:**
+- Recorded Sandip's explicit autosave/no Save button clarification in plan1745d58 before code, within existing162/163. Kept immediate local retention and added fixed200ms automatic Cloud windows, account-abort timer cleanup and failure/conflict pause. Put away/Retry may flush immediately without a network wait. No normal Save control added.
+- Moved upload recovery into the existing note body after a genuine browser assertion first failed on its external location. Added actual local-generation-race regression; it first paused normal newer typing during asyncprepare, then a proven higher-generation reobservation/new window fixed automatic progress without retrying failed network requests or adopting unknown results. Earlier observer-cancellation failure remains recorded.
+- Passed16 upload cases plus17 session cases (Node24focused33/2), exactCloud444/35 then shared659/73 sequentially,41browser/type/full checked-source format/build/whitespace. Default bundle hashes/580kB warning and legacy assertions/defaults unchanged. Prior12/440 and15/443 results precede the final generation fix; all failed strengthened cases are retained separately.
+
+**State now:**
+- Every edit is automatically retained; online confirmed uploads are batched without starving continuous typing. Pending stays until matching current confirmation. Current PR163 is draft while new source review/gates replace obsolete15a evidence; real Cloud/default app/provider/platform acceptance remains unmet.
+
+**Next:**
+- Scan/no-reply/new-source push and refreshed review, ready163 when reviewable, all3 exact-newhead hosted gates, normal merge/main/tracking proof and owned-only cleanup. Do not reuse old source gates or renew expired allowances/stopped probes.
