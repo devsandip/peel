@@ -330,6 +330,21 @@ it("refuses ordinary capacity overflow while keeping all32 cleanup slots availab
   expect(count(db, "journal_observations")).toBe(96);
 });
 
+it("requires contiguous append identities across categories and refuses gap/backfill/reordering", () => {
+  const db = open();
+  expect(() => observation(db, 2)).toThrow("Cloud journal write unavailable");
+  expect(() => observation(db, 64)).toThrow("Cloud journal write unavailable");
+  observation(db, 1);
+  const first = digest(db);
+  expect(() => observation(db, 3, "cleanup")).toThrow(
+    "Cloud journal write unavailable",
+  );
+  expect(digest(db)).toBe(first);
+  observation(db, 2, "cleanup");
+  expect(() => observation(db, 1)).toThrow("Cloud journal write unavailable");
+  expect(count(db, "journal_observations")).toBe(2);
+});
+
 it("does not allow cleanup overflow to borrow ordinary capacity", () => {
   const db = open();
   for (let id = 1; id <= 32; id++) observation(db, id, "cleanup");

@@ -7,8 +7,8 @@
   "databaseLimit": 2097152,
   "rollbackLimit": 4194304,
   "observationJsonLimit": 1984,
-  "ddlSha256": "e6f8065845b3b76834b82bf88661210e0bd2c9a685edea40e58b8c7f633bf910",
-  "catalogSha256": "8ede12da0e7f3e7eac367cfed271fc6d364138918092bd217089091ed2b1fb96",
+  "ddlSha256": "e4a61107fff68b35bd9efcd81fb58b20b22aa39757a80aaaeff90a442ee7d520",
+  "catalogSha256": "64ee8e6428b1f3d3aecd2a2bca6f2f8170e4a9940eeb205d32d41b3853dbca3f",
   "objects": [
     {
       "type": "index",
@@ -128,7 +128,7 @@
       "type": "trigger",
       "name": "journal_observations_insert_capacity",
       "table": "journal_observations",
-      "sqlSha256": "05d33befe6c52ec6a96095007095bd0d6490e3c3308ef9776b03d8a6579a190e"
+      "sqlSha256": "4b75c8d61abbc4dac4d2e28b9937d500984bb429b5cfb7960c2de63d26ba309d"
     },
     {
       "type": "trigger",
