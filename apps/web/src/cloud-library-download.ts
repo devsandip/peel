@@ -6,7 +6,9 @@ import {
   DurableCloudPull,
   validatePullProgress,
   type CloudPullStateStore,
+  type CloudPullProgress,
 } from "../../../packages/cloud-protocol/src/pull-local";
+import { createCloudChangeHintReader } from "../../../packages/cloud-protocol/src/change-hints";
 import {
   cloudScopeHash,
   validatePullStart,
@@ -45,6 +47,9 @@ export const CLOUD_DOWNLOAD_PASS_PAGES = 8;
 export class CloudLibraryDownload {
   private scope: CloudScope;
   private pull: DurableCloudPull;
+  private readHint: ReturnType<typeof createCloudChangeHintReader>;
+  private hintTarget = 0;
+  private hintRound: { roundId: string; target: number } | null = null;
   private task: Promise<DownloadSnapshot> | null = null;
   private view: DownloadSnapshot = Object.freeze({
     kind: "idle",
@@ -59,6 +64,7 @@ export class CloudLibraryDownload {
     private signal: AbortSignal,
   ) {
     this.scope = validateCloudScope(input);
+    this.readHint = createCloudChangeHintReader(this.scope);
     this.pull = new DurableCloudPull(
       {
         read: (...args) => store.read(...args),
@@ -107,8 +113,61 @@ export class CloudLibraryDownload {
   restartSnapshot() {
     return this.run(true);
   }
-  private run(restart: boolean): Promise<DownloadSnapshot> {
+  /** One explicit bounded pass. A notification is not an acknowledgement or live grant. */
+  acceptHint(raw: unknown): Promise<DownloadSnapshot> {
+    try {
+      this.signal.throwIfAborted();
+      const hint = this.readHint(raw);
+      this.signal.throwIfAborted();
+      this.hintTarget = Math.max(this.hintTarget, hint.sequence);
+      return this.run(false, true);
+    } catch {
+      return Promise.reject(Error("Cloud change hint unavailable"));
+    }
+  }
+  private finish(progress: CloudPullProgress, pages: number) {
+    const more = () =>
+      this.publish(
+        "more",
+        pages,
+        "Another Cloud catch-up pass is needed. Showing cached notes.",
+      );
+    if (progress.next) {
+      this.publish(
+        "more",
+        pages,
+        "More Cloud notes remain to download. Showing cached notes.",
+      );
+    } else if (this.hintTarget > progress.throughSequence) {
+      const started =
+        this.hintRound?.roundId === progress.roundId
+          ? this.hintRound.target
+          : 0;
+      if (started > progress.throughSequence) {
+        // Invalidate only the target this fresh round disproved; keep newer arrivals.
+        if (this.hintTarget <= started) this.hintTarget = 0;
+        this.hintRound = null;
+        this.publish(
+          "paused",
+          pages,
+          "Could not verify the Cloud notification. Your cached notes and drafts remain on this device.",
+        );
+      } else more();
+    } else {
+      this.hintTarget = 0;
+      this.publish(
+        "complete",
+        pages,
+        "Last Cloud download complete. Pending drafts still need their own confirmation.",
+      );
+      // Observers can deliver a new hint synchronously during completion publication.
+      if (this.hintTarget > progress.throughSequence) more();
+      else this.hintTarget = 0;
+    }
+  }
+  private run(restart: boolean, hintOnly = false): Promise<DownloadSnapshot> {
     if (this.task) return this.task;
+    let completedThrough: number | null = null;
     const task = Promise.resolve()
       .then(async () => {
         let pages = 0;
@@ -122,6 +181,19 @@ export class CloudLibraryDownload {
           this.signal.throwIfAborted();
           if (progress && progress.scopeHash !== hash)
             throw Error("Foreign cached download");
+          if (
+            hintOnly &&
+            !restart &&
+            progress &&
+            !progress.next &&
+            progress.checkpoint &&
+            progress.throughSequence >= this.hintTarget
+          ) {
+            completedThrough = progress.throughSequence;
+            this.finish(progress, pages);
+            this.signal.throwIfAborted();
+            return this.view;
+          }
           const request = async (input: CloudDownloadRequest) => {
             this.signal.throwIfAborted();
             const reply = await this.send(structuredClone(input), this.signal);
@@ -156,6 +228,7 @@ export class CloudLibraryDownload {
                       modeGeneration: this.scope.modeGeneration,
                     },
                   };
+            const target = this.hintTarget;
             const reply = await request(initial);
             if (!reply) return this.view;
             const start = validatePullStart(reply.body as CloudPullStart);
@@ -169,6 +242,8 @@ export class CloudLibraryDownload {
               start,
               progress?.generation ?? null,
             );
+            this.signal.throwIfAborted();
+            this.hintRound = { roundId: progress.roundId, target };
           }
           while (progress.next && pages < CLOUD_DOWNLOAD_PASS_PAGES) {
             const reply = await request({
@@ -184,13 +259,10 @@ export class CloudLibraryDownload {
             this.publish("downloading", pages);
             this.signal.throwIfAborted();
           }
-          this.publish(
-            progress.next ? "more" : "complete",
-            pages,
-            progress.next
-              ? "More Cloud notes remain to download. Showing cached notes."
-              : "Last Cloud download complete. Pending drafts still need their own confirmation.",
-          );
+          this.signal.throwIfAborted();
+          if (!progress.next) completedThrough = progress.throughSequence;
+          this.finish(progress, pages);
+          this.signal.throwIfAborted();
         } catch {
           this.publish(
             this.signal.aborted ? "canceled" : "paused",
@@ -202,9 +274,31 @@ export class CloudLibraryDownload {
         }
         return this.view;
       })
-      .finally(() => {
-        this.task = null;
-      });
+      .then(
+        (snapshot) => {
+          try {
+            // Completion observers may queue a hint before this task settles.
+            if (snapshot.kind === "complete" && completedThrough !== null) {
+              if (this.hintTarget > completedThrough)
+                this.publish(
+                  "more",
+                  snapshot.pages,
+                  "Another Cloud catch-up pass is needed. Showing cached notes.",
+                );
+              else this.hintTarget = 0;
+            }
+            if (this.signal.aborted && this.view.kind !== "canceled")
+              this.publish("canceled", this.view.pages);
+            return this.view;
+          } finally {
+            this.task = null;
+          }
+        },
+        (error: unknown) => {
+          this.task = null;
+          throw error;
+        },
+      );
     this.task = task;
     return task;
   }
