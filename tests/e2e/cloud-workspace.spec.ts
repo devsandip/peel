@@ -221,6 +221,8 @@ test("failed retention, 401 upload pause and failed owner Put away keep editor r
     name: "Cloud note editor",
   });
   const editor = editorArticle.getByRole("textbox", { name: "Note text" });
+  await expect(editor).toContainText("Account A private body ##work");
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
 
   server.control.unauthorized = true;
   await editor.fill("Keep pending text through 401 failure");
@@ -262,7 +264,7 @@ test("failed retention, 401 upload pause and failed owner Put away keep editor r
     .getByRole("button", { name: "Retry", exact: true })
     .click();
   await expect(editorArticle.getByRole("alert")).toHaveCount(0);
-  await expect(editorArticle.getByRole("status")).toHaveText("Pending upload");
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
 
   await page.evaluate(() => window.cloudWorkspaceFixture.failPutAway(true));
   await editorArticle.getByRole("button", { name: "Put away note" }).click();
@@ -297,6 +299,8 @@ test("hides old account content immediately, ignores stale callbacks and preserv
     name: "Cloud note editor",
   });
   const editor = editorArticle.getByRole("textbox", { name: "Note text" });
+  await expect(editor).toContainText("Account A private body ##work");
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
 
   server.control.hold = true;
   await editor.fill(
@@ -432,6 +436,7 @@ test("supports keyboard focus, Escape preservation and responsive desktop and 39
   });
   const editor = editorArticle.getByRole("textbox", { name: "Note text" });
   await expect(editor).toBeFocused();
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
 
   const libraryBox = await page
       .locator(".cloud-workspace-library")
