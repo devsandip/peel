@@ -15,6 +15,11 @@ import {
 } from "@aws-sdk/client-cloudformation";
 import { cloudJournalInput } from "./cloud-journal-input.ts";
 import golden from "./cloud-stack-create-request-golden.json" with { type: "json" };
+import responseGolden from "./cloud-stack-create-response-golden.json" with { type: "json" };
+import {
+  createCloudStackCreateResponseObservation,
+  readCloudStackCreateResponseObservation,
+} from "../../infra/cloud/stack-create-response.ts";
 import { createCloudStackCreateIntent } from "../../infra/cloud/stack-create-intent.ts";
 import {
   createCloudStackCreateRequest,
@@ -117,8 +122,10 @@ async function capture(kind) {
   assert.ok(handle.pin.sha256 === golden[kind].sha256);
   assert.ok(handle.pin.unsignedSha256 === golden[kind].unsignedSha256);
   let view,
+    output,
     requests = 0,
     destroys = 0;
+  const stackId = `arn:aws:cloudformation:${handle.projection.binding.identity.region}:${handle.projection.binding.identity.accountId}:stack/${handle.projection.input.StackName}/${responseGolden.stackUuid}`;
   const client = new CloudFormationClient({
     region: "us-east-1",
     endpoint: "https://cloudformation.us-east-1.amazonaws.com",
@@ -163,9 +170,12 @@ async function capture(kind) {
         return {
           response: {
             statusCode: 200,
-            headers: { "content-type": "text/xml" },
+            headers: {
+              "content-type": "text/xml",
+              "x-amzn-requestid": responseGolden.requestId,
+            },
             body: Buffer.from(
-              '<CreateStackResponse xmlns="http://cloudformation.amazonaws.com/doc/2010-05-15/"><CreateStackResult><StackId>synthetic-id</StackId></CreateStackResult><ResponseMetadata><RequestId>synthetic-request</RequestId></ResponseMetadata></CreateStackResponse>',
+              `<CreateStackResponse xmlns="http://cloudformation.amazonaws.com/doc/2010-05-15/"><CreateStackResult><StackId>${stackId}</StackId>${scenario === "response-optional" ? "" : `<OperationId>${responseGolden.operationId}</OperationId>`}</CreateStackResult><ResponseMetadata><RequestId>${responseGolden.requestId}</RequestId></ResponseMetadata></CreateStackResponse>`,
             ),
           },
         };
@@ -176,16 +186,321 @@ async function capture(kind) {
     },
   });
   try {
-    const output = await client.send(
+    output = await client.send(
       new CreateStackCommand(cloudStackCreateRequestInput(handle)),
     );
-    assert.ok(output.StackId === "synthetic-id");
+    assert.ok(output.StackId === stackId);
     assert.ok(output.$metadata.attempts === 1 && requests === 1);
   } finally {
     client.destroy();
   }
   assert.ok(destroys === 1);
-  return { f, handle, view };
+  return { f, handle, view, output };
+}
+
+function responseInput(c) {
+  return {
+    request: {
+      json: c.handle.json,
+      expected: {
+        original: c.f.original,
+        intent: c.f.intent,
+        pin: c.handle.pin,
+      },
+    },
+    observedAt: responseGolden.observedAt,
+    response: c.output,
+  };
+}
+function responseRefused(work) {
+  let caught;
+  try {
+    work();
+  } catch (e) {
+    caught = e;
+  }
+  assert.ok(caught instanceof Error, "Expected private response refusal");
+  assert.ok(
+    caught.message === "Original Cloud stack response observation unavailable",
+  );
+  assert.ok(
+    caught.cause === undefined &&
+      Object.keys(caught).length === 0 &&
+      Object.isFrozen(caught),
+  );
+}
+function responseScenario(all) {
+  const input = responseInput(all[3]),
+    make = createCloudStackCreateResponseObservation,
+    read = readCloudStackCreateResponseObservation,
+    hash = (s) => crypto.createHash("sha256").update(s).digest("hex");
+  if (scenario === "response-positive") {
+    for (const c of all) {
+      const i = responseInput(c),
+        r = make(i),
+        g = responseGolden.cases[c.handle.projection.stackKind];
+      assert.ok(
+        r.sha256 === g.sha256 && Buffer.byteLength(r.json) === g.utf8Bytes,
+      );
+      assert.ok(
+        read(r.json, { request: i.request, sha256: r.sha256 }).json === r.json,
+      );
+      frozen(r);
+      assert.ok(
+        !r.json.includes(key) &&
+          !/TemplateBody|ParameterValue|authorization|synthetic-not-a-real-secret/.test(
+            r.json,
+          ),
+      );
+      assert.ok(
+        r.observation.providerObservation === "unproven" &&
+          r.observation.ownership === "unproven",
+      );
+      assert.ok(
+        r.observation.operationSettlement === "unproven" &&
+          r.observation.runAuthority === "unproven",
+      );
+      assert.ok(
+        r.observation.resourceWrites === 0 && Buffer.byteLength(r.json) <= 2048,
+      );
+      refused(r, c.view);
+    }
+  } else if (scenario === "response-optional") {
+    for (const c of all) {
+      const i = responseInput(c),
+        r = make(i);
+      assert.ok(
+        c.output.OperationId === undefined &&
+          r.observation.operationId === null,
+      );
+      const copy = {
+        ...i,
+        response: { ...i.response, OperationId: undefined },
+      };
+      assert.ok(make(copy).json === r.json);
+      assert.ok(
+        read(r.json, { request: i.request, sha256: r.sha256 }).json === r.json,
+      );
+    }
+  } else if (scenario === "response-binding") {
+    for (const changed of [
+      input.response.StackId.replace(":111122223333:", ":999988887777:"),
+      input.response.StackId.replace(":us-east-1:", ":us-west-2:"),
+      input.response.StackId.replace(":stack/", ":stack/foreign-"),
+      input.response.StackId + "\n",
+      input.response.StackId.replace(/.$/, "X"),
+      input.response.StackId.replace("arn:aws:", "arn:aws-cn:"),
+    ])
+      responseRefused(() =>
+        make({ ...input, response: { ...input.response, StackId: changed } }),
+      );
+    responseRefused(() =>
+      make({ ...input, request: responseInput(all[0]).request }),
+    );
+    const copy = structuredClone(input);
+    copy.request.expected.pin.sha256 = "f".repeat(64);
+    responseRefused(() => make(copy));
+  } else if (scenario === "response-metadata") {
+    for (const id of ["0", "a._:-b", "x".repeat(128)]) {
+      const r = make({
+        ...input,
+        response: {
+          ...input.response,
+          OperationId: id,
+          $metadata: { ...input.response.$metadata, requestId: id },
+        },
+      });
+      assert.ok(
+        r.observation.operationId === id && r.observation.requestId === id,
+      );
+    }
+    const otherUuidVersion = make({
+      ...input,
+      response: {
+        ...input.response,
+        StackId:
+          input.response.StackId.slice(0, -36) +
+          responseGolden.stackUuid.replace("-4000-", "-1000-"),
+      },
+    });
+    assert.ok(otherUuidVersion.observation.ownership === "unproven");
+    for (const [field, values] of Object.entries({
+      httpStatusCode: [201, 400, "200", undefined],
+      attempts: [0, 2, "1", undefined],
+      totalRetryDelay: [1, "0", undefined],
+      requestId: ["", null, undefined, key, "x\n", "x".repeat(129)],
+      extendedRequestId: ["unexpected", null],
+      cfId: ["unexpected", null],
+    }))
+      for (const v of values)
+        responseRefused(() =>
+          make({
+            ...input,
+            response: {
+              ...input.response,
+              $metadata: { ...input.response.$metadata, [field]: v },
+            },
+          }),
+        );
+    for (const OperationId of [null, "", key, "x\n", "界", "x".repeat(129), 1])
+      responseRefused(() =>
+        make({ ...input, response: { ...input.response, OperationId } }),
+      );
+    for (const response of [
+      { ...input.response, name: "AlreadyExists" },
+      { ...input.response, Message: "private failure" },
+      {
+        ...input.response,
+        $metadata: { ...input.response.$metadata, raw: "private" },
+      },
+      { $metadata: input.response.$metadata },
+      null,
+    ])
+      responseRefused(() => make({ ...input, response }));
+  } else if (scenario === "response-time") {
+    for (const observedAt of [
+      "2026-10-27T11:59:59.999Z",
+      "2026-10-27T12:01:00Z",
+      "2026-10-27T12:01:00.000+00:00",
+      "2026-02-30T12:01:00.000Z",
+      1,
+      undefined,
+    ])
+      responseRefused(() => make({ ...input, observedAt }));
+    Date.now = () => {
+      throw Error("No current clock");
+    };
+    for (const observedAt of [
+      "2026-10-27T12:00:00.000Z",
+      "2026-10-30T12:00:00.000Z",
+    ]) {
+      const r = make({ ...input, observedAt });
+      assert.ok(
+        read(r.json, { request: input.request, sha256: r.sha256 }).observation
+          .runAuthority === "unproven",
+      );
+    }
+  } else if (scenario === "response-canonical") {
+    const r = make(input);
+    for (const field of [
+      "format",
+      "kind",
+      "runId",
+      "stackKind",
+      "requestSha256",
+      "unsignedSha256",
+      "httpStatusCode",
+      "attempts",
+      "totalRetryDelay",
+      "providerObservation",
+      "ownership",
+      "operationSettlement",
+      "runAuthority",
+      "resourceWrites",
+    ]) {
+      const o = JSON.parse(r.json);
+      o[field] = "changed";
+      const json = JSON.stringify(o);
+      responseRefused(() =>
+        read(json, { request: input.request, sha256: hash(json) }),
+      );
+    }
+    for (const json of [
+      r.json + " ",
+      JSON.stringify(JSON.parse(r.json), null, 2),
+      r.json.replace('"format":1', '"format":1.0'),
+      '{"format":1,' + r.json.slice(1),
+      JSON.stringify({ ...r.observation, raw: "private" }),
+    ])
+      responseRefused(() =>
+        read(json, { request: input.request, sha256: hash(json) }),
+      );
+    responseRefused(() =>
+      read(r.json, { request: input.request, sha256: "f".repeat(64) }),
+    );
+    responseRefused(() =>
+      read(r.json, {
+        request: responseInput(all[0]).request,
+        sha256: r.sha256,
+      }),
+    );
+    responseRefused(() =>
+      read("x".repeat(2049), {
+        request: input.request,
+        sha256: hash("x".repeat(2049)),
+      }),
+    );
+    responseRefused(() =>
+      read("\ud800", { request: input.request, sha256: hash("\ud800") }),
+    );
+  } else if (scenario === "response-shape") {
+    let getters = 0;
+    for (const response of [
+      Object.assign(Object.create({}), input.response),
+      [],
+      Object.defineProperty({ ...input.response }, "OperationId", {
+        get() {
+          getters++;
+          return "private";
+        },
+      }),
+      { ...input.response, [Symbol("private")]: "private" },
+    ])
+      responseRefused(() => make({ ...input, response }));
+    const metaGetter = Object.defineProperty(
+      { ...input.response.$metadata },
+      "requestId",
+      {
+        get() {
+          getters++;
+          return "private";
+        },
+      },
+    );
+    responseRefused(() =>
+      make({
+        ...input,
+        response: { ...input.response, $metadata: metaGetter },
+      }),
+    );
+    for (const i of [
+      null,
+      { ...input, approved: true },
+      Object.assign(Object.create({}), input),
+      { ...input, response: { ...input.response, Parameters: key } },
+      Object.defineProperty({ ...input }, "response", {
+        get() {
+          getters++;
+          return input.response;
+        },
+      }),
+    ])
+      responseRefused(() => make(i));
+    assert.ok(getters === 0);
+  } else if (scenario === "response-recovery") {
+    const copy = structuredClone(input),
+      r = make(copy);
+    copy.response.OperationId = "different-operation";
+    assert.ok(make(input).json === r.json);
+    discardCloudStackCreateRequest(all[3].handle);
+    const recovered = read(r.json, {
+      request: input.request,
+      sha256: r.sha256,
+    });
+    assert.ok(
+      recovered.json === r.json &&
+        recovered.observation.providerObservation === "unproven",
+    );
+    refused(recovered, all[3].view);
+    refused(JSON.parse(JSON.stringify(recovered)), all[3].view);
+    const coherent = JSON.parse(r.json);
+    coherent.operationId = "different-operation";
+    const json = JSON.stringify(coherent),
+      changed = read(json, { request: input.request, sha256: hash(json) });
+    assert.ok(changed.observation.providerObservation === "unproven");
+    frozen(recovered);
+    frozen(changed);
+  } else throw Error("Unknown response scenario");
 }
 
 try {
@@ -414,7 +729,8 @@ try {
     const material = cloudStackCreateRequestInput(handle);
     frozen(material);
     assert.ok(Object.isFrozen(handle));
-  } else throw Error("Unknown offline scenario");
+  } else if (scenario.startsWith("response-")) responseScenario(all);
+  else throw Error("Unknown offline scenario");
   assert.ok(
     effects.network === 0 && effects.privateRead === 0 && effects.random === 0,
   );
