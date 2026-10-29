@@ -1,0 +1,19 @@
+# Scoped Cloud cached-note editor
+
+[Issue156](https://github.com/devsandip/peel/issues/156) composes the proven [retention session](cloud-draft-retention.md) with the existing Markdown editor for [SPEC](../SPEC.md) FR-02/08/10/11/13/14 and AC-02/08/13/20 prerequisites. This plan precedes code. The [v0.8 contract](two-tier-cloud-first.md) remains unchanged; default Cloud stays unavailable.
+
+## Scope and decisions
+
+Add a React editor for an explicit already-open CloudDraftSession plus a nonnegative integer refresh token and owner-bound dismissal callback. Reuse MarkdownEditor and existing paper/titlebar/green-minus/footer styles. The normal titlebar has exactly one Put away control; status is noninteractive. Source view can be supplied by a future menu owner, without adding a toolbar here. No new-note capture, lifecycle menus, default Local repository/native bridge, transport/auth/entitlement grant, schema/store/protocol/dependency/provider change or production route.
+
+Typing immediately updates the session and view and joins its automatic retention. Render the latest snapshot after async work, never a captured old result. Matching confirmed state can display Saved in Cloud; local retention/dismissal cannot. Put away locks immediately, awaits session retention and then calls dismissal with the original session. Duplicate clicks/keyboard close share one attempt. Failure retains current text and shows generic Retry/Copy recovery. A failed owner dismissal may retry after successful retention; it must not leak the callback's raw exception or claim actual OS closure. Clipboard writes require an explicit Copy click, and failures preserve the text.
+
+A changed session must synchronously replace the editor instance and discard previous text/status/CodeMirror undo history. Pin all async updates/dismissals to the mounted session; no old-session callback may dismiss a new account's editor. Invalid refresh token hides the editor without reading/writing its store. The caller owns storage/authenticated account and actual window lifecycle; never close a shared store or treat a session/cache as independent authentication authority. Existing default Local/native UI remains untouched.
+
+## Verification
+
+Use a test-only React/CodeMirror/actual IndexedDB fixture with fresh explicit M0 namespaces and two synthetic scopes. Verify immediate edit/Put-away/reload, injected actual retention abort with Retry/Copy, held retention and frozen transactions, account switch/undo isolation/late old dismissal, confirmed-versus-newer-pending status, owner-dismissal failure/retry and unavailable token. Stub clipboard before page scripts; no OS clipboard/profile/default DB/native app. Browser-controlled acknowledgements are fixtures; actual server-receipt/session evidence remains PR155 and is not re-claimed as provider acceptance.
+
+Remove only the old-session dismissal guard, prove the held old-session callback refusal fails, restore/hash exact source and run positive focused/full browser/type/format/build checks with unchanged legacy defaults/assertions. Visually inspect an owned screenshot of the functional fixture. Review lifecycle/privacy/recovery and scope, no-reply author AND committer/staged-range scans, all3 exact-source hosted gates and normal integration/actual main/closure/Project proof. Append155 proof6492415014 with all3 source40844477578 and actual-main40845613221 success to WORKLOG/new immutable journal/INDEX; keep ignored immutable resumes current.
+
+This is a disabled cached-note editing component, not enabled Cloud, new-note/untouched-empty handling, a complete Cloud app, real authentication/reconnect/full web inventory/live, actual native/iPhone or M2.2 managed/independent teardown acceptance. Existing stopped31/51/72 probes and expired allowances remain. No milestone exit is claimed.
