@@ -2317,3 +2317,21 @@
 
 **Decisions:**
 - A reader keeps its captured issued token/origin/original signal for its whole lifetime; later cookie rotation cannot silently retarget it. The parent owns cache selection, drafts and replacement lifetime. Never reuse a successful scope after a failed request or label discovery as Saved/Live.
+
+
+## 2026-10-30 - Compose the discovered browser Cloud workspace
+
+**Did:**
+- Completed188/187 at632b088: source40959216608/main40960169113 all3 first attempts, review5705309044/Ready6509014508/proof6509167184; observed actual adapter30/Cloud639/shared847/browser75 and closure/bothProjectDone/labels/guarded primary/unknown paths/scanned Root-only cleanup. Frozen0305 and all peer refs/checkouts preserved.
+- Committed189 plan71cffc3 before code. Added one captured parent that discovers scope, resolves only its caller-owned cache and composes existing retained owners/download/bounded senders. Constructor/preparation start no note transfer; cancellation races an ignoring resolver and keeps original pending recovery reachable without closing/erasing storage.
+- Verified169 focused Node24/8 suites including12 new parent cases, full shared859/81 and79 browser cases, type/full format/whitespace/deterministic artifact smoke/build/all8 unchanged default bundle hashes. Four actual browser/HTTP/SQLite/IndexedDB cases prove truthful autosave/Put away/held ACK, explicit scoped catalog download and account-replacement isolation through a named synthetic session proxy.44-file Node24 list includes the new suite.
+- Kept initial unrun duplicate-Playwright config and two4-case setup failures distinct. The existing HTTPS-only session guard correctly refused HTTP setup; Chromium then refused Secure __Host cookie injection for HTTP loopback. No cookie/session defaults changed: fixture uses synthetic Node cookie injection and exact-origin mapping, not actual browser login/TLS acceptance. Eight owned failed-setup dirs were birth-bound/known-file/no-handle checked and removed without DB reads. Setup cleanup now runs even before page initialization.
+
+**State now:**
+- Parent composition is development-only; default Cloud, real auth/paid/full web/live/reconnect/platform/performance and M2.2 managed/independent teardown remain open. Peer181's six files/props remain unchanged. Local adapter acquisition stays unrun after the prior timeout, without retry/old runtime.
+
+**Next:**
+- Finish189 exact-source focused review/all3 hosted gates and observed evidence, normal integration/separate actual-main/closure/Project/guarded primary/scanned Root-only cleanup. Check169/181 and frozen peer Ready first; preserve all peer refs and unknown user changes.
+
+**Decisions:**
+- A successful workspace remains in its original discovered scope for its original signal lifetime. Caller owns late cache resources and recovery; cancellation withholds current UI without erasing original drafts. Keep synthetic cookie/proxy evidence separate from managed-browser authentication.

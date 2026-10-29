@@ -1,0 +1,13 @@
+# Discovered scope reaches the browser workspace
+
+2026-10-30 03:42 IST. Frozen pre-source-gate checkpoint.
+
+PR188/187 fully completed at632b088, proof6509167184. Source40959216608 and actual-main40960169113 all3 first run/job attempts; review5705309044/Ready6509014508. Observed actual adapter30/5, Node24Cloud639/43, shared847/80/browser75 and actual closure/Project/guarded primary/scanned Root-only cleanup verified. Frozen0305 and all peer refs/checkouts remain preserved.
+
+Issue189 plan71cffc3 preceded code. Its captured parent explicitly discovers a server scope before asking a caller-owned cache resolver, then composes existing retained upload owners/download and bounded senders. Preparation transfers no notes. Original-signal cancellation settles even when a resolver ignores it, withholds late/current UI and leaves cache resources caller-owned. Successfully prepared original owners remain reachable for recovery; no default-store lookup, context retargeting, automatic reconnect or tier activation.
+
+All169 focused Node24 cases/8 suites (12 new), full shared859/81 and79 browser cases pass sequentially, plus type/full format/whitespace/artifact/build/all8 default bundle hashes unchanged. Four new real browser/HTTP/session-handler/SQLite/IndexedDB cases use an explicitly synthetic cookie/origin proxy to verify autosave Pending until matching confirmation, immediate Put away, explicit downloaded catalog refresh and original-account pending recovery across canceled discovery/late ACK. This does not establish actual browser-managed cookie, login, TLS/proxy or provider acceptance.
+
+Initial external-config Playwright loading was unrun; two later4-case setup failures are retained. Existing HTTPS-only session configuration correctly rejected HTTP, then Chromium rejected Secure __Host cookie injection for loopback HTTP. Defaults were preserved; fixture-only Node cookie injection/exact-origin mapping supplies the development seam. Eight exact owned failed-setup directories were removed with birth/filename/no-open-handle checks and no DB reads; setup cleanup now includes boundary construction and page-initialization failure. No old assertion/control/shared runtime/peer prop changes.
+
+Fresh exact-source/main all3 hosted gates, observed adapter/Cloud/browser evidence, focused review, normal integration/tracking/owned cleanup remain next. Local adapter acquisition remains unrun after its prior timeout and was not retried. Default Cloud is off; real auth/paid/full web/live/reconnect/platform/performance and M2.2 managed teardown remain unmet. No actual/default notes/operator DB/profile/provider/native/clipboard/stopped/expired/private-archive/unrelated-process access.
