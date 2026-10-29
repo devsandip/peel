@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-29 14:13 IST.
+Last refreshed: 2026-10-29 14:51 IST.
 
-Latest entry: [Put away waits for retention](entries/2026-10-29-1413-put-away-waits-for-retention.md).
+Latest entry: [The Cloud editor waits for retention](entries/2026-10-29-1451-cloud-editor-waits-for-retention.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free independent Local storage and optional paid cloud-authoritative storage. It was called Peel until 28 October 2026.
 
@@ -10,11 +10,13 @@ Synkies is a fast sticky-note app with independent Mac notes, a searchable libra
 
 I have local Mac and browser development clients and tested backend foundations. I do not yet have a complete desktop/Cloud beta, enabled Cloud login/live delivery, real billing or an iPhone app. The [PRD](../docs/PRD.md) and [SPEC](../docs/SPEC.md) define the active scope; mockups and infrastructure PRs are not app acceptance.
 
-I adopted Sandip's 29 October v0.8 simplification under issue148: Local libraries are independent, with no pairing, discovery, relay or sync. Cloud is authoritative, pushes server-committed updates to online clients and provides the complete confirmed web library. Offline Cloud edits remain durable pending drafts and are Saved only after matching server confirmation. The v0.7 gallery and peer experiments remain historical. PR149 integrated that contract with passing source gates and honest docs-only main proof. PR151 integrated the visible Local/Cloud tier copy with passing source and actual-main gates, proof6490662321. PR153 integrated the disabled scoped cached-note panel with passing source and actual-main gates, proof6491628289. Issue154 adds a disabled pending-draft session that freezes/awaits retention before Put away without a false Cloud Saved claim. Actual SQLite/service and IndexedDB/browser validation passes; its own hosted gates still precede integration. Actual full Cloud editor/transport composition remains.
+I adopted Sandip's 29 October v0.8 simplification under issue148: Local libraries are independent, with no pairing, discovery, relay or sync. Cloud is authoritative, pushes server-committed updates to online clients and provides the complete confirmed web library. Offline Cloud edits remain durable pending drafts and are Saved only after matching server confirmation. The v0.7 gallery and peer experiments remain historical. PR149 integrated that contract with passing source gates and honest docs-only main proof. PR151 integrated the visible Local/Cloud tier copy with passing source and actual-main gates, proof6490662321. PR153 integrated the disabled scoped cached-note panel with passing source and actual-main gates, proof6491628289. PR155 integrated the disabled pending-draft session with passing source and actual-main gates, proof6492415014. Issue156 composes it with the Markdown editor and sole Put away, with session/undo/late-dismissal isolation and actual IndexedDB/browser validation. Its own hosted gates still precede integration. Actual default Cloud activation/authentication/new-note/transport/full-web/live composition remains.
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). PR146's fixed initial-state store passed source/main checks, but actual managed smoke/independent teardown remains unproven. Issue147 was canceled after planning, removed from the milestone and is not shipped progress. Audit51, managed31 and native72 remain stopped or blocked. The continuing automation now follows v0.8; no expired allowance or stopped probe is revived.
 
 ## Recent entries
+
+- [2026-10-29 14:51 IST: The Cloud editor waits for retention](entries/2026-10-29-1451-cloud-editor-waits-for-retention.md)
 
 - [2026-10-29 14:13 IST: Put away waits for retention](entries/2026-10-29-1413-put-away-waits-for-retention.md)
 
