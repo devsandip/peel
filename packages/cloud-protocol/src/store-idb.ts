@@ -16,10 +16,15 @@ import {
   type CloudPullProgress,
   type CloudPageStateWrite,
 } from "./pull-local";
+import {
+  CloudLibraryPageBuilder,
+  type CloudLibraryStateStore,
+  type CloudLibraryRequest,
+} from "./library-local";
 
 /** Isolated M0 database. Never opens peel-local-v1 or changes application storage. */
 export class IndexedDBCloudStateStore
-  implements CloudStateStore, CloudPullStateStore
+  implements CloudStateStore, CloudPullStateStore, CloudLibraryStateStore
 {
   private db: Promise<IDBPDatabase>;
   constructor(
@@ -189,6 +194,40 @@ export class IndexedDBCloudStateStore
   }
   async close() {
     (await this.db).close();
+  }
+  async listLibrary(scope: CloudScope, request: CloudLibraryRequest) {
+    const page = new CloudLibraryPageBuilder(scope, request),
+      tx = (await this.db).transaction(["meta", "states"], "readonly"),
+      done = tx.done;
+    void done.catch(() => {});
+    try {
+      const rawScope = await tx.objectStore("meta").get("scope"),
+        storedScope =
+          rawScope === undefined ? null : validateCloudScope(rawScope);
+      assertCloudScope(storedScope, page.scope);
+      const rawPull = await tx.objectStore("meta").get("pull");
+      if (
+        !storedScope &&
+        ((await tx.objectStore("states").count()) || rawPull !== undefined)
+      )
+        throw Error("Cloud library has no owning scope");
+      let cursor = await tx.objectStore("states").openCursor();
+      while (cursor) {
+        page.add(String(cursor.primaryKey), cursor.value);
+        cursor = await cursor.continue();
+      }
+      const result = page.finish(rawPull === undefined ? null : rawPull);
+      await done;
+      return result;
+    } catch (error) {
+      try {
+        tx.abort();
+      } catch {
+        /* Already complete. */
+      }
+      await done.catch(() => {});
+      throw error;
+    }
   }
   async readPull(input: CloudScope, noteIds: string[]) {
     const scope = validateCloudScope(input),

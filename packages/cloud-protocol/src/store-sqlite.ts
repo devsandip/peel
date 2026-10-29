@@ -16,10 +16,15 @@ import {
   type CloudPullProgress,
   type CloudPageStateWrite,
 } from "./pull-local";
+import {
+  CloudLibraryPageBuilder,
+  type CloudLibraryStateStore,
+  type CloudLibraryRequest,
+} from "./library-local";
 
 /** Node M0 SQLite adapter. It never opens the native application's schema. */
 export class SQLiteCloudStateStore
-  implements CloudStateStore, CloudPullStateStore
+  implements CloudStateStore, CloudPullStateStore, CloudLibraryStateStore
 {
   private db: DatabaseSync;
   constructor(
@@ -175,6 +180,27 @@ export class SQLiteCloudStateStore
   }
   async close() {
     this.db.close();
+  }
+  async listLibrary(scope: CloudScope, request: CloudLibraryRequest) {
+    const page = new CloudLibraryPageBuilder(scope, request);
+    this.db.exec("BEGIN");
+    try {
+      this.checkScope(page.scope);
+      for (const row of this.db
+        .prepare("SELECT note_id,generation,state FROM m0_cloud_states")
+        .iterate()) {
+        const state = JSON.parse(String(row.state));
+        if (state.generation !== row.generation)
+          throw Error("Cloud local row generation mismatch");
+        page.add(String(row.note_id), state);
+      }
+      const result = page.finish(this.progress());
+      this.db.exec("COMMIT");
+      return result;
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
   }
   private progress(): CloudPullProgress | null {
     const raw = this.db

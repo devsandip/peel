@@ -1,0 +1,25 @@
+.cloud-cached-library .library-header {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.cloud-cached-library .library-header .primary {
+  font-size: 14px;
+}
+.cloud-cached-library nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cloud-cached-library .result-label {
+  margin: 16px 0;
+}
+.cloud-cached-library .note-grid {
+  list-style: none;
+  padding: 0;
+}
+.cloud-cached-library .card-open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
