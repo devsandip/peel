@@ -2137,3 +2137,18 @@
 
 **Next:**
 - Scan/no-reply/new-source push and refreshed review, ready163 when reviewable, all3 exact-newhead hosted gates, normal merge/main/tracking proof and owned-only cleanup. Do not reuse old source gates or renew expired allowances/stopped probes.
+
+
+## 2026-10-29 - Browse scoped cached Cloud notes
+
+**Did:**
+- Verified163 final-source40870572977/main40871261039 all3PASS/APIattempt1 at998460ad/merge1a1f838, review6496194650/ready6496303696/proof6496455511. Actual162closure/ProjectDone/label/guarded primary/unknown path preservation/only owned163 cleanup complete. Old15a evidence was not used.
+- Created164/current Project and committed plan8d9e6d3 before code. Added metadata-only recent-first bounded catalog pages, independent scope/collection-bound cursors, read-only same-transaction state/pull observation in existing M0 adapters and a guarded cached-library panel with original-context open/new callbacks. No schema/write-path/default app/Local/native/auth grant or normal Save control change.
+- Passed22 catalog cases in final Node24Cloud466/36 then shared681/74 sequentially,47 browser/type/full checked-source format/whitespace/build. Six new actual IndexedDB/HTTP/SQLite library flows cover metadata pages/lifecycle/literal titles, original-ID edit/new/retention/real confirmation, two same-ID account contexts and independent server reads, late old errors, foreign page/progress, invalid refresh/cancellation, malformed actual IDB and390px layout. Bundle hashes/580kB warning and legacy assertions/defaults unchanged.
+- Preserved initial11pass/2fail from a new remote-head fixture shape and genuine nullscope acceptance, then the expanded corruption fixture's frozen-object mutation failure. Corrected fixtures/strict scope checks without weakening production/legacy assertions. Visual audit found status/nav overlap and mobile New font0; strengthened mobile test failed then scoped CSS fixed it, reviewed desktop/mobile PNGs retained. Final hold-before-type fixture ordering makes pending-state proof deterministic. Owned browser/HTTP/DB/temp resources cleaned, no actual user/operator DB/profile/provider/native/OS clipboard/stopped probe.
+
+**State now:**
+- Cached notes are discoverable and open/create through the existing automatic editor in an explicit scoped composition. No title/body leakage across selection changes, no body in metadata and no cursor-based false Saved. M0 scan work is linear and performance/index remains an activation gate. Default Cloud/full auth/remote download/live/platform/M2.2 teardown remain unmet.
+
+**Next:**
+- Finish164 focused review/scans/no-reply/all3 exact-source gates, normal merge and actual main/closure/Project proof/owned cleanup. Preserve all recorded failures, cached-versus-server limits and expired/stopped safety boundaries.

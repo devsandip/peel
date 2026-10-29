@@ -10,9 +10,20 @@ import {
 } from "../../packages/cloud-protocol/src/server";
 import { createCloudMutationHandler } from "../../packages/cloud-protocol/src/server-http";
 import { cloudScope } from "./cloud-durable-contract";
+import {
+  validateCloudScope,
+  type CloudScope,
+} from "../../packages/cloud-protocol/src/durable";
 
 /** Test-only loopback service. No default DB, actual credentials or provider. */
-export async function startCloudUploadServer(browserOrigin: string) {
+export async function startCloudUploadServer(
+  browserOrigin: string,
+  secondScope?: CloudScope,
+) {
+  const otherScope =
+    secondScope === undefined ? null : validateCloudScope(secondScope);
+  if (otherScope?.ownerSubject === cloudScope.ownerSubject)
+    throw Error("Distinct fixture owner required");
   const parent = mkdtempSync(join(tmpdir(), "synkies-browser-upload-")),
     store = new SQLiteCloudServerStore(join(parent, "server.sqlite3")),
     token = randomBytes(32).toString("hex"),
@@ -26,15 +37,29 @@ export async function startCloudUploadServer(browserOrigin: string) {
     sequence: 0,
     wall: 0,
   });
+  const contexts = [{ scope: cloudScope, token }];
+  if (otherScope) {
+    const scope = otherScope;
+    await store.seedAccount({
+      ...scope,
+      status: "active",
+      entitlement: "active",
+      revision: 1,
+      sequence: 0,
+      wall: 0,
+    });
+    contexts.push({ scope, token: randomBytes(32).toString("hex") });
+  }
   const handler = createCloudMutationHandler(
     new CloudMutationService(store),
     async (request) => {
-      if (
-        control.unauthorized ||
-        request.headers.get("x-synthetic-fixture") !== token
-      )
+      const context = contexts.find(
+        (candidate) =>
+          candidate.token === request.headers.get("x-synthetic-fixture"),
+      );
+      if (control.unauthorized || !context)
         throw new CloudServerError("unauthorized", 401);
-      return cloudScope.ownerSubject;
+      return context.scope.ownerSubject;
     },
   );
   let api = "";
@@ -105,6 +130,7 @@ export async function startCloudUploadServer(browserOrigin: string) {
     api,
     token,
     scope: cloudScope,
+    contexts,
     control,
     release,
     async close() {
