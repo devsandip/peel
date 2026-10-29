@@ -1942,3 +1942,17 @@
 
 **Next:**
 - Finish issue137 focused review/scans/hosted gates and normal integration, actual closure/Project/main proof. Keep current provenance/private assessments/preparation/fence/real transport/ownership/settlement/teardown separate and M2.2 open. Update ignored immutable resume with exact state.
+
+
+## 2026-10-29 - Define fixed journal storage evolution before writes
+
+**Did:**
+- Finished PR138/source973191d after all three40814991420 gates/reviews6487520768+6487604870, normalmerge5430f71, actual137closure/ProjectDone/label/ownedbranch cleanup and safe primary advancement. All three actual main40815771203 gates pass. The failed expanded response fixture remains separately recorded; no provider authority follows from observation integrity.
+- Created issue139/current Project and committed planb2e7afa before canonical protocol edits. Defined preserved genesis-only v1 and a separate fixed future-v2 initializer/catalog, with no migration/reset/upcast/alternate path or public schema override. Original genesis/revision0 remains separate from later coherent state revision.
+- Checked current storage/header/catalog and file-layer code. Clarified that the held-header classifier is separate from recognized reader behavior; existing DatabaseSync lacks readOnly:true, so metadata inspection is not advertised as physically write-free. Kept actual SQLite capacity/cleanup reserve and mutation/ACK/crash evidence as unproven runtime prerequisites.
+
+**State now:**
+- Markdown only; runtime/tests/workflow/dependencies match passing base5430f71. Changed format/links/protocol consistency and focused review precede required exact-head hosted gates. No local runtime rerun for prose. No DDL, v2 store/initializer/dispatcher, actual/default DB, credential/account/provider/budget/billing/app action or stopped retry.
+
+**Next:**
+- Finish issue139 review/scans/all exact-head hosted gates and normal integration; report docs-only main path-filter evidence honestly. Then scope one independently reviewable actual prerequisite with a plan before code. M2.2 and actual managed/independent teardown remain unmet; keep immutable resumes current.
