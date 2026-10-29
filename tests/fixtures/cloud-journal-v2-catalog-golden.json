@@ -1,0 +1,182 @@
+{
+  "format": 1,
+  "applicationId": 1398360625,
+  "userVersion": 2,
+  "pageSize": 4096,
+  "maxPages": 512,
+  "databaseLimit": 2097152,
+  "rollbackLimit": 4194304,
+  "observationJsonLimit": 1984,
+  "ddlSha256": "e4a61107fff68b35bd9efcd81fb58b20b22aa39757a80aaaeff90a442ee7d520",
+  "catalogSha256": "64ee8e6428b1f3d3aecd2a2bca6f2f8170e4a9940eeb205d32d41b3853dbca3f",
+  "objects": [
+    {
+      "type": "index",
+      "name": "journal_intent_token",
+      "table": "journal_intents",
+      "sqlSha256": "61360e5dd0dc375a026461f3b715aeb7a6a7775fb4aaecdca1cacd80c3421897"
+    },
+    {
+      "type": "index",
+      "name": "journal_observation_category",
+      "table": "journal_observations",
+      "sqlSha256": "2fdd99f409857e0f57c7db8e8bf5f1cc7c9115d4dd86f03aa826466754552a98"
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_journal_fences_1",
+      "table": "journal_fences",
+      "sqlSha256": null
+    },
+    {
+      "type": "index",
+      "name": "sqlite_autoindex_journal_intents_1",
+      "table": "journal_intents",
+      "sqlSha256": null
+    },
+    {
+      "type": "table",
+      "name": "journal_fences",
+      "table": "journal_fences",
+      "sqlSha256": "b8511573347a2b946de6d78899a457c41977c30b9f1384c3dd03e1f67bb153d6"
+    },
+    {
+      "type": "table",
+      "name": "journal_genesis",
+      "table": "journal_genesis",
+      "sqlSha256": "df1fbcf5474252bfc1a84a880e79527011a0c4eccf614cad377f4ece749beee1"
+    },
+    {
+      "type": "table",
+      "name": "journal_intents",
+      "table": "journal_intents",
+      "sqlSha256": "ac4ef2dfea09cae585e15d501d6fb46b308f84b2a0f70e76f268cc2a81974b99"
+    },
+    {
+      "type": "table",
+      "name": "journal_observations",
+      "table": "journal_observations",
+      "sqlSha256": "363219bd694ccb156c910aaa473e5b6dcc83be1c1db471fb2cad4dc1cc7a3b29"
+    },
+    {
+      "type": "table",
+      "name": "journal_state",
+      "table": "journal_state",
+      "sqlSha256": "f39e44d7d47c47543d9bca645857a9df99bdc3a8941f2f87b873942b1ff404ee"
+    },
+    {
+      "type": "table",
+      "name": "journal_teardown",
+      "table": "journal_teardown",
+      "sqlSha256": "57bbd96f91ce8b58c9d560903a10f2152fe2c56215f2b6be177235e59d0e6c33"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_fences_insert_bound",
+      "table": "journal_fences",
+      "sqlSha256": "d82eb3118b529fbcb0ca42f68f97a09e815291fa17093cfea9feeb9faad8b252"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_fences_no_delete",
+      "table": "journal_fences",
+      "sqlSha256": "8c83947a6c9321d377e1e799df2ac5d91e096bf850e9512efb9cc91433787841"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_fences_no_update",
+      "table": "journal_fences",
+      "sqlSha256": "c1ef4f34bababfa0a115e8a90b98a0f17736e5a83829392c87562978359a630c"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_genesis_insert_once",
+      "table": "journal_genesis",
+      "sqlSha256": "2f4f3ee88b6cdaf7c6907717cc3fada7a632364e69e24177945e6d00e10e7906"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_genesis_no_delete",
+      "table": "journal_genesis",
+      "sqlSha256": "a6a54e58684b806cc154578d98c8a76a70e7a45ac52230b06e53e16d6f238ff1"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_genesis_no_update",
+      "table": "journal_genesis",
+      "sqlSha256": "e5693aad868dbc23ccb385a84a752c09d7794dfae2ec1ec8aa999e9d30d96c2a"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_intents_insert_once",
+      "table": "journal_intents",
+      "sqlSha256": "cdb321dea43fa72aba036584b6c4687107b1a48c0a7e3c87652cdde91b3c1ef0"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_intents_no_delete",
+      "table": "journal_intents",
+      "sqlSha256": "39d093b443f4dd787ee796b421d4250169dfaf908c975837882b9b97d52ff9c0"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_intents_no_update",
+      "table": "journal_intents",
+      "sqlSha256": "92d7678da8c05ccd5a2dbbd228d19655402f6799d2715c82829e230db1d8b82b"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_observations_insert_capacity",
+      "table": "journal_observations",
+      "sqlSha256": "4b75c8d61abbc4dac4d2e28b9937d500984bb429b5cfb7960c2de63d26ba309d"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_observations_no_delete",
+      "table": "journal_observations",
+      "sqlSha256": "3d37192abe381434441c2c5bccc8300c048fb75a6b7e3d5862f4af020bc0f8a1"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_observations_no_update",
+      "table": "journal_observations",
+      "sqlSha256": "b083b8f143cd07cfe70ea707bd64f01cc6f07cdf0af26aa4ce5629462db6bca4"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_state_insert_once",
+      "table": "journal_state",
+      "sqlSha256": "c65be6a35afb1786b1e0fb0981a2ae9ab1b6d39f153c190366d38ae6797460ec"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_state_no_delete",
+      "table": "journal_state",
+      "sqlSha256": "25918c4d55bfeb219daab9053f26c9dd8e7adadb0b740daceae7e2cf4b8a2baf"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_state_step",
+      "table": "journal_state",
+      "sqlSha256": "630f65f61ddcdd36cafc8dee28419e48ee82dc7f40cb3c4735d05ced3acb5e7d"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_teardown_insert_once",
+      "table": "journal_teardown",
+      "sqlSha256": "942c1d0e54f31289357f66cf10892d4e37823f8f1eebfd497b051dc0652f6faf"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_teardown_no_delete",
+      "table": "journal_teardown",
+      "sqlSha256": "f5ee0948df325cc624513655d30ac46349373d65f7f1baf2ef03a3b2c1494b6d"
+    },
+    {
+      "type": "trigger",
+      "name": "journal_teardown_no_update",
+      "table": "journal_teardown",
+      "sqlSha256": "dd1dd14a9e0009479324496bae88f6c7dbc0beb80d5c171b09f43e0a7905fb83"
+    }
+  ]
+}
