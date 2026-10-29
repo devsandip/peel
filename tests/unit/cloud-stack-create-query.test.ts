@@ -64,7 +64,7 @@ for (const scenario of [
           clearTimeout(timer);
           reject(e);
         });
-        child.on("exit", (code) => {
+        child.on("close", (code) => {
           clearTimeout(timer);
           resolve({ code, out, err });
         });
