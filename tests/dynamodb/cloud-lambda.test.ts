@@ -453,3 +453,108 @@ it("discovers caller-selected-by-auth scope through Lambda bearer and durable we
   now += 3600001;
   expect((await web(event("GET", path, { cookie }))).statusCode).toBe(401);
 });
+
+it("binds safe web reads to the supplied token across durable session rotation before data access", async () => {
+  let signingOwner = owner("a");
+  const boundary = createCloudWebSessionBoundary(
+    { origin, lifetimeMs: 3600000 },
+    new DynamoDBCloudWebSessionStore(client, table),
+    async () => signingOwner,
+    () => now,
+  );
+  const issue = async (previous?: string) => {
+    const response = await boundary.issue(
+      new Request(origin + "/auth/session", {
+        method: "POST",
+        headers: { origin, ...(previous ? { cookie: previous } : {}) },
+      }),
+    );
+    return {
+      cookie: response.headers.get("set-cookie")!.split(";")[0],
+      csrf: (await response.json()).csrfToken as string,
+    };
+  };
+  const a = await issue();
+  signingOwner = owner("b");
+  const b = await issue(a.cookie);
+  let dataReads = 0;
+  client.middlewareStack.add(
+    (next) => async (args) => {
+      if ("TransactItems" in (args.input as object)) dataReads++;
+      return next(args);
+    },
+    { step: "initialize", name: "observeSafeReadDataAccess" },
+  );
+  const web = handler({ kind: "web-session", lifetimeMs: 3600000 }),
+    path = "/v1/library-context";
+  expect(
+    data(
+      await web(
+        event("GET", path, { cookie: b.cookie, "x-peel-csrf": a.csrf }),
+      ),
+      403,
+    ),
+  ).toEqual({ error: "csrf-rejected" });
+  expect(
+    data(
+      await web(
+        event("GET", "/v1/notes/synthetic-note", {
+          cookie: b.cookie,
+          "x-peel-csrf": a.csrf,
+          "x-peel-collection": scope.collectionId,
+          "x-peel-mode-generation": "1",
+        }),
+      ),
+      403,
+    ),
+  ).toEqual({ error: "csrf-rejected" });
+  expect(dataReads).toBe(0);
+  expect(
+    data(
+      await web(
+        event("GET", path, { cookie: b.cookie, "x-peel-csrf": b.csrf }),
+      ),
+    ),
+  ).toEqual({ ...scope, ownerSubject: owner("b") });
+  expect(dataReads).toBe(1);
+  expect(data(await web(event("GET", path, { cookie: b.cookie })))).toEqual({
+    ...scope,
+    ownerSubject: owner("b"),
+  });
+  expect(dataReads).toBe(2);
+  expect(
+    (await web(event("GET", path, { cookie: a.cookie, "x-peel-csrf": a.csrf })))
+      .statusCode,
+  ).toBe(401);
+  expect(dataReads).toBe(2);
+  const bearer = handler();
+  expect(
+    data(
+      await bearer(
+        event("GET", path, { ...native("a"), "x-peel-csrf": b.csrf }),
+      ),
+    ),
+  ).toEqual({ ...scope, ownerSubject: owner("a") });
+  expect(dataReads).toBe(3);
+  expect(
+    (
+      await bearer(
+        event("GET", path, {
+          ...native("a"),
+          cookie: b.cookie,
+          "x-peel-csrf": b.csrf,
+        }),
+      )
+    ).statusCode,
+  ).toBe(401);
+  expect(dataReads).toBe(3);
+  await seed({ ...account(owner("b")), entitlement: "inactive", revision: 2 });
+  expect(
+    data(
+      await web(
+        event("GET", path, { cookie: b.cookie, "x-peel-csrf": b.csrf }),
+      ),
+      403,
+    ),
+  ).toEqual({ error: "cloud-entitlement-inactive" });
+});

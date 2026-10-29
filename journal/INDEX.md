@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-30 01:44 IST.
+Last refreshed: 2026-10-30 02:24 IST.
 
-Latest entry: [Authenticated library context stays metadata](entries/2026-10-30-0144-authenticated-library-context.md).
+Latest entry: [Safe reads keep their captured session](entries/2026-10-30-0224-safe-reads-keep-their-session.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free independent Local storage and optional paid cloud-authoritative storage. It was called Peel until 28 October 2026.
 
@@ -12,11 +12,13 @@ I have Local Mac/browser development clients and tested Cloud foundations. I do 
 
 Sandip's 29 October v0.8 contract makes free Local libraries independent, with no pairing/discovery/relay/sync or cross-device awareness. Paid Cloud is authoritative, pushes server-committed changes and provides complete authenticated web access. Offline drafts stay durable Pending until matching current confirmation. The older peer gallery/experiments remain historical without completion credit.
 
-The scoped cached editor/library, resumable downloads and bounded web upload/download transports are merged foundations. PR175 fixed verified retention races (proof6503676649), and peer PR172 adds the responsive development workspace after resolved lifecycle/focus review (proof6504154806); both have separate source/main all3 first-attempt gates, actual closure/Project/primary proof. PR177 completes same-owner reopening with separate source/main proof6505545151. Peer180 adds optional truthful connection/recovery presentation, proof6506524242, separate source/main all3 first attempts. PR182 binds the workspace to scoped retained upload owners, proof6506883860 with separate all3 first-attempt source/main gates and hosted Cloud576/40; the two local Cloud failures remain explicit. Issue183 adds authenticated metadata-only library-context discovery with51 focused/shared811/79/static/artifact positives before exact-source gates. Its local DynamoDB tests are unrun after the pinned runtime download timed out, requiring hosted adapter evidence. Default Cloud remains unavailable; authenticated parent/activation and full inventory/live/reconnect composition remain.
+The scoped cached editor/library, resumable downloads and bounded web upload/download transports are merged foundations. PR175 fixed verified retention races (proof6503676649), and peer PR172 adds the responsive development workspace after resolved lifecycle/focus review (proof6504154806); both have separate source/main all3 first-attempt gates, actual closure/Project/primary proof. PR177 completes same-owner reopening with separate source/main proof6505545151. Peer180 adds optional truthful connection/recovery presentation, proof6506524242, separate source/main all3 first attempts. PR182 binds the workspace to scoped retained upload owners, proof6506883860 with separate all3 first-attempt source/main gates and hosted Cloud576/40; the two local Cloud failures remain explicit. PR184 completes authenticated metadata-only context discovery at9797683, proof6507731774 with separate all3 first-attempt source/main gates and actual hosted29 adapter/596 Cloud/811 shared/75 browser cases. Local runtime acquisition remains explicitly unrun. Issue185 now binds explicitly supplied safe-read tokens to their original sessions, with39 focused/shared817/79/static/artifact positives before source gates; fresh hosted adapter/Cloud evidence remains required. Default Cloud remains unavailable; authenticated parent/activation and full inventory/live/reconnect composition remain.
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Actual managed smoke/independent teardown remains unproven; audit51, managed31 and native72 stay stopped or blocked. Retired/canceled work is not shipped scope. No expired AWS allowance or stopped probe is revived, and no production/billing/public-beta acceptance is inferred from these foundations.
 
 ## Recent entries
+
+- [2026-10-30 02:24 IST: Safe reads keep their captured session](entries/2026-10-30-0224-safe-reads-keep-their-session.md)
 
 - [2026-10-30 01:44 IST: Authenticated library context stays metadata](entries/2026-10-30-0144-authenticated-library-context.md)
 

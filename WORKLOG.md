@@ -2282,3 +2282,20 @@
 
 **Decisions:**
 - Read exactly account metadata without arbitrary note probes or note-head scans. Discovery never becomes an auth/paid grant; later requests revalidate server policy and generation. Record unavailable local adapter evidence instead of retrying an unverified runtime or weakening controls.
+
+## 2026-10-30 - Keep safe reads in their captured session
+
+**Did:**
+- Completed184/183 at9797683: source40947657173/main40949158188 all3 first attempts, review5704383622/Ready6507552105/proof6507731774, observed actual adapter29/Cloud596/shared811/browser75; actual closure/Project/guarded primary/unknown paths/scanned Root-only cleanup verified. Local acquisition remains unrun; frozen0144 and all peer refs/checkouts preserved.
+- Committed185 plane2f756a before tests/runtime. Actual SQLite/session HTTP red passed7 original cases and failed the new one with200/current-B context despite older-A binding. Added the narrow supplied-header check on safe requests, preserving no-header safe behavior and all unsafe/auth/policy gates; canonical SPEC session contract clarified.
+- Verified39 focused Node24 cases including13 session cases, shared817/79, type/full format/whitespace/deterministic packaged artifact smoke/build/default-bundle equality. Added real durable-session Lambda coverage for zero data access on stale binding, rotation/revocation, matching/omitted binding, independent signed bearer/mixed credentials and paid policy.
+- Local adapter tests remain unrun after the prior pinned runtime acquisition timeout; no blind retry/old runtime or changed assertion/default/worker/timeout/retry/isolation. Fresh hosted30-case adapter and42-suite Cloud evidence are required. Peer181 files/interface untouched.
+
+**State now:**
+- An explicitly supplied token now binds a safe read to the same stored session; it never authorizes a different current cookie or bypasses paid policy. Default Cloud remains unavailable; real auth/paid/full web/live/reconnect/platform/performance and M2.2 managed teardown remain open.
+
+**Next:**
+- Finish185 exact-source review/all3 hosted gates, normal integration/separate main/closure/Project/guarded primary/scanned Root-only cleanup. Check169/181/open peer PRs first; then plan a bounded browser context reader separately. No actual/default data/provider/native/stopped/expired probe is authorized.
+
+**Decisions:**
+- Honor an explicitly supplied binding even for safe methods, while keeping original plain safe requests compatible. No new auth endpoint, stored credential/schema, entitlement or UI grant is introduced.
