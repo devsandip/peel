@@ -10,6 +10,12 @@ Cancellation prevents queued sends and late responses from starting acknowledgem
 
 Wire this owner to the existing Markdown editor. Retention triggers upload; mount resumes a retained pending/in-flight operation. Put away still waits only for local retention and initiates upload without awaiting the network. Generic upload recovery may offer Retry; keep one normal titlebar control, original session/undo/dismissal guards and truthful Pending/Saved status. No default app activation, login shortcut or Local/native change.
 
+## Confirmed autosave clarification
+
+Sandip explicitly reaffirmed that every edit autosaves and there is no dedicated Save button. Keep immediate durable local draft retention. Batch automatic Cloud requests in fixed200ms windows starting with the first retained edit, without resetting that window on each keystroke, so continuous typing cannot postpone upload indefinitely. Successful queued work gets another bounded window; authentication/network/conflict failure pauses automatic scheduling until explicit retry or an authenticated reconnect trigger. Put away flushes the scheduled upload attempt immediately but never waits for its response. Account abort removes any scheduled timer. Retry remains an error-recovery control, not a normal Save action.
+
+Keep generic upload recovery inside the existing note body, preserving the independent paper note and its sole titlebar control. Verify the window/debounce behavior with controlled timers and the actual HTTP/browser flows. This amendment precedes the batching implementation; the existing first source review/gates do not cover the changed head.
+
 ## Evidence and limits
 
 Use focused actual Node24 SQLite/service tests for commit-before-Saved, newer typing, immutable retry after a lost successful response/reopen, real 401/conflict responses, scope/cancellation and abort during a held acknowledgement read. Extend the actual browser editor path with an owned loopback HTTP server backed by fresh SQLite and the real mutation handler. Synthetic authentication is confined to test fixtures. Verify typed text becomes confirmed only after server acknowledgement; a separate client reads that committed copy while newer unconfirmed text stays local. Verify failure/retry and close without waiting for a held network response. New Cloud IndexedDB names are explicit M0; no real/default user/operator DB, native app, provider/account or OS clipboard.
