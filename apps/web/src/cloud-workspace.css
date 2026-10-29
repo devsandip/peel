@@ -16,6 +16,49 @@
   min-inline-size: 0;
 }
 
+.cloud-workspace-connection {
+  margin: 18px 40px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--sidebar);
+  color: var(--text);
+  display: flex;
+  align-items: safe center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.cloud-workspace-connection[data-connection-kind="offline"],
+.cloud-workspace-connection[data-connection-kind="paused"],
+.cloud-workspace-connection[data-connection-kind="sign-in-required"] {
+  border-color: #d9cb96;
+  background: #fff9df;
+}
+
+.cloud-workspace-connection-text {
+  margin: 0;
+  flex: 1 1 220px;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.cloud-workspace-connection-action {
+  flex: 0 0 auto;
+  min-inline-size: 24px;
+  min-block-size: 32px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
 .cloud-workspace-unavailable,
 .cloud-workspace-alert {
   margin: 18px 40px 0;
@@ -26,6 +69,11 @@
   color: var(--error);
   font-size: 13px;
   overflow-wrap: anywhere;
+}
+
+.cloud-workspace-library > :not(.cloud-cached-library) ~ .cloud-cached-library {
+  min-block-size: auto;
+  padding-block-start: 20px;
 }
 
 .cloud-workspace .cloud-cached-library {
@@ -122,6 +170,11 @@
 }
 
 @media (pointer: coarse) {
+  .cloud-workspace-connection-action {
+    min-block-size: 36px;
+    padding: 8px 14px;
+  }
+
   .cloud-workspace-editor .note-close {
     inline-size: 24px;
     block-size: 24px;
@@ -143,9 +196,22 @@
     overflow: clip;
   }
 
+  .cloud-workspace-connection,
   .cloud-workspace-unavailable,
   .cloud-workspace-alert {
     margin: 14px 16px 0;
+  }
+
+  .cloud-workspace-connection-action {
+    min-block-size: 36px;
+    padding: 8px 14px;
+  }
+
+  .cloud-workspace-library
+    > :not(.cloud-cached-library)
+    ~ .cloud-cached-library {
+    min-block-size: auto;
+    padding-block-start: 16px;
   }
 
   .cloud-workspace .cloud-cached-library {
@@ -198,6 +264,14 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .cloud-workspace-connection[data-connection-kind="offline"],
+  .cloud-workspace-connection[data-connection-kind="paused"],
+  .cloud-workspace-connection[data-connection-kind="sign-in-required"] {
+    border-color: #7a6f47;
+    background: #3d3927;
+    color: var(--paper-text);
+  }
+
   .cloud-workspace-unavailable,
   .cloud-workspace-alert {
     border-color: #8c554e;
