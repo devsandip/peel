@@ -2170,3 +2170,21 @@
 
 **Decisions:**
 - Bound each explicit pass rather than invent a library quota; pause failures without destructive reset or automatic failed retry. Antigravity remains only Sandip's proposed split, with an ignored draft handoff and no delegated work.
+
+## 2026-10-29 — Download Cloud notes into an explicit browser cache
+
+**Did:**
+- Completed PR167/issue166: exact source40886197078 and separate actual-main40888047368 all3 first attempts, proof6499042570; actual closure/Project/guarded primary/owned cleanup verified.
+- Planned issue168 in d85ffc7 before implementation, then built the captured bounded web download sender and actual browser IndexedDB/service composition.
+- Verified39 transport cases, sequential Node24 Cloud524/38 then shared739/76, all51 browser cases, type/format/whitespace/build and unchanged default bundle. Inspected the synthetic download screenshot.
+- Prepared Sandip's manual Antigravity workspace handoff/issue169 Ready and updated continuation coordination. Separate worktrees and explicit UI/backend ownership apply; no spawned agents or automatic wake bridge.
+
+**State now:**
+- A fresh synthetic browser cache can download independently committed notes and later checkpoint edits; local pending/conflicting drafts remain unconfirmed. Default Cloud is unavailable.
+- Source review/exact-head hosted checks/integration/main proof follow. Actual login/paid activation/public full-web/live/native/iPhone/performance and M2.2 managed/independent teardown remain unmet.
+
+**Next:**
+- Finish issue168 source/gates/normal merge/main/tracking/owned cleanup; read issue169 for the manual peer's interface/blocker/ready messages and preserve its workspace files.
+
+**Decisions:**
+- Bound one whole response operation instead of registering one abort race per chunk. The browser proxy and smaller page requests are explicit test scaffolding, not real authentication/hosting or production performance evidence.

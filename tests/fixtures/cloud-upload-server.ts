@@ -9,7 +9,16 @@ import {
   CloudServerError,
 } from "../../packages/cloud-protocol/src/server";
 import { createCloudMutationHandler } from "../../packages/cloud-protocol/src/server-http";
-import { cloudScope } from "./cloud-durable-contract";
+import { cloudScope, cloudDraft } from "./cloud-durable-contract";
+import {
+  CloudPullService,
+  CloudCursorSigner,
+} from "../../packages/cloud-protocol/src/pull";
+import {
+  createCloudClient,
+  saveCloudDraft,
+  startCloudMutation,
+} from "../../packages/cloud-protocol/src/index";
 import {
   validateCloudScope,
   type CloudScope,
@@ -19,6 +28,7 @@ import {
 export async function startCloudUploadServer(
   browserOrigin: string,
   secondScope?: CloudScope,
+  enablePull = false,
 ) {
   const otherScope =
     secondScope === undefined ? null : validateCloudScope(secondScope);
@@ -27,7 +37,13 @@ export async function startCloudUploadServer(
   const parent = mkdtempSync(join(tmpdir(), "synkies-browser-upload-")),
     store = new SQLiteCloudServerStore(join(parent, "server.sqlite3")),
     token = randomBytes(32).toString("hex"),
-    control = { hold: false, unauthorized: false, committed: 0 },
+    control = {
+      hold: false,
+      holdDownloads: false,
+      unauthorized: false,
+      committed: 0,
+      downloaded: 0,
+    },
     releases: (() => void)[] = [];
   await store.seedAccount({
     ...cloudScope,
@@ -50,8 +66,21 @@ export async function startCloudUploadServer(
     });
     contexts.push({ scope, token: randomBytes(32).toString("hex") });
   }
+  const service = new CloudMutationService(store),
+    pull = enablePull
+      ? new CloudPullService(
+          store,
+          new CloudCursorSigner(
+            await crypto.subtle.generateKey(
+              { name: "HMAC", hash: "SHA-256" },
+              false,
+              ["sign", "verify"],
+            ),
+          ),
+        )
+      : undefined;
   const handler = createCloudMutationHandler(
-    new CloudMutationService(store),
+    service,
     async (request) => {
       const context = contexts.find(
         (candidate) =>
@@ -61,6 +90,7 @@ export async function startCloudUploadServer(
         throw new CloudServerError("unauthorized", 401);
       return context.scope.ownerSubject;
     },
+    pull,
   );
   let api = "";
   const server = createServer(async (incoming, outgoing) => {
@@ -98,9 +128,23 @@ export async function startCloudUploadServer(
           ...(chunks.length ? { body: Buffer.concat(chunks) } : {}),
         }),
       );
-      if (incoming.method === "POST" && response.status === 200) {
+      const path = new URL(api + incoming.url).pathname;
+      if (
+        incoming.method === "POST" &&
+        path === "/v1/mutations" &&
+        response.status === 200
+      ) {
         control.committed++;
         if (control.hold)
+          await new Promise<void>((resolve) => releases.push(resolve));
+      }
+      if (
+        enablePull &&
+        ["/v1/sync/bootstrap", "/v1/notes", "/v1/sync"].includes(path) &&
+        response.status === 200
+      ) {
+        control.downloaded++;
+        if (control.holdDownloads)
           await new Promise<void>((resolve) => releases.push(resolve));
       }
       if (!outgoing.destroyed) {
@@ -124,6 +168,7 @@ export async function startCloudUploadServer(
   api = `http://127.0.0.1:${address.port}`;
   const release = () => {
     control.hold = false;
+    control.holdDownloads = false;
     for (const done of releases.splice(0)) done();
   };
   return {
@@ -133,6 +178,40 @@ export async function startCloudUploadServer(
     contexts,
     control,
     release,
+    async seedRemote(noteId: string, body: string, contextIndex = 0) {
+      const context = contexts[contextIndex];
+      if (!context || !enablePull)
+        throw Error("Explicit synthetic pull context required");
+      const scope = context.scope,
+        head = await service.get(scope.ownerSubject, scope, noteId);
+      if (head.kind === "purged") throw Error("Use a fresh synthetic note ID");
+      const prepared = await startCloudMutation(
+        saveCloudDraft(
+          createCloudClient(
+            scope.collectionId,
+            noteId,
+            head.kind === "note" ? head.snapshot : null,
+          ),
+          {
+            kind: "upsert",
+            snapshot: {
+              ...cloudDraft(body),
+              collectionId: scope.collectionId,
+              noteId,
+            },
+          },
+        ),
+        crypto.randomUUID(),
+      );
+      const result = await service.mutate(scope.ownerSubject, {
+        version: 1,
+        collectionId: scope.collectionId,
+        modeGeneration: scope.modeGeneration,
+        mutation: prepared.inFlight!,
+      });
+      if (result.receipt.outcome !== "applied")
+        throw Error("Synthetic seed did not commit");
+    },
     async close() {
       release();
       server.closeAllConnections();
