@@ -90,11 +90,11 @@ function render() {
   );
 }
 const api = {
-  async select(owner: number) {
+  async select(owner: number, noteId = id) {
     const next = await CloudDraftSession.open(
       wrappers[owner],
       scopes[owner],
-      id,
+      noteId,
     );
     opened.add(next);
     owners.set(next, owner);
@@ -104,7 +104,17 @@ const api = {
     refreshKey = 0;
     render();
   },
-  read: (owner: number) => clients[owner].get(id),
+  capture(owner: number) {
+    session = CloudDraftSession.capture(wrappers[owner], scopes[owner]);
+    opened.add(session);
+    owners.set(session, owner);
+    selected = owner;
+    shown = true;
+    refreshKey = 0;
+    render();
+    return session.snapshot().noteId;
+  },
+  read: (owner: number, noteId = id) => clients[owner].get(noteId),
   snapshot: () => session.snapshot(),
   async flush() {
     await session.flush();
@@ -136,11 +146,17 @@ const api = {
     await Promise.allSettled([...opened].map((current) => current.flush()));
   },
   async prepare() {
-    const state = (await clients[selected].get(id))!;
-    await clients[selected].prepare(id, state.generation, crypto.randomUUID());
+    const noteId = session.snapshot().noteId,
+      state = (await clients[selected].get(noteId))!;
+    await clients[selected].prepare(
+      noteId,
+      state.generation,
+      crypto.randomUUID(),
+    );
   },
   async acknowledge() {
-    const state = (await clients[selected].get(id))!,
+    const noteId = session.snapshot().noteId,
+      state = (await clients[selected].get(noteId))!,
       op = state.inFlight!,
       revision = state.baseRevision + 1;
     // Controlled fixture receipt only; actual service evidence is in PR155.
@@ -152,7 +168,12 @@ const api = {
         ? { ...op.snapshot, serverRevision: revision }
         : null,
     });
-    await stores[selected].commit(scopes[selected], id, state.generation, next);
+    await stores[selected].commit(
+      scopes[selected],
+      noteId,
+      state.generation,
+      next,
+    );
     api.refresh();
   },
   async destroy() {

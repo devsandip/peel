@@ -1,5 +1,6 @@
 import { validateBody } from "../../../packages/core/src/index";
 import {
+  validateCloudDraft,
   type CloudClientState,
   type CloudDraft,
 } from "../../../packages/cloud-protocol/src/index";
@@ -14,6 +15,7 @@ import {
 import { projectCloudCachedNote } from "./cloud-note-cache";
 
 type DraftSnapshot = Readonly<{
+  noteId: string;
   bodyMarkdown: string;
   status:
     | ReturnType<typeof projectCloudCachedNote>["status"]
@@ -66,15 +68,43 @@ export class CloudDraftSession {
   private attempted: {
     draft: CloudDraft;
     version: number;
-    generation: number;
+    generation: number | null;
   } | null = null;
   private constructor(
     private client: DurableCloudClient,
     private scope: CloudScope,
     private noteId: string,
-    private known: CloudClientState,
+    private known: CloudClientState | null,
+    initial: CloudDraft,
   ) {
-    this.latest = structuredClone(draftOf(known));
+    this.latest = structuredClone(initial);
+  }
+  static capture(store: CloudStateStore, input: CloudScope) {
+    try {
+      const scope = validateCloudScope(input),
+        noteId = crypto.randomUUID(),
+        now = new Date().toISOString(),
+        draft = validateCloudDraft({
+          schemaVersion: 1,
+          collectionId: scope.collectionId,
+          noteId,
+          bodyMarkdown: "",
+          state: "active",
+          createdAt: now,
+          updatedAt: now,
+          deletedAt: null,
+          purgeAfter: null,
+        });
+      return new CloudDraftSession(
+        new DurableCloudClient(store, scope),
+        scope,
+        noteId,
+        null,
+        draft,
+      );
+    } catch {
+      throw Error("Cloud draft unavailable");
+    }
   }
   static async open(store: CloudStateStore, input: CloudScope, noteId: string) {
     try {
@@ -85,19 +115,28 @@ export class CloudDraftSession {
       if (!state) throw Error("Missing cache");
       const checked = cloudStateInScope(scope, noteId, state);
       draftOf(checked);
-      return new CloudDraftSession(client, scope, noteId, checked);
+      return new CloudDraftSession(
+        client,
+        scope,
+        noteId,
+        checked,
+        draftOf(checked),
+      );
     } catch {
       throw Error("Cloud draft unavailable");
     }
   }
   snapshot(): DraftSnapshot {
     return Object.freeze({
+      noteId: this.noteId,
       bodyMarkdown: this.latest.bodyMarkdown,
       status: this.error
         ? ("Could not retain draft" as const)
         : this.dirty
           ? ("Pending upload" as const)
-          : projectCloudCachedNote(this.scope, this.noteId, this.known).status,
+          : this.known
+            ? projectCloudCachedNote(this.scope, this.noteId, this.known).status
+            : ("Pending upload" as const),
       retained: !this.dirty && !this.running && !this.error,
       canEdit: !this.closing && !this.closed,
       closed: this.closed,
@@ -120,7 +159,10 @@ export class CloudDraftSession {
   }
   private async read() {
     const state = await this.client.get(this.noteId);
-    if (!state) throw Error("Missing cache");
+    if (!state) {
+      if (this.known) throw Error("Missing cache");
+      return null;
+    }
     const checked = cloudStateInScope(this.scope, this.noteId, state);
     draftOf(checked);
     return checked;
@@ -131,27 +173,32 @@ export class CloudDraftSession {
         const previous = await this.read();
         if (
           this.attempted &&
-          previous.generation > this.attempted.generation &&
+          previous &&
+          previous.generation > (this.attempted.generation ?? 0) &&
           same(draftOf(previous), this.attempted.draft)
         ) {
           this.known = previous;
           if (this.attempted.version === this.version) this.dirty = false;
           this.attempted = null;
         }
-        if (!same(draftOf(previous), draftOf(this.known)))
+        if (
+          previous === null || this.known === null
+            ? previous !== this.known
+            : !same(draftOf(previous), draftOf(this.known))
+        )
           throw Error("Cloud projection changed");
         this.known = previous;
         if (!this.dirty) break;
         const attempt = {
           draft: structuredClone(this.latest),
           version: this.version,
-          generation: previous.generation,
+          generation: previous?.generation ?? null,
         };
         this.attempted = attempt;
         const saved = await this.client.save(
           this.noteId,
           { kind: "upsert", snapshot: attempt.draft },
-          previous.generation,
+          attempt.generation,
         );
         this.known = cloudStateInScope(this.scope, this.noteId, saved);
         this.attempted = null;
@@ -164,6 +211,8 @@ export class CloudDraftSession {
     }
   }
   async flush(): Promise<DraftSnapshot> {
+    // An untouched capture has no durable work and must not create an empty row.
+    if (!this.known && !this.dirty && !this.attempted) return this.snapshot();
     if (this.running) {
       await this.running;
       return this.dirty ? this.flush() : this.snapshot();
@@ -179,10 +228,12 @@ export class CloudDraftSession {
     return this.dirty ? this.flush() : this.snapshot();
   }
   async refresh() {
-    if (this.dirty || this.running || this.closing) return this.snapshot();
+    if (!this.known || this.dirty || this.running || this.closing)
+      return this.snapshot();
     const version = ++this.refreshVersion;
     try {
       const state = await this.read();
+      if (!state) throw Error("Missing cache");
       if (
         this.dirty ||
         this.running ||

@@ -2093,3 +2093,18 @@
 
 **Next:**
 - Finish158 focused review/scans/all3 exact-source hosted gates and normal integration, actual main/closure/Project proof and owned cleanup. Retain all original failure evidence; no blind rerun or guard-policy relaxation. Actual managed/teardown/native and full app gates remain.
+
+
+## 2026-10-29 - Capture a new scoped Cloud pending note
+
+**Did:**
+- Completed159 all3 source40858493017/main40859641351 gates, review6494369816/ready6494501409/normal merge98eb188, proof6494678079. Verified actual158closure/ProjectDone/label removal/guarded primary advancement/unknown path preservation/owned159 ref cleanup. Original157 failed attempt and unknown exact schedule remain recorded.
+- Created160/current Project and committed plan21a2ae4 before code. Added synchronous scoped capture with UUID/empty draft, no I/O or empty row until actual typing, touched-empty retention, absent-row CAS and existing lost-insert reply/recovery/close mechanics. Exposed immutable snapshot noteId for owner reopen. Default Cloud/app/Local/native/editor/protocol/store/schema/dependencies/workflow unchanged.
+- Passed7 new actual SQLite/service cases, actual Node24 focused25/4, exact Cloud428/34 then shared643/72 sequentially, and3 new plus34 prior browser cases (37total). Type/full checked-source format/whitespace/build pass; bundle hashes/580kB warning unchanged. Collision-adoption negative fails intended refusal; exact d0b1e902 source restored before full positives. Legacy unit/browser assertion tails byte-equal.
+- Preserved initial focusedbrowser9pass/1fail from the new empty-DOM matcher observing CodeMirror's placeholder. Inspected implementation and corrected only that new assertion to visible placeholder/empty source; full positives pass without runtime/default/legacy assertion or retry/worker/timeout changes. Owned synthetic stores/browser/server/namespaces cleaned, clipboard stubbed, no actual/default DB/native/provider/stopped probe.
+
+**State now:**
+- Disabled new pending-note capture reuses the scoped session/editor. Untouched close creates no row; retained new text stays Pending upload until matching service confirmation. Actual Cloud authentication/parent loading/upload/reconnect/full web/live/native/iPhone and M2.2 managed/independent teardown remain unmet.
+
+**Next:**
+- Finish160 focused review/scans/no-reply/all3 exact-source hosted gates, normal integration and actual main/closure/Project proof. Preserve the initial DOM-test failure and negative control separately, and leave stopped probes/expired allowances unchanged.

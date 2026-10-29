@@ -36,6 +36,7 @@ async function create() {
     control = {
       fail: false,
       lost: false,
+      missing: false,
       commits: 0,
       commitGate: null as ReturnType<typeof gate> | null,
       readGate: null as ReturnType<typeof gate> | null,
@@ -49,6 +50,7 @@ async function create() {
   let local = makeStore();
   const store: CloudStateStore = {
     async read(scope, noteId) {
+      if (control.missing) return null;
       const held = control.readGate;
       control.readGate = null;
       const state = await local.read(scope, noteId);
@@ -86,6 +88,11 @@ async function create() {
       sessions.push(session);
       return session;
     },
+    capture(scope = cloudScope) {
+      const session = CloudDraftSession.capture(store, scope);
+      sessions.push(session);
+      return session;
+    },
     hold(kind: "commitGate" | "readGate") {
       const held = gate();
       gates.push(held);
@@ -97,18 +104,18 @@ async function create() {
       local = makeStore();
       f.client = new DurableCloudClient(local, cloudScope);
     },
-    async prepare(opId: string) {
-      const previous = (await f.client.get(id))!;
-      await f.client.prepare(id, previous.generation, opId);
+    async prepare(opId: string, noteId = id) {
+      const previous = (await f.client.get(noteId))!;
+      await f.client.prepare(noteId, previous.generation, opId);
       return {
         version: 1 as const,
         collectionId: cloudScope.collectionId,
         modeGeneration: cloudScope.modeGeneration,
-        mutation: await f.client.retry(id),
+        mutation: await f.client.retry(noteId),
       };
     },
-    async confirm(opId: string) {
-      const request = await f.prepare(opId);
+    async confirm(opId: string, noteId = id) {
+      const request = await f.prepare(opId, noteId);
       await applyCloudServerReply(
         f.client,
         request,
@@ -116,7 +123,7 @@ async function create() {
       );
     },
     async cleanup() {
-      control.fail = control.lost = false;
+      control.fail = control.lost = control.missing = false;
       control.commitGate = control.readGate = null;
       for (const held of gates) held.release.resolve(false);
       await Promise.allSettled(sessions.map((session) => session.flush()));
@@ -146,6 +153,221 @@ async function fixture(
     await f.cleanup();
   }
 }
+
+it("captures distinct scoped IDs synchronously and puts away untouched empties without any store I/O", async () => {
+  const calls: string[] = [],
+    unavailable: CloudStateStore = {
+      async read() {
+        calls.push("read");
+        throw Error("Private unavailable storage");
+      },
+      async commit() {
+        calls.push("commit");
+        throw Error("Private unavailable storage");
+      },
+      async close() {
+        calls.push("close");
+      },
+    },
+    a = CloudDraftSession.capture(unavailable, cloudScope),
+    b = CloudDraftSession.capture(unavailable, cloudScope);
+  expect(a).not.toBeInstanceOf(Promise);
+  expect(a.snapshot().noteId).toMatch(/^[a-f0-9-]{36}$/);
+  expect(b.snapshot().noteId).not.toBe(a.snapshot().noteId);
+  expect(a.snapshot()).toMatchObject({
+    bodyMarkdown: "",
+    status: "Pending upload",
+    canEdit: true,
+    closed: false,
+  });
+  expect(Object.isFrozen(a.snapshot())).toBe(true);
+  a.edit("");
+  await a.refresh();
+  await a.flush();
+  expect(await a.putAway()).toMatchObject({ closed: true, retained: true });
+  expect(await b.putAway()).toMatchObject({ closed: true });
+  expect(calls).toEqual([]);
+  expect(() =>
+    CloudDraftSession.capture(unavailable, {
+      ...cloudScope,
+      modeGeneration: 0,
+    }),
+  ).toThrow("Cloud draft unavailable");
+});
+
+it("retains the newest first capture before Put away and actual reopen, then requires matching service confirmation", async () =>
+  fixture(async (f) => {
+    const session = f.capture(),
+      noteId = session.snapshot().noteId,
+      held = f.hold("commitGate");
+    expect(await f.client.get(noteId)).toBeNull();
+    session.edit("First pending capture");
+    await held.entered.promise;
+    session.edit("Newest pending capture 原文");
+    const closing = session.putAway();
+    expect(session.snapshot().canEdit).toBe(false);
+    expect(session.snapshot().closed).toBe(false);
+    expect(await f.client.get(noteId)).toBeNull();
+    held.release.resolve(false);
+    expect(await closing).toMatchObject({
+      bodyMarkdown: "Newest pending capture 原文",
+      retained: true,
+      closed: true,
+      status: "Pending upload",
+    });
+    await f.reopen();
+    const reopened = await f.open(cloudScope, noteId),
+      request = await f.prepare("new-capture-first", noteId);
+    expect(request.mutation.baseRevision).toBe(0);
+    expect(reopened.snapshot().bodyMarkdown).toBe(
+      "Newest pending capture 原文",
+    );
+    reopened.edit("Later typing after the first request");
+    await reopened.flush();
+    await applyCloudServerReply(
+      f.client,
+      request,
+      await f.service.mutate(cloudScope.ownerSubject, request),
+    );
+    expect(await reopened.refresh()).toMatchObject({
+      bodyMarkdown: "Later typing after the first request",
+      status: "Pending upload",
+    });
+    await f.confirm("new-capture-next", noteId);
+    expect((await reopened.refresh()).status).toBe("Saved in Cloud");
+  }));
+
+it("retains a touched and subsequently cleared capture but creates no row for an untouched capture", async () =>
+  fixture(async (f) => {
+    const untouched = f.capture(),
+      touched = f.capture();
+    await untouched.putAway();
+    expect(await f.client.get(untouched.snapshot().noteId)).toBeNull();
+    touched.edit("Touched before clearing");
+    touched.edit("");
+    await touched.putAway();
+    await f.reopen();
+    const state = (await f.client.get(touched.snapshot().noteId))!;
+    expect(state.current!.snapshot!.bodyMarkdown).toBe("");
+    expect(state.pending!.snapshot!.bodyMarkdown).toBe("");
+    expect(state.baseRevision).toBe(0);
+    expect(touched.snapshot().status).toBe("Pending upload");
+  }));
+
+it("preserves failed first-retention text and reconciles an actual lost insert reply without a duplicate write", async () =>
+  fixture(async (f) => {
+    const session = f.capture(),
+      noteId = session.snapshot().noteId;
+    f.control.fail = true;
+    session.edit("Copyable new capture after a failed insert");
+    await expect(session.flush()).rejects.toThrow("Could not retain draft");
+    await expect(session.putAway()).rejects.toThrow("Could not retain draft");
+    expect(session.snapshot()).toMatchObject({
+      bodyMarkdown: "Copyable new capture after a failed insert",
+      canEdit: true,
+      closed: false,
+    });
+    expect(session.snapshot().error).not.toContain("synthetic private");
+    expect(await f.client.get(noteId)).toBeNull();
+    f.control.fail = false;
+    f.control.lost = true;
+    await expect(session.flush()).rejects.toThrow("Could not retain draft");
+    const committed = (await f.client.get(noteId))!,
+      writes = f.control.commits;
+    expect(committed.generation).toBe(1);
+    expect(committed.pending!.snapshot!.bodyMarkdown).toBe(
+      "Copyable new capture after a failed insert",
+    );
+    expect(await session.flush()).toMatchObject({
+      retained: true,
+      status: "Pending upload",
+      error: null,
+    });
+    expect(f.control.commits).toBe(writes);
+    expect(await session.putAway()).toMatchObject({ closed: true });
+  }));
+
+it("refuses to adopt a colliding row or overwrite a competing first insert", async () =>
+  fixture(async (f) => {
+    const collision = f.capture(),
+      noteId = collision.snapshot().noteId,
+      other = { ...cloudDraft("Pre-existing draft must survive"), noteId };
+    await f.client.save(noteId, { kind: "upsert", snapshot: other }, null);
+    const before = await f.client.get(noteId);
+    collision.edit("New volatile text must remain copyable");
+    await expect(collision.flush()).rejects.toThrow("Could not retain draft");
+    expect(await f.client.get(noteId)).toEqual(before);
+    expect(collision.snapshot()).toMatchObject({
+      bodyMarkdown: "New volatile text must remain copyable",
+      closed: false,
+      canEdit: true,
+    });
+    const competing = f.capture(),
+      competingId = competing.snapshot().noteId,
+      held = f.hold("commitGate");
+    competing.edit("First capture held before insert");
+    await held.entered.promise;
+    await f.client.save(
+      competingId,
+      {
+        kind: "upsert",
+        snapshot: { ...cloudDraft("Competing insertion"), noteId: competingId },
+      },
+      null,
+    );
+    const inserted = await f.client.get(competingId);
+    held.release.resolve(false);
+    await expect(competing.flush()).rejects.toThrow("Could not retain draft");
+    expect(await f.client.get(competingId)).toEqual(inserted);
+    expect(competing.snapshot().bodyMarkdown).toBe(
+      "First capture held before insert",
+    );
+  }));
+
+it("captures scope values before typing and refuses foreign storage without copying its content", async () =>
+  fixture(async (f) => {
+    const input = { ...cloudScope },
+      session = f.capture(input);
+    input.ownerSubject = "another-synthetic-owner";
+    input.collectionId = "another-library";
+    input.modeGeneration++;
+    session.edit("Original scope remains selected");
+    await session.flush();
+    expect((await f.client.get(session.snapshot().noteId))!.collectionId).toBe(
+      cloudScope.collectionId,
+    );
+    const foreign = f.capture(input);
+    foreign.edit("Foreign cache cannot retain this draft");
+    await expect(foreign.flush()).rejects.toThrow("Could not retain draft");
+    expect(foreign.snapshot()).toMatchObject({
+      bodyMarkdown: "Foreign cache cannot retain this draft",
+      canEdit: true,
+      closed: false,
+    });
+    expect((await f.client.get(id))!.current!.snapshot!.bodyMarkdown).toBe(
+      "Original fixture",
+    );
+  }));
+
+it("does not recreate a missing row after a capture has been retained", async () =>
+  fixture(async (f) => {
+    const session = f.capture(),
+      noteId = session.snapshot().noteId;
+    session.edit("Retained before missing-row observation");
+    await session.flush();
+    const before = await f.client.get(noteId),
+      writes = f.control.commits;
+    f.control.missing = true;
+    session.edit("New text must remain copyable after missing row");
+    await expect(session.flush()).rejects.toThrow("Could not retain draft");
+    expect(f.control.commits).toBe(writes);
+    expect(await f.client.get(noteId)).toEqual(before);
+    expect(session.snapshot()).toMatchObject({
+      bodyMarkdown: "New text must remain copyable after missing row",
+      closed: false,
+      canEdit: true,
+    });
+  }));
 
 it("automatically retains pending text across actual reopen and only observes Saved after a real matching server receipt", async () =>
   fixture(async (f) => {
