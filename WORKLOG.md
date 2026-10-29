@@ -2335,3 +2335,20 @@
 
 **Decisions:**
 - A successful workspace remains in its original discovered scope for its original signal lifetime. Caller owns late cache resources and recovery; cancellation withholds current UI without erasing original drafts. Keep synthetic cookie/proxy evidence separate from managed-browser authentication.
+
+
+## 2026-10-30 - Verify the browser workspace and prepare change hints
+
+**Did:**
+- Fully integrated188/187 at632b088, source40959216608/main40960169113 all3 first attempts, review5705309044/Ready6509014508/proof6509167184; then190/189 ate697bc6, source40964247854/main40965583316 all3 first attempts, review5705668665/Ready6509723559/proof6510001991.
+- Verified190 actual adapter30/5, Node24Cloud651/44, shared859/81/browser79, local169 focused/static/artifact/build/all8 default bundle equality, actual closure/bothProjectDone/labels/guarded primary/unknown paths/scanned Root-only cleanup. Initial setup failures/unrun acquisition and synthetic cookie/proxy limits remain explicit; the one CLI ZIP log read was recovered via read-only actual job API without CI rerun.
+- Preserved all peer refs/checkouts and frozen0342/older journals. Created191 Ready in the existing milestone/Project, committed requirement-linked plan3dbfda7 before code, and confirmed protocol-only ownership in169/181. No191 runtime/tests exist yet.
+
+**State now:**
+- Fully verified main ise697bc6; default Cloud and real login/paid/full web/live/reconnect/platform/performance acceptance remain off/open. M2.2 managed/independent teardown is unmet. Peer181 still has its six-file assignment and must freshly rebase/freeze/validate; no Ready/peer PR in the latest check.
+
+**Next:**
+- Implement191 from docs/features/cloud-change-hints.md in the ownedcodex/cloud-change-hints checkout, starting with strict body-free protocol module and actual committed-change fixtures. Update191 status before code, check169/181/openPRs first, preserve old controls and claim validation windows. Root full-test window released6509523391.
+
+**Decisions:**
+- Keep the new hint envelope separate from the unchanged internal retention record. A hint is an input to authenticated pull, never an acknowledgement, paid grant, cursor commit or evidence of enabled live delivery.
