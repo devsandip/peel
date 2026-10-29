@@ -1927,3 +1927,18 @@
 
 **Next:**
 - Finish issue135 focused review/scans/hosted gates and normal integration, then scope the next independent prerequisite under30. Keep original phase/source/authorization/time/budget/provenance gates explicit and M2.2 open. Update ignored immutable resume with actual state.
+
+
+## 2026-10-29 - Preserve original response integrity without provider authority
+
+**Did:**
+- Finished PR136/sourcef1dbc88 after all three40811969490 gates/reviews6487051659+6487166755, normalmerge06383d1, actual135closure/ProjectDone/label/ownedbranch cleanup and safe primary advancement. All three actual main40812903067 gates pass; proof6487369419. No signer/account/transport/send authority follows.
+- Created current issue137/Project and committed plan792ff96 before safe original capture and independent Python observation goldens. Implemented pure create/read codec997a244 for exact original request and bounded SDK identifier/count projections; all authority remains unproven, including after canonical historical recovery/expiry. No store/schema mutation or provider call.
+- Preserved all12 Query assertions and old request goldens, strengthened synthetic stack-ID assertion and added8 response groups through actual SDK deserialization. Independent four-kind commitments match756/748/754/746-byte outputs. File/network/checker-RNG guards remain zero for disallowed effects; full bodies/outputs stay in child memory.
+- Omitted only stack-prefix binding for a meaningful wrong-account negative control, observed intended refusal failure and restored exact source hash. Review expanded one positive UUID-version test incorrectly changed the original stack name's embedded UUID first; unchanged codec correctly refused it. Failed consumer-reviewed run remains380PASS/oneFAIL. Corrected test targets only the last36-character stack-ID UUID; isolated same-deadline case and final381Cloud30files/596shared68/type/format/build pass sequentially. No legacy assertion/deadline/retry/worker change. Existing browser chunk warning remains.
+
+**State now:**
+- Source997a244 equals the restored/validated runtime source. Local supplied-data integrity only; final focused review/three exact-head hosted gates precede merge and actual main proof follows separately. No actual/default operator/note data, credentials/profile/account/provider/budget/billing/app activation or stopped retry.
+
+**Next:**
+- Finish issue137 focused review/scans/hosted gates and normal integration, actual closure/Project/main proof. Keep current provenance/private assessments/preparation/fence/real transport/ownership/settlement/teardown separate and M2.2 open. Update ignored immutable resume with exact state.
