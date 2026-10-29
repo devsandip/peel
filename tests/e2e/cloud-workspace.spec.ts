@@ -528,3 +528,98 @@ test("supports keyboard focus, Escape preservation and responsive desktop and 39
   );
   await expect(renamedCard).toBeFocused();
 });
+
+test("coalesces concurrent library-switch and Put-away closure through one retained parent callback", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const library = page.getByRole("region", { name: "Cached Cloud library" });
+  const editorArticle = page.getByRole("article", {
+    name: "Cloud note editor",
+  });
+
+  await library
+    .getByRole("button", { name: "Open Account A workspace note", exact: true })
+    .click();
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+  const before = await page.evaluate(
+    () => window.cloudWorkspaceFixture.putAways().length,
+  );
+
+  await page.evaluate(() => window.cloudWorkspaceFixture.holdCommit(0));
+  await editorArticle
+    .getByRole("textbox", { name: "Note text" })
+    .fill("Concurrent closure retained source");
+  await page.waitForFunction(
+    () => window.cloudWorkspaceFixture.heldCommits() > 0,
+  );
+
+  await library
+    .getByRole("button", { name: "Open Second cached note", exact: true })
+    .click();
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await page.evaluate(() => window.cloudWorkspaceFixture.releaseCommits());
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.cloudWorkspaceFixture.putAways().length),
+    )
+    .toBeGreaterThan(before);
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.putAways().length),
+  ).toBe(before + 1);
+  expect(
+    await page.evaluate(() => window.cloudWorkspaceFixture.putAways().at(-1)),
+  ).toEqual({
+    owner: 0,
+    noteId: "shared-note",
+    retained: true,
+    matchedSession: true,
+  });
+});
+
+test("uses neutral New-note focus fallback instead of focusing another note with a duplicate title", async ({
+  page,
+}) => {
+  const library = page.getByRole("region", { name: "Cached Cloud library" });
+  const editorArticle = page.getByRole("article", {
+    name: "Cloud note editor",
+  });
+  const duplicateLabel = "Open Account A workspace note";
+
+  await library
+    .getByRole("button", { name: duplicateLabel, exact: true })
+    .click();
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await expect(editorArticle).toHaveCount(0);
+
+  await library.getByRole("button", { name: "New note", exact: true }).click();
+  await editorArticle
+    .getByRole("textbox", { name: "Note text" })
+    .fill(
+      "Account A workspace note\nA different newer note with a duplicate title",
+    );
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await expect(editorArticle).toHaveCount(0);
+
+  const duplicates = library.getByRole("button", {
+    name: duplicateLabel,
+    exact: true,
+  });
+  await expect(duplicates).toHaveCount(2);
+
+  await duplicates.nth(1).click();
+  await expect(
+    editorArticle.getByRole("textbox", { name: "Note text" }),
+  ).toContainText("Account A private body");
+  await expect(editorArticle.getByRole("status")).toHaveText("Saved in Cloud");
+  await editorArticle.getByRole("button", { name: "Put away note" }).click();
+  await expect(editorArticle).toHaveCount(0);
+
+  await expect(duplicates.nth(0)).not.toBeFocused();
+  await expect(
+    library.getByRole("button", { name: "New note", exact: true }),
+  ).toBeFocused();
+});

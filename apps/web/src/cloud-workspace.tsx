@@ -41,11 +41,15 @@ export type CloudWorkspaceProps = {
   onPutAway?: (closed: CloudWorkspacePutAway) => void | Promise<void>;
 };
 
-type ActiveEditor = Readonly<{
-  context: CloudLibraryContext;
-  upload: CloudNoteUpload;
-  origin: "open" | "create";
-}>;
+type ActiveEditor = {
+  readonly context: CloudLibraryContext;
+  readonly upload: CloudNoteUpload;
+  readonly origin: "open" | "create";
+  closingTask: Promise<void> | null;
+  dismissWatching: boolean;
+  notifiedParent: boolean;
+  closedComplete: boolean;
+};
 
 type ReturnFocusTarget =
   Readonly<{ kind: "new" }> | Readonly<{ kind: "card"; title: string }>;
@@ -324,14 +328,14 @@ function SelectedWorkspace({
           active === provisionalButtonRef.current);
       if (focusDropped) {
         const expectedLabel = `Open ${title}`;
-        const cardButton = Array.from(
+        const matchingCards = Array.from(
           section.querySelectorAll<HTMLButtonElement>(
             ".note-grid button.card-open",
           ),
-        ).find((btn) => btn.getAttribute("aria-label") === expectedLabel);
-        if (cardButton) {
+        ).filter((btn) => btn.getAttribute("aria-label") === expectedLabel);
+        if (matchingCards.length === 1) {
           provisionalButtonRef.current = null;
-          cardButton.focus();
+          matchingCards[0].focus();
         } else {
           desiredCardTitleRef.current = null;
           focusNewButton(false);
@@ -368,65 +372,97 @@ function SelectedWorkspace({
     );
   };
 
+  const putAwayActiveEditor = (
+    entry: ActiveEditor,
+    intent: "dismiss" | "switch",
+  ): Promise<void> => {
+    if (intent === "dismiss") {
+      entry.dismissWatching = true;
+    }
+    if (entry.closedComplete) {
+      return Promise.resolve();
+    }
+    if (entry.closingTask) {
+      return entry.closingTask;
+    }
+    const task = (async () => {
+      await entry.upload.session.putAway();
+      if (
+        !mounted.current ||
+        signal.aborted ||
+        activeEditorRef.current !== entry
+      ) {
+        return;
+      }
+      void entry.upload.upload();
+      if (!entry.notifiedParent && onPutAway) {
+        await onPutAway(
+          Object.freeze({
+            context: entry.context,
+            upload: entry.upload,
+            session: entry.upload.session,
+          }),
+        );
+        entry.notifiedParent = true;
+      }
+      if (
+        !mounted.current ||
+        signal.aborted ||
+        activeEditorRef.current !== entry
+      ) {
+        return;
+      }
+      entry.closedComplete = true;
+      activeEditorRef.current = null;
+      setWorkspaceIssue(null);
+      if (entry.dismissWatching) {
+        latestRequest.current++;
+        const snapshot = entry.upload.session.snapshot();
+        const focusTarget: ReturnFocusTarget =
+          snapshot.bodyMarkdown.length > 0 || entry.origin === "open"
+            ? { kind: "card", title: titleOf(snapshot.bodyMarkdown) }
+            : { kind: "new" };
+        desiredCardTitleRef.current =
+          focusTarget.kind === "card" ? focusTarget.title : null;
+        setReturnFocus(focusTarget);
+      }
+      setActiveEditor(null);
+      setLocalRefresh((previous) => previous + 1);
+    })().finally(() => {
+      entry.closingTask = null;
+    });
+    entry.closingTask = task;
+    return task;
+  };
+
   const closeActiveBeforeSwitch = async (): Promise<boolean> => {
     const current = activeEditorRef.current;
     if (!current) return true;
-    const initialSnap = current.upload.session.snapshot();
-    if (!initialSnap.canEdit && !initialSnap.closed) return false;
     transitioning.current = true;
     try {
-      await current.upload.session.flush();
-      if (
-        !mounted.current ||
-        signal.aborted ||
-        activeEditorRef.current?.upload !== current.upload
-      ) {
-        return false;
-      }
-      await current.upload.session.putAway();
-      if (
-        !mounted.current ||
-        signal.aborted ||
-        activeEditorRef.current?.upload !== current.upload
-      ) {
-        return false;
-      }
-      void current.upload.upload();
-      if (onPutAway) {
-        try {
-          await onPutAway(
-            Object.freeze({
-              context: current.context,
-              upload: current.upload,
-              session: current.upload.session,
-            }),
-          );
-        } catch {
-          if (
-            mounted.current &&
-            !signal.aborted &&
-            activeEditorRef.current?.upload === current.upload
-          ) {
-            setWorkspaceIssue(
-              "Could not put away this note. Retry or copy the text.",
-            );
-          }
-          return false;
-        }
-      }
-      if (
-        !mounted.current ||
-        signal.aborted ||
-        activeEditorRef.current?.upload !== current.upload
-      ) {
-        return false;
-      }
-      activeEditorRef.current = null;
-      setActiveEditor(null);
-      setLocalRefresh((previous) => previous + 1);
-      return true;
+      await putAwayActiveEditor(current, "switch");
+      return (
+        mounted.current &&
+        !signal.aborted &&
+        current.closedComplete &&
+        !current.dismissWatching
+      );
     } catch {
-      focusOpenEditor();
+      if (
+        mounted.current &&
+        !signal.aborted &&
+        activeEditorRef.current === current
+      ) {
+        if (
+          current.upload.session.snapshot().closed &&
+          !current.dismissWatching
+        ) {
+          setWorkspaceIssue(
+            "Could not put away this note. Retry or copy the text.",
+          );
+        }
+        focusOpenEditor();
+      }
       return false;
     } finally {
       transitioning.current = false;
@@ -466,11 +502,15 @@ function SelectedWorkspace({
       ) {
         return;
       }
-      const next: ActiveEditor = Object.freeze({
+      const next: ActiveEditor = {
         context: workspaceContext,
         upload,
         origin: "open",
-      });
+        closingTask: null,
+        dismissWatching: false,
+        notifiedParent: false,
+        closedComplete: false,
+      };
       activeEditorRef.current = next;
       desiredCardTitleRef.current = null;
       setActiveEditor(next);
@@ -513,11 +553,15 @@ function SelectedWorkspace({
       ) {
         return;
       }
-      const next: ActiveEditor = Object.freeze({
+      const next: ActiveEditor = {
         context: workspaceContext,
         upload,
         origin: "create",
-      });
+        closingTask: null,
+        dismissWatching: false,
+        notifiedParent: false,
+        closedComplete: false,
+      };
       activeEditorRef.current = next;
       desiredCardTitleRef.current = null;
       setActiveEditor(next);
@@ -541,40 +585,13 @@ function SelectedWorkspace({
     if (
       !mounted.current ||
       signal.aborted ||
-      activeEditorRef.current?.upload !== entry.upload ||
-      entry.upload.session !== session
+      entry.upload.session !== session ||
+      entry.closedComplete ||
+      activeEditorRef.current !== entry
     ) {
       return;
     }
-    const snapshot = session.snapshot();
-    const focusTarget: ReturnFocusTarget =
-      snapshot.bodyMarkdown.length > 0 || entry.origin === "open"
-        ? { kind: "card", title: titleOf(snapshot.bodyMarkdown) }
-        : { kind: "new" };
-    if (onPutAway) {
-      await onPutAway(
-        Object.freeze({
-          context: entry.context,
-          upload: entry.upload,
-          session,
-        }),
-      );
-    }
-    if (
-      !mounted.current ||
-      signal.aborted ||
-      activeEditorRef.current?.upload !== entry.upload
-    ) {
-      return;
-    }
-    latestRequest.current++;
-    activeEditorRef.current = null;
-    desiredCardTitleRef.current =
-      focusTarget.kind === "card" ? focusTarget.title : null;
-    setWorkspaceIssue(null);
-    setReturnFocus(focusTarget);
-    setActiveEditor(null);
-    setLocalRefresh((previous) => previous + 1);
+    await putAwayActiveEditor(entry, "dismiss");
   };
 
   const handleLibraryFocusCapture = (event: FocusEvent<HTMLDivElement>) => {
