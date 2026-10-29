@@ -85,7 +85,9 @@ test("real authentication failure preserves pending text and Retry uploads the o
   await page
     .getByRole("textbox", { name: "Note text" })
     .fill("Keep through authentication failure");
-  await expect(page.getByRole("alert")).toContainText("Sign in again");
+  await expect(
+    page.getByRole("article", { name: "Cloud note editor" }).getByRole("alert"),
+  ).toContainText("Sign in again");
   await expect(page.getByRole("status")).toHaveText("Pending upload");
   server.control.unauthorized = false;
   await page.getByRole("button", { name: "Retry upload" }).click();

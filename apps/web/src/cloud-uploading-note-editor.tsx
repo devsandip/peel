@@ -46,17 +46,21 @@ function SelectedUploadEditor({
   const view = upload.snapshot();
   return (
     <>
-      {view.message && (
-        <div role="alert">
-          <p>{view.message}</p>
-          <button onClick={() => void upload.upload()}>Retry upload</button>
-        </div>
-      )}
       <CloudNoteEditor
         session={upload.session}
         refreshKey={revision}
+        uploadNotice={
+          view.message
+            ? {
+                message: view.message,
+                onRetry: () => {
+                  void upload.upload();
+                },
+              }
+            : undefined
+        }
         onRetained={() => {
-          void upload.upload();
+          upload.schedule();
         }}
         onPutAway={(session) => {
           // Retention has finished; the window never waits for Cloud response.

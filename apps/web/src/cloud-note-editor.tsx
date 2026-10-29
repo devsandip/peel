@@ -8,6 +8,7 @@ type Props = {
   refreshKey: number;
   onPutAway: (session: CloudDraftSession) => void | Promise<void>;
   onRetained?: () => void;
+  uploadNotice?: { message: string; onRetry: () => void };
   source?: boolean;
 };
 
@@ -29,6 +30,7 @@ function SelectedEditor({
   refreshKey,
   onPutAway,
   onRetained,
+  uploadNotice,
   source = false,
 }: Props) {
   const [view, setView] = useState(() => session.snapshot()),
@@ -164,6 +166,14 @@ function SelectedEditor({
           </button>
           <button onClick={() => void copy()}>Copy text</button>
           <span aria-live="polite">{copyResult}</span>
+        </div>
+      )}
+      {uploadNotice && (
+        <div className="note-notice" role="alert">
+          <p>{uploadNotice.message}</p>
+          <button disabled={closing} onClick={uploadNotice.onRetry}>
+            Retry upload
+          </button>
         </div>
       )}
       <MarkdownEditor

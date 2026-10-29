@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { CloudNoteUpload } from "../../apps/web/src/cloud-note-upload";
 import {
   DurableCloudClient,
@@ -57,6 +57,7 @@ async function create() {
           body: any;
         }) => Promise<{ status: number; body: unknown }>),
     read: null as null | (() => Promise<void>),
+    commit: null as null | (() => Promise<void>),
   };
   const store: CloudStateStore = {
     async read(...args) {
@@ -66,7 +67,12 @@ async function create() {
       if (held) await held();
       return result;
     },
-    commit: (...args) => local.commit(...args),
+    async commit(...args) {
+      const held = control.commit;
+      control.commit = null;
+      if (held) await held();
+      return local.commit(...args);
+    },
     close: () => local.close(),
   };
   const handler = createCloudMutationHandler(service, async () => {
@@ -405,4 +411,101 @@ it("pauses instead of marking old editor text Saved when an accepted retry revea
     expect((await f.client.get(noteId))!.current!.snapshot!.bodyMarkdown).toBe(
       "Newer remote head",
     );
+  }));
+
+it("batches additions/deletions in a fixed 200ms window without starving continuous typing", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    await fixture(async (f) => {
+      f.upload.session.edit("First addition");
+      await f.upload.session.flush();
+      f.upload.schedule();
+      await vi.advanceTimersByTimeAsync(100);
+      f.upload.session.edit("Second addition");
+      await f.upload.session.flush();
+      f.upload.schedule();
+      await vi.advanceTimersByTimeAsync(99);
+      f.upload.session.edit("Second");
+      await f.upload.session.flush();
+      f.upload.schedule();
+      expect(f.requests).toHaveLength(0);
+      await vi.advanceTimersByTimeAsync(1);
+      await f.upload.upload();
+      expect(f.requests).toHaveLength(1);
+      expect(f.requests[0].mutation.snapshot!.bodyMarkdown).toBe("Second");
+      expect(f.upload.session.snapshot().status).toBe("Saved in Cloud");
+    });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("cancels a scheduled upload when its account context ends", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    await fixture(async (f) => {
+      f.upload.session.edit("Retained while the account context ends");
+      await f.upload.session.flush();
+      f.upload.schedule();
+      f.controller.abort();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(f.requests).toHaveLength(0);
+      expect(
+        (await f.client.get(f.upload.session.snapshot().noteId))!.pending,
+      ).not.toBeNull();
+    });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("does not automatically retry failed authentication when later typing is retained", async () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    await fixture(async (f) => {
+      f.control.unauthorized = true;
+      f.upload.session.edit("Before authentication expires");
+      await f.upload.upload();
+      f.upload.session.edit("Later retained typing");
+      await f.upload.session.flush();
+      f.upload.schedule();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(f.requests).toHaveLength(1);
+      expect(f.upload.snapshot().kind).toBe("sign-in-required");
+      expect(f.upload.session.snapshot().bodyMarkdown).toBe(
+        "Later retained typing",
+      );
+    });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("automatically prepares newer typing after a real local generation race", async () =>
+  fixture(async (f) => {
+    f.upload.session.edit("First retained version");
+    await f.upload.session.flush();
+    const held = f.hold(),
+      sent = deferred();
+    f.control.commit = async () => {
+      held.entered.resolve();
+      await held.release.promise;
+    };
+    f.control.afterServer = async (reply) => {
+      sent.resolve();
+      return reply;
+    };
+    const first = f.upload.upload();
+    await held.entered.promise;
+    f.upload.session.edit("Newer typing during asynchronous preparation");
+    await f.upload.session.flush();
+    held.release.resolve();
+    expect((await first).kind).toBe("idle");
+    await sent.promise;
+    await f.upload.upload();
+    expect(f.requests).toHaveLength(1);
+    expect(f.requests[0].mutation.snapshot!.bodyMarkdown).toBe(
+      "Newer typing during asynchronous preparation",
+    );
+    expect(f.upload.session.snapshot().status).toBe("Saved in Cloud");
   }));

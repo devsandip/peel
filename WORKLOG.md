@@ -2123,3 +2123,17 @@
 
 **Next:**
 - Finish162 focused review/scans/no-reply/all3 exact-source gates and normal merge/main/closure/Project proof. Keep the cancellation failure and prior historical failures explicit, preserve unrelated changes and do not renew expired allowances.
+
+
+## 2026-10-29 - Confirm automatic save and batch Cloud edits
+
+**Did:**
+- Recorded Sandip's explicit autosave/no Save button clarification in plan1745d58 before code, within existing162/163. Kept immediate local retention and added fixed200ms automatic Cloud windows, account-abort timer cleanup and failure/conflict pause. Put away/Retry may flush immediately without a network wait. No normal Save control added.
+- Moved upload recovery into the existing note body after a genuine browser assertion first failed on its external location. Added actual local-generation-race regression; it first paused normal newer typing during asyncprepare, then a proven higher-generation reobservation/new window fixed automatic progress without retrying failed network requests or adopting unknown results. Earlier observer-cancellation failure remains recorded.
+- Passed16 upload cases plus17 session cases (Node24focused33/2), exactCloud444/35 then shared659/73 sequentially,41browser/type/full checked-source format/build/whitespace. Default bundle hashes/580kB warning and legacy assertions/defaults unchanged. Prior12/440 and15/443 results precede the final generation fix; all failed strengthened cases are retained separately.
+
+**State now:**
+- Every edit is automatically retained; online confirmed uploads are batched without starving continuous typing. Pending stays until matching current confirmation. Current PR163 is draft while new source review/gates replace obsolete15a evidence; real Cloud/default app/provider/platform acceptance remains unmet.
+
+**Next:**
+- Scan/no-reply/new-source push and refreshed review, ready163 when reviewable, all3 exact-newhead hosted gates, normal merge/main/tracking proof and owned-only cleanup. Do not reuse old source gates or renew expired allowances/stopped probes.

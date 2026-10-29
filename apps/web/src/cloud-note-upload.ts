@@ -36,6 +36,12 @@ export class CloudNoteUpload {
   private client: DurableCloudClient;
   private task: Promise<UploadSnapshot> | null = null;
   private queued = false;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private clearScheduled = () => {
+    if (this.timer !== null) clearTimeout(this.timer);
+    this.timer = null;
+    this.signal.removeEventListener("abort", this.clearScheduled);
+  };
   private view: UploadSnapshot = Object.freeze({ kind: "idle", message: null });
   private listeners = new Set<() => void>();
   private constructor(
@@ -94,6 +100,7 @@ export class CloudNoteUpload {
     };
   }
   private publish(kind: UploadSnapshot["kind"], message: string | null = null) {
+    if (kind !== "idle" && kind !== "uploading") this.clearScheduled();
     this.view = Object.freeze({ kind, message });
     for (const listener of this.listeners) {
       try {
@@ -103,7 +110,23 @@ export class CloudNoteUpload {
       }
     }
   }
+  /** Fixed windows batch typing without postponing continuous edits indefinitely. */
+  schedule() {
+    if (
+      this.timer !== null ||
+      this.signal.aborted ||
+      (this.view.kind !== "idle" && this.view.kind !== "uploading")
+    )
+      return;
+    this.signal.addEventListener("abort", this.clearScheduled, { once: true });
+    this.timer = setTimeout(() => {
+      this.clearScheduled();
+      if (this.view.kind === "idle" || this.view.kind === "uploading")
+        void this.upload();
+    }, 200);
+  }
   upload(): Promise<UploadSnapshot> {
+    this.clearScheduled();
     if (this.task) {
       this.queued = true;
       return this.task;
@@ -124,12 +147,30 @@ export class CloudNoteUpload {
             this.publish("idle");
             return this.view;
           }
-          if (!state.inFlight)
-            await this.client.prepare(
-              noteId,
-              state.generation,
-              crypto.randomUUID(),
-            );
+          if (!state.inFlight) {
+            try {
+              await this.client.prepare(
+                noteId,
+                state.generation,
+                crypto.randomUUID(),
+              );
+            } catch (error) {
+              this.signal.throwIfAborted();
+              const current = await this.client.get(noteId);
+              // Concurrent retained typing can invalidate asynchronous hashing.
+              // Reobserve actual progress in a new window, never resend a failed request.
+              if (
+                current &&
+                current.generation > state.generation &&
+                !current.conflict
+              ) {
+                this.queued = true;
+                this.publish("idle");
+                return this.view;
+              }
+              throw error;
+            }
+          }
           const request: CloudMutationRequest = {
             version: 1,
             collectionId: this.scope.collectionId,
@@ -192,7 +233,7 @@ export class CloudNoteUpload {
         const again =
           this.queued && this.view.kind === "idle" && !this.signal.aborted;
         this.queued = false;
-        if (again) void this.upload();
+        if (again) this.schedule();
       });
     this.task = task;
     return task;
