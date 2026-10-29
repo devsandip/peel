@@ -1,20 +1,22 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-29 11:32 IST.
+Last refreshed: 2026-10-29 12:15 IST.
 
-Latest entry: [Initial state is not a session](entries/2026-10-29-1132-initial-state-is-not-a-session.md).
+Latest entry: [Two tiers, no peer sync](entries/2026-10-29-1215-two-tiers-no-peer-sync.md).
 
-Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
+Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free independent Local storage and optional paid cloud-authoritative storage. It was called Peel until 28 October 2026.
 
 ## Where we are now
 
-I have a local Mac development build and browser client. The complete promised sync/search/iPhone/distribution scope remains in the [PRD](../docs/PRD.md) and [SPEC](../docs/SPEC.md); mockups and merged foundations do not establish app acceptance. No public beta, production Cloud or real billing is enabled.
+I have local Mac and browser development clients and tested backend foundations. I do not yet have a complete desktop/Cloud beta, enabled Cloud login/live delivery, real billing or an iPhone app. The [PRD](../docs/PRD.md) and [SPEC](../docs/SPEC.md) define the active scope; mockups and infrastructure PRs are not app acceptance.
 
-I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
+I adopted Sandip's 29 October v0.8 simplification under issue148: Local libraries are independent, with no pairing, discovery, relay or sync. Cloud is authoritative, pushes server-committed updates to online clients and provides the complete confirmed web library. Offline Cloud edits remain durable pending drafts and are Saved only after matching server confirmation. The v0.7 gallery and peer experiments remain historical. The active UI/status implementation still needs alignment.
 
-Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. PR 127 integrated the separate test worker budget. PR 128 integrated request feature 125 with all source/main checks passing. Its complete unsigned input and transient NoEcho value stay behind private active handles; safe metadata cannot reconstruct them. PR 130 integrated private session lineage with all source/main checks passing. PR 132 integrated the phase/provenance design with passing source checks and honest docs-only main not-run evidence. PR 134 integrated the pure supplied-facts checker with all source/main gates passing and explicitly unproven authority. PR136 integrated the unsigned Query contract with all source/main gates passing. PR138 integrated bounded supplied response observations with all source/main gates passing. Their provider/ownership/settlement authority stays unproven. PR140 integrated the fixed v2 transition design with source gates and honest docs-only main not-run proof. PR142 integrated issue141’s passive fixed SQL catalog with independent golden and actual synthetic SQLite capacity evidence; all source and actual main gates passed. PR144 integrated the compatible v1 engine extraction with all source/main gates passing. Issue145 now persists/reads only the protected v2 initial state under exact header/catalog/original/state0/empty-row checks, with synthetic ACK/process-crash evidence awaiting its own review/gates/merge. No actual v2 source-bound initializer, fresh lineage, current assessment or execution capability is implemented. Actual current gates, durable preparation, dispatch, lifecycle and managed/independent teardown remain. No local record is a create capability.
+I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). PR146's fixed initial-state store passed source/main checks, but actual managed smoke/independent teardown remains unproven. Issue147 was canceled after planning, removed from the milestone and is not shipped progress. Audit51, managed31 and native72 remain stopped or blocked. The continuing automation now follows v0.8; no expired allowance or stopped probe is revived.
 
 ## Recent entries
+
+- [2026-10-29 12:15 IST: two tiers, no peer sync](entries/2026-10-29-1215-two-tiers-no-peer-sync.md)
 
 - [2026-10-29 11:32 IST: initial state is not a session](entries/2026-10-29-1132-initial-state-is-not-a-session.md)
 
@@ -51,17 +53,19 @@ None yet.
 
 ## Working hypotheses
 
-- Fast durable local capture stays independent of network and paid services.
-- Provider/lifecycle and remote transport need end-to-end evidence beyond local fixtures.
-- Branding changes must preserve storage compatibility and historical evidence.
+- Independent Local storage and one Cloud authority reduce the transport and trust surface.
+- Cloud pending-draft durability preserves responsive offline editing without a false Saved claim.
+- Product progress needs complete user flows, not only backend tests and infrastructure counts.
 
 ## Open questions
 
-- Enabled remote peer/live Cloud, iPhone, meaning search and native release/performance acceptance remain.
-- Cloud pricing/billing terms, fresh managed-run authorization and stopped integration gates remain explicit in the SPEC and active issues.
+- Active tier/status UI, Cloud login/save-to-web/live delivery, iPhone, meaning search and native acceptance remain.
+- Cloud commercial terms and fresh managed-run/audit/cleanup gates remain explicit in SPEC and active issues.
 
 ## Things ruled out
 
 - Google Drive storage and per-note mode overrides.
 - Reusing expired AWS leases, turning local recovery records into spending authority or treating card counts as product completion.
 - Importing private archive history, publishing private notes, or blindly retrying stopped probes.
+
+- Peer discovery, pairing, signaling, TURN relays and peer latest-edit convergence, removed by Sandip on 29 October 2026. Historical failures are retained without becoming current release gates.

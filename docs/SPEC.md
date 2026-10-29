@@ -1,54 +1,54 @@
 # Synkies product and technical specification
 
-Version 0.7 | 26 October 2026 | Implementation in progress
+Version 0.8 | 29 October 2026 | Confirmed two-tier contract; implementation in progress
 
-Brand update: 28 October 2026. Synkies replaces the name Peel and adopts Antigravity v2 Folded Horizon. Functional version 0.7 and requirement IDs stay unchanged; repository, storage and protocol identifiers retain their compatible names. See [brand plan](features/synkies-brand.md).
+Brand update: 28 October 2026. Synkies replaces Peel and adopts Antigravity v2 Folded Horizon. Scope revision: 29 October 2026. Sandip replaces peer sync with independent Local storage and cloud-authoritative Cloud storage, and explicitly allows offline Cloud pending drafts with Saved only after server confirmation. Compatible repository/package/storage identifiers stay unchanged. Requirement IDs remain stable; retired IDs are not reassigned. See the [scope plan](features/two-tier-cloud-first.md) and [brand plan](features/synkies-brand.md).
 
 This is the canonical behavior and implementation contract for Synkies. [PRFAQ.md](PRFAQ.md) defines the customer promise. Requirement IDs remain stable as this specification evolves. Implementation was authorized on 26 October. Current evidence and remaining gates live in [features/local-mac-app.md](features/local-mac-app.md); targets below remain acceptance targets until measured.
 
 ## Product scope
 
-Build a personal note app with fast floating notes on Mac, a searchable library, two app-wide saving modes, and access through an iPhone app and the browser. Free On-device mode stores notes only on devices and periodically synchronizes paired devices, including remotely. Paid Synkies Cloud stores the complete library in Amazon DynamoDB and synchronizes connected devices live. Capture, local saving, and word search must work without a network connection. The first user is Sandip; the architecture must also support unrelated public users without access to one another's notes.
+Build a personal note app with fast floating Mac notes, a searchable library and two whole-library tiers. Free Local storage is independent on each laptop, phone and browser installation, with no cross-device discovery or sync. Paid Cloud storage has one authoritative library in DynamoDB, pushes server-committed updates to online clients and provides complete authenticated web access. Local notes save directly on their device. Cloud clients may cache notes and durably retain offline pending drafts; upload on reconnect and show Saved only after matching server confirmation. Unuploaded drafts are not visible on other devices/web. Typing and cached search do not wait for network/authentication. The first user is Sandip; unrelated public accounts remain isolated.
 
 Confirmed decisions: the app is Synkies; iPhone comes first and Android uses the web app. Mac is the only native desktop target.
 
 ### Delivery stages
 
-| Stage | Deliverable | Exit condition |
-| --- | --- | --- |
-| M0 | Feasibility and performance experiments | Resolve the technical gates below before committing to the shell, sync layout, or model |
-| M1 | Local Mac dogfood app | Capture, durable autosave, formatting, tags, lifecycle, word search, import and export pass |
-| M2 | Remote periodic peer sync, paid live Cloud, and web app | Peer convergence, no server-stored peer notes, entitlement, live delivery, offline recovery, reconnect, and initial download tests pass |
-| M3 | iPhone app | Native persistence, authentication, lifecycle interruption, touch editing, and Mac/web parity pass |
-| M4 | Search by meaning | Local inference meets quality and performance gates on Mac, iPhone, and web |
-| M5 | Public beta and launch readiness | All public requirements pass, 14 days of dogfooding complete, distribution and operating requirements met |
+| Stage | Deliverable                                              | Exit condition                                                                                                                    |
+| ----- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| M0    | Feasibility and performance experiments                  | Resolve the technical gates below before committing to the shell, sync layout, or model                                           |
+| M1    | Local Mac dogfood app                                    | Capture, durable autosave, formatting, tags, lifecycle, word search, import and export pass                                       |
+| M2    | Cloud-authoritative storage, live updates and web access | Server-confirmed saves, full web library, entitlement, live delivery, pending-draft recovery, reconnect and initial download pass |
+| M3    | iPhone app                                               | Native persistence, authentication, lifecycle interruption, touch editing, and Mac/web parity pass                                |
+| M4    | Search by meaning                                        | Local inference meets quality and performance gates on Mac, iPhone, and web                                                       |
+| M5    | Public beta and launch readiness                         | All public requirements pass, 14 days of dogfooding complete, distribution and operating requirements met                         |
 
-M4 experiments start in M0; the feature must not delay M1 capture work. All ten items in the original brief remain in public v1. The modes are free On-device with remote periodic peer sync, and paid Synkies Cloud operated in Sandip’s AWS account using DynamoDB. A local-only build is an intermediate step, not the completed free mode. Google Drive integration is excluded.
+M4 experiments start in M0; the feature must not delay M1 capture. Local storage is a complete independent tier once its platform acceptance passes; it has no peer-sync requirement. Cloud is paid and operated in Sandip’s AWS account using DynamoDB. The green minus, Mac/iPhone/browser scope, search and release requirements remain. Google Drive is excluded. This explicitv0.8 decision supersedes v0.7’s remote peer promise rather than leaving it as a deferred requirement.
 
 ## Functional requirements
 
-| ID | Required behavior | Stage |
-| --- | --- | --- |
-| FR-01 | Create a focused blank note with one action. Mac supports a configurable global shortcut, menu bar action, and library action. | M1 |
-| FR-02 | Save changes automatically to durable local storage. Closing a native note waits for the final local save and keeps the note in the library. | M1 |
-| FR-03 | Offer two app-wide library modes: free On-device and paid Synkies Cloud. Switching to Cloud explicitly authorizes upload of the complete library. No per-note destination picker. | M1 local; M2 modes |
-| FR-04 | Store the entire Cloud-mode library through an authenticated API in app-managed DynamoDB. Cache it locally, accept offline edits, and deliver updates live to connected devices. | M2 |
-| FR-05 | Provide a Mac app, browser app including Android, and native iPhone app with the same note content and lifecycle behavior. | M1 to M3 |
-| FR-06 | Search locally by words and tags; add an optional local search by meaning that returns source notes and excerpts. | M1 words; M4 meaning |
-| FR-07 | Edit, archive, unarchive, move to Trash, restore, and permanently delete notes. | M1 |
-| FR-08 | Render cached notes and accept typing without waiting for authentication, cloud requests, analytics, or an AI model. Meet the performance budgets below. | All |
-| FR-09 | Parse inline tags beginning with `##` and expose tag filtering. | M1 |
-| FR-10 | Support only one Markdown heading level, bold, task checkboxes, bullets, and ordered lists, with lossless source storage. | M1 |
-| FR-11 | Make independent, draggable top-level Mac note windows the primary desktop experience. Each lives outside the separate Notes Library and has one top-left green minus (Put away) control that saves locally before closing. | M1 |
-| FR-12 | Export portable Markdown plus metadata and import that format without duplicating matching note revisions. | M1 |
-| FR-13 | Expose separate local-save and mode-specific sync states. Recover interrupted writes and transitions. On-device sync applies the latest edit automatically with optional local version recovery; Cloud preserves concurrent offline drafts for resolution. | M1 local; M2 sync |
-| FR-14 | Keep unrelated users and Synkies accounts isolated. Keep note text, queries, tags, and tokens out of telemetry. | All |
-| FR-15 | Pin a note to the desktop by dragging it out of the Notes Library or choosing Pin to desktop from its right-click menu. Keep one note identity and unchanged storage. | M1 |
-| FR-16 | Arrange open notes along the left, right, top, or bottom edge using configurable shortcuts and Window menu commands. Offer Undo last arrangement. | M1 |
-| FR-17 | Pair trusted devices and periodically sync On-device notes over direct encrypted connections or transient relays across different networks. Store no note payload on servers. | M2; iPhone M3 |
-| FR-18 | Require a server-verified paid entitlement for Cloud. Keep On-device capture, peer sync, search and export available without a subscription. | M2 |
-| FR-19 | Converge On-device notes by deterministic latest-edit ordering, independent of message/retry order. Keep replaced content locally for seven days and reject resurrection of purged IDs. | M2 |
-| FR-20 | Push committed Cloud changes to active connected devices in real time; reconcile offline/suspended clients on return. | M2 |
+| ID    | Required behavior                                                                                                                                                                                                                                                                    | Stage                |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
+| FR-01 | Create a focused blank note with one action. Mac supports a configurable global shortcut, menu bar action, and library action.                                                                                                                                                       | M1                   |
+| FR-02 | Automatically persist Local notes durably on this device. Retain Cloud pending drafts durably, upload on reconnect and show Saved only after the server confirms the matching current edit. Closing preserves the latest Local note or pending Cloud draft.                          | M1 Local; M2 Cloud   |
+| FR-03 | Offer two whole-library tiers: free independent Local storage and paid cloud-authoritative Cloud storage. Local installations have no awareness of other devices. Explicitly authorize complete-library Cloud upload; no per-note destination picker.                                | M1 Local; M2 tiers   |
+| FR-04 | Store the authoritative entire Cloud library through an authenticated app-managed DynamoDB API. Keep account-bound caches/pending drafts, confirm server commits before Saved, push committed changes and expose the complete committed library on the web.                          | M2                   |
+| FR-05 | Provide a Mac app, browser app including Android, and native iPhone app with the same note content and lifecycle behavior.                                                                                                                                                           | M1 to M3             |
+| FR-06 | Search locally by words and tags; add an optional local search by meaning that returns source notes and excerpts.                                                                                                                                                                    | M1 words; M4 meaning |
+| FR-07 | Edit, archive, unarchive, move to Trash, restore, and permanently delete notes.                                                                                                                                                                                                      | M1                   |
+| FR-08 | Render available local/cached notes and accept typing without waiting for authentication, network, analytics or an AI model. Cloud offline typing remains Pending upload, never a confirmed Cloud save. Meet the performance budgets below.                                          | All                  |
+| FR-09 | Parse inline tags beginning with `##` and expose tag filtering.                                                                                                                                                                                                                      | M1                   |
+| FR-10 | Support only one Markdown heading level, bold, task checkboxes, bullets, and ordered lists, with lossless source storage.                                                                                                                                                            | M1                   |
+| FR-11 | Use independent draggable top-level Mac notes outside Notes Library, with one top-left green minus Put away control. Commit a Local note or durably retain a pending Cloud draft before closing; Pending upload stays visible until server confirmation.                             | M1; M2 Cloud status  |
+| FR-12 | Export portable Markdown plus metadata and import that format without duplicating matching note revisions.                                                                                                                                                                           | M1                   |
+| FR-13 | Expose truthful tier-specific states and recover interrupted writes/transitions. Local uses Saved on this device; Cloud uses Pending upload/Saving to Cloud/Saved in Cloud only for the acknowledged current edit. Preserve concurrent offline Cloud drafts for explicit resolution. | M1 Local; M2 Cloud   |
+| FR-14 | Keep unrelated users and Synkies accounts isolated. Keep note text, queries, tags, and tokens out of telemetry.                                                                                                                                                                      | All                  |
+| FR-15 | Pin a note to the desktop by dragging it out of the Notes Library or choosing Pin to desktop from its right-click menu. Keep one note identity and unchanged storage.                                                                                                                | M1                   |
+| FR-16 | Arrange open notes along the left, right, top, or bottom edge using configurable shortcuts and Window menu commands. Offer Undo last arrangement.                                                                                                                                    | M1                   |
+| FR-17 | Retired in v0.8 by Sandip’s 29 October 2026 decision: peer pairing, remote device-to-device sync and transient relays are outside product scope. This ID is retained for historical evidence only.                                                                                   | Retired              |
+| FR-18 | Require server-verified paid entitlement for Cloud APIs/live subscriptions. Local capture, search and export remain available without an account/subscription. Commercial terms remain a separate launch gate.                                                                       | M2                   |
+| FR-19 | Retired in v0.8: peer latest-edit clocks/convergence and its seven-day peer recovery contract are outside product scope. Cloud conditional revisions/conflict preservation remain FR-13; this ID is not reassigned.                                                                  | Retired              |
+| FR-20 | After an authoritative Cloud commit, push change notifications to active authorized online clients. Reconcile caches and pending drafts on reconnect; committed notes remain available through web access when the originating device is offline.                                    | M2                   |
 
 The baseline excludes attachments, reminders, collaboration, live cursors, arbitrary rich text, generated AI answers, native Android, Windows, Linux, and automatic Google Keep import.
 
@@ -60,7 +60,7 @@ The proposed Mac shortcut is Control Option N. Detect registration failure and l
 
 Launch at login reads the Mac's current login-item status and changes only after an explicit Settings action. Never register automatically on install/startup or silently re-enable a login item disabled in System Settings. Show pending approval separately from enabled, refresh on return to Synkies, and preserve the observed state on failure. Turning it off leaves the current app and notes running. Development executables and isolated test libraries cannot change login items. Verify registration, approval, disable and actual login/relaunch with the installed signed app before treating this behavior as accepted.
 
-An action creates a new note ID, uses the library’s selected mode, and focuses an empty editor. A missing cloud connection does not silently switch mode: keep changes locally, show Waiting to sync, and offer reconnection or the explicit whole-library mode transition. No account or title prompt interrupts On-device capture.
+An action creates a new note ID in the selected tier and focuses an empty editor. Missing Cloud connectivity never silently switches tiers: retain a pending draft, show Pending upload/Offline and offer reconnection or an explicit whole-library transition. Local capture has no account or title prompt. Cloud authentication failures preserve cached notes and pending drafts without a Saved claim.
 
 Floating notes are the primary Mac surface. On launch, restore the person's pinned desktop notes; opening Synkies does not require opening the library. New Note creates a note directly in its own floating window. Each note has at most one such window per Mac; opening an already visible note brings that window forward.
 
@@ -88,12 +88,12 @@ Pinning means keeping a note open on the desktop and restoring its placement nex
 
 Provide these proposed, configurable global shortcuts while Synkies is resident:
 
-| Action | Shortcut |
-| --- | --- |
-| Arrange left | Control Option Command Left arrow |
-| Arrange right | Control Option Command Right arrow |
-| Arrange top | Control Option Command Up arrow |
-| Arrange bottom | Control Option Command Down arrow |
+| Action         | Shortcut                           |
+| -------------- | ---------------------------------- |
+| Arrange left   | Control Option Command Left arrow  |
+| Arrange right  | Control Option Command Right arrow |
+| Arrange top    | Control Option Command Up arrow    |
+| Arrange bottom | Control Option Command Down arrow  |
 
 Expose the same commands under Window, with shortcut labels. Settings provides device-local Capture and four-edge bindings, Disable, Restore defaults and Retry activation. Validate duplicate combinations and reserved editing/app commands before changing registration. A non-function key needs at least two modifiers including Control or Command; supported physical keys are letters, digits, arrows and F1 to F20. Labels and behavior on non-US keyboard layouts require native verification.
 
@@ -107,67 +107,42 @@ Save the preceding geometry as Undo last arrangement and expose it in Window. Re
 
 ### Saving and recovery
 
-Submit every editor document transaction to local persistence immediately, coalescing at most 50 ms of changes. Persist note state and its pending sync record atomically. Only a committed transaction may display Saved on this device. Never depend on a cloud write for local-save success.
+Submit editor transactions immediately to local persistence, coalescing at most 50 ms. In Local storage, a committed local transaction permits Saved on this device. In Cloud storage, atomically retain the pending draft/operation for crash recovery, then submit to the authoritative service. This local retention is not a Cloud save. Show Pending upload/Saving to Cloud until the server confirms the matching current edit; a receipt for an older draft never marks newer typing Saved.
 
-Native close and quit handlers flush the latest editor state and await commit. After 500 ms, display Saving. If persistence fails, keep the editor open, show Could not save on this device, and offer Retry and Copy text. Do not close until a save succeeds or the person explicitly discards changes.
+Native close and quit flush the latest Local note or pending Cloud draft and await durable retention. After 500 ms, show Saving on this device or Retaining draft as appropriate. Retention failure keeps the editor open with Retry and Copy text. Cloud Put away does not require a network round trip after successful draft retention, but its library entry remains Pending upload until server confirmation. Never report a successful Cloud save merely because the window closed.
 
-Browser writes also happen during editing. Page unload handlers are not a durability mechanism, and the product must not promise recovery of input whose local commit has not completed. Restore every acknowledged save after forced termination. During iPhone backgrounding, initiate a flush promptly and recover any committed draft on resume.
+Browser writes happen during editing. Page unload is not a durability mechanism, and uncommitted input has no recovery guarantee. Restore every acknowledged Local save and every durably retained pending Cloud draft after termination. During iPhone backgrounding, flush promptly and recover committed drafts on resume. Reopen server-confirmed Cloud notes from the server even if the original device is gone.
 
-Local-save states are Saving, Saved on this device, and Could not save. Cloud states are Synced, Waiting to sync, Offline, Sign in again, Conflict, and Sync paused with a reason. A note can be saved locally while cloud sync has failed.
+Local states are Saving, Saved on this device and Could not save. Cloud states are Pending upload, Saving to Cloud and Saved in Cloud, with Offline, Sign in again, Conflict or Sync paused reasons when applicable. Saved in Cloud requires the current edit’s authoritative acknowledgement; a locally retained draft may remain Pending upload indefinitely while offline. Live/Connecting describes the notification channel separately and does not acknowledge an edit.
 
-### Saving modes, pairing, and transitions
+### Storage tiers and transitions
 
-The mode belongs to the complete linked library. It is not a property independently chosen for each note. A fresh installation starts in free On-device mode without an account. Unpaired installations are independent; pairing creates local replicas of the linked library. A device belongs to one paired library at a time in public v1. Pairing an installation with existing notes previews the merge; unrelated identities remain distinct and both complete local sets survive until acknowledgement.
+The tier belongs to the whole library, not each note. A fresh installation starts in free Local storage without a Cloud account. Every Local installation is independent: no device list, discovery, pairing, signaling, relay, peer sync or cross-device awareness. Explicit portable export/import is allowed and does not establish a live relationship.
 
-| Mode | Durable note storage | Synchronization | Commercial status |
-| --- | --- | --- | --- |
-| On-device | SQLite on each native device; IndexedDB in each browser profile | Periodic peer sync across local or different networks; no server-stored note copies | Free |
-| Synkies Cloud | Complete library in DynamoDB plus local caches | Live delivery between active online devices; stored catch-up for offline clients | Paid |
+Cloud is the authoritative shared library. Upload a Local library only after an explicit whole-library preview/authorization; sign-in alone uploads nothing. Retain at least one complete recoverable copy throughout upgrade. A pending source draft is not confirmed or shared until its server mutation succeeds. Download the complete confirmed Cloud library and reconcile/explain pending drafts before downgrading this installation to independent Local storage. Other devices and Cloud data are not silently deleted or switched. Billing cancellation, Cloud-data removal and account deletion are separate choices with published retention.
 
-On-device pairing uses authenticated device keys and explicit confirmation/QR or a verified pairing code. Remote pairing and reconnect work across different networks. Do not send note data to a device until pairing is authenticated. Unpairing revokes future connections; offer keeping or removing that device's existing local copy. Removal of a lost device cannot remotely erase an offline copy. Changing a peer group must not expose notes, keys or suggestions from the former group.
+Persist transition metadata with source/destination identities, account, generation, stages, complete snapshots and acknowledgements so interruption cannot lose the only copy. Import follows the selected tier and discloses upload consequences. Export is always available. Sign-out/account switching separates caches, pending drafts and indexes and offers draft copy/export recovery; no draft crosses accounts.
 
-Free peer sync attempts on foreground, reconnect and Sync now, plus a proposed 60-second interval while the app is active. Exchange data only when peers are simultaneously reachable; a local outbox waits otherwise. Relay through another paired device is permitted if that device holds the data locally. No server-side store-and-forward of note content is permitted. Show Last synced, Waiting for iPhone/Mac, Device offline, Connecting, Syncing and the most recent completed acknowledgement separately from Saved on this device.
+### Cloud authority and delivery
 
-Remote connectivity may use a signaling service and an authenticated transient TURN relay when direct peer connection fails. Notes, titles, tags, embeddings, recovery versions and note outboxes must never be written to server databases, object storage, logs, crash reports or durable message queues in this mode. Relays buffer encrypted packets only in memory for transmission. Public-key/pairing/connection metadata is separate and disclosed. Default to the least metadata needed and bounded retention. Direct connectivity and relay behavior must be verified on different networks; same-LAN success alone is insufficient. [WebRTC connection setup](https://webrtc.org/getting-started/peer-connections), [data channels](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels).
+The flow is editor/pending draft, authenticated server mutation, authoritative DynamoDB commit/acknowledgement, then push/reconciliation to online Mac/iPhone/browser clients. The complete committed library is accessible on the web independently of any source device. There is no device-to-device path or server dependency for Local storage notes.
 
-iOS schedules background execution opportunistically. The UI must not promise a guaranteed one-minute wakeup when suspended. Use permitted background opportunities, foreground/reconnect and explicit Sync now; show waiting peers truthfully. Cloud also cannot force a suspended editor to render instantly. [Apple background tasks](https://developer.apple.com/documentation/BackgroundTasks/refreshing-and-maintaining-your-app-using-background-tasks).
+A Cloud client may retain cached confirmed notes and offline pending drafts. On reconnect, authenticate, reconcile server state and conditionally submit the original pending operation. Failed auth, quota or conflict preserves the draft and truthful status. Unuploaded drafts remain only on their source device; no other client/web can display them yet. Once Cloud confirms an edit, the source may go offline and other clients can still fetch it. Push is a hint to pull confirmed state, never an alternative authority or proof that every device has received the edit.
 
-On Mac, use a small SQLite database in a user-selected local directory, with an app-managed default. Relocation flushes writes and uses SQLite backup or a closed checkpointed database; never copy an open database as an ordinary file. A disconnected drive produces a recoverable save error without silently choosing another folder. iPhone uses private app storage. Web uses IndexedDB and requests persistent storage; clearing browser data can still remove local replicas. Every client supports portable export. Browser direct/relayed peer compatibility is an M0 gate, not an omitted feature.
-
-Choose a destination without an existing Synkies database. Verify a complete copy before atomically selecting it, and retain the previous folder as an inactive recovery copy until the user explicitly removes it. Later edits go only to the selected copy. A missing selected library opens a reconnect/retry view rather than creating an empty replacement. During relocation every open editor saves and freezes; failed saves cancel the move. If selection publication is uncertain, keep the already-saved editors read-only and offer Quit/reopen before allowing more edits.
-
-Enabling paid Cloud requires sign-in, an active entitlement and explicit confirmation that the complete linked library will upload, including Archive and retained Trash. Signing in alone does not change mode or upload data. Keep the on-device source, identity map, pairing information and transition journal until the complete cloud copy is acknowledged. Migrate paired devices deliberately into the same authenticated library; a still-offline peer retains work and is reconciled before activation. Do not create two active sync engines for the same library during a transition.
-
-Switching to On-device first downloads and verifies the complete Cloud library, merges pending local drafts safely, then establishes the peer library. Offer explicit device pairing afterward. Do not silently delete server data or cancel a subscription as a side effect. Provide separate Cancel subscription and Remove cloud data actions, with retention explained. The final billing grace period and service retention policy must be published before paid launch. Lapse never deletes local notes or disables local capture/export; paused cloud delivery and next steps remain visible.
-
-Persist a transition ID, source/destination library identity, mode, account, stages, complete snapshots and acknowledgements so interruption can resume. At least one recoverable full copy must survive every step. Import follows the active mode and discloses whether imported notes will sync/upload. Export is always available. Leaving a cloud account stops its engine and separates its cache/outbox/index from other accounts and peer libraries. Unsynced drafts have copy/export recovery before cache removal.
-
-### Latest-edit rule for On-device sync
-
-Each note change carries a device-generated immutable edit ID and a hybrid logical edit stamp: UTC physical milliseconds, logical counter, and stable authenticated device ID. Generate the next stamp monotonically from the local clock and last observed stamp. Compare the tuple lexicographically, with edit ID as the final deterministic tie-breaker. Causally later edits win; concurrent offline edits use that ordering. Replicas converge regardless of arrival order or retries. Keep timestamps for display separate from transport receipt time; receiving a remote edit must not restamp it as a new user edit.
-
-This is a deterministic latest-edit policy, not proof of real-world ordering when offline clocks disagree. Calibrate/check clock offset during authenticated peer handshakes; flag a large skew, avoid adopting an unbounded future stamp automatically, and retain recovery content before replacement. M0 must establish the exact skew/quarantine policy with one-year-forward/backward fixtures before peer sync is enabled. Do not silently claim an arbitrary clock winner is certainly the latest human action.
-
-The isolated [signed clock diagnostic](features/peer-clock-diagnostics.md) can observe peer-relative skew using fresh monotonic challenges and confirmed-key signatures even when absolute session expiry rejects. The [durable current-trust gate](features/peer-clock-current-trust.md) rechecks confirmed key generations before releasing a diagnostic packet or observation. A [same-page Chrome channel fixture](features/peer-clock-channel.md) derives bindings from installed descriptions and rejects changed descriptions. These checks do not establish trusted UTC, repair or publication authority. Production channel integration, skewed-device transport and the exact repair/quarantine policy remain required before app sync.
-
-Commit local text independently of protocol clock safety. An unstamped local draft remains durable while sync waits; failed stamping or publication cannot undo that save. Publication must check the exact current draft generation and local revision, so newer typing invalidates an older pending publish. Preserve original display timestamps. Verified remote heads may be stored without replacing the pending local draft; permanent purge still removes all retained content for that identity. Clock calibration/repair and the policy for publishing uncertain-time drafts must pass M0 before app integration.
-
-Apply whole-note snapshots atomically; no automatic character merge. Latest active/archive/Trash state follows the same edit ordering, with the 30-day Trash contract. Permanent deletion markers dominate stale content regardless of edit stamp; an explicit recovery creates a new identity. Store a replaced non-purged version locally for seven days, accessible through Recent versions without blocking sync. Recovery is a new edit or separate note. Never transfer local recovery history to a server in On-device mode. A receiving peer acknowledges only after its own durable local commit. A peer acknowledgement is not a cloud backup.
-
-Cloud-mode concurrent offline edits retain the existing conditional-revision/conflict behavior below. Sandip's automatic latest-edit instruction currently applies to On-device mode. Do not use a blocking conflict picker for ordinary On-device synchronization.
+Cloud revisions and explicit conflict preservation below apply to concurrent offline drafts. Device clocks never silently overwrite a remote edit. Permanent deletion markers reject stale resurrection. Retained peer prototype code/experiments are historical and outside v0.8; no peer clock, pairing or relay acceptance gate remains.
 
 ### Markdown and tags
 
 Store the original Markdown body as UTF-8 text. Use a shared parser for native and browser clients, configured for this subset:
 
-| Element | Syntax | Rule |
-| --- | --- | --- |
-| Heading | `# Heading` | Only ATX H1, with a space after `#`; multiple headings may use this same level |
-| Bold | `**important**` | Asterisks only for the first release |
-| Checkbox | `- [ ] Task` and `- [x] Done` | A tap or click updates source text and saves; uppercase X also accepted |
-| Bullet | `- Item` | One list depth; ordinary Markdown continuation lines remain part of their item |
-| Numbered list | `1. Item` | One list depth; preserve source numbers and render ordered list semantics |
-| Tag | `##work` | App extension parsed as described below |
+| Element       | Syntax                        | Rule                                                                           |
+| ------------- | ----------------------------- | ------------------------------------------------------------------------------ |
+| Heading       | `# Heading`                   | Only ATX H1, with a space after `#`; multiple headings may use this same level |
+| Bold          | `**important**`               | Asterisks only for the first release                                           |
+| Checkbox      | `- [ ] Task` and `- [x] Done` | A tap or click updates source text and saves; uppercase X also accepted        |
+| Bullet        | `- Item`                      | One list depth; ordinary Markdown continuation lines remain part of their item |
+| Numbered list | `1. Item`                     | One list depth; preserve source numbers and render ordered list semantics      |
+| Tag           | `##work`                      | App extension parsed as described below                                        |
 
 Unsupported syntax remains literal editable text. Do not render raw HTML, images, tables, code blocks, nested list levels, or additional heading levels. Pasting Markdown never deletes unsupported characters. A source-editing mode must remain available; preview and toolbar actions must preserve supported content. URLs are plain text in v1. Block unsupported browser navigation or script execution from note content.
 
@@ -193,21 +168,19 @@ Archive preserves text and tags, removes a note from Notes, and closes its float
 
 Delete moves a note to Trash. Trash is excluded from ordinary search and the semantic index. Restore is available for 30 days from deletion. After that, purge retained content on the next successful maintenance pass. Delete permanently accelerates the purge after confirmation. Collection metadata retains a small deletion marker without note text to reject stale edits from devices that have been offline longer than 30 days.
 
-In On-device mode a concurrent edit/delete follows the latest-edit stamp until permanent purge, retaining optional local recovery content. In Cloud mode concurrent delete and edit hides the note from ordinary views but preserves the edit as a recoverable conflict until the deletion retention deadline. After permanent purge, stale clients must not re-upload that note ID. An explicit decision to recover stale local text creates a new note ID. Provider snapshots and user-created backups follow their own retention; do not claim deletion erases those copies.
+Local lifecycle changes affect only this installation. In Cloud, concurrent delete/edit hides the note from ordinary views but preserves the edit as a recoverable conflict until the deletion deadline. After permanent purge, stale clients must not re-upload that note ID; explicit recovery creates a new ID. Provider backups and user exports have separate retention; do not claim immediate physical erasure.
 
 ## Storage design and operating cost
 
 ### Confirmed storage choices
 
-Both modes commit locally first. SQLite is an embedded native database; IndexedDB is the browser repository. On-device stores all note content only on paired devices. Paid Cloud stores the complete library in DynamoDB and retains local replicas for speed and offline use. DynamoDB is not a text/vector search engine; search indexes and embeddings stay on devices. Google Drive is excluded.
+Local storage commits its independent library directly to SQLite/native or IndexedDB/browser. Cloud uses DynamoDB as its single authoritative library; clients retain account-bound caches and pending drafts for responsive editing/recovery, but only a matching server commit is a Cloud save. Search indexes and embeddings remain on devices. Google Drive and peer connectivity services are excluded.
 
-The app operator pays for Cloud resources and free remote connectivity. Use one initial AWS region, us-east-1, with separate development and production resources. DynamoDB uses Standard/on-demand capacity. The existing database scenario below is a component estimate, not a complete price for either mode.
+The operator pays for Cloud resources and shared app-shell hosting. Local storage requires no peer signaling/relay service or note-hosting account. Use one initial AWS region, us-east-1, with separate development/production resources and Standard/on-demand DynamoDB. The dated database scenario below is a component estimate, not a deployment allowance or complete price.
 
-### Free connectivity and paid live-sync cost
+### Cloud hosting and live-update cost
 
-Measure pairing/signaling requests, active connection-minutes, direct versus relayed sessions, encrypted payload size and relay egress GB. A useful relay model is synced edits times mean wire bytes times recipients times relay fraction, plus handshake/retry overhead. Add relay hosting/availability, signaling, abuse protection and operational logs that exclude payloads. No cloud note storage does not mean zero AWS/network cost. Do not provision an always-on relay fleet before validating transport and estimating idle as well as bandwidth cost.
-
-Paid Cloud adds authenticated live connection-minutes, push messages/fan-out, change pulls, entitlement/billing webhooks, transaction amplification, account storage, backups and hosting. Polling is a reconnect fallback rather than the primary real-time mechanism. Price and quotas must sustain the free tier and paid service. Verify current service/region rates in the infrastructure plan before deployment; no subscription price is invented in mockups.
+Measure authenticated requests, confirmed mutations, active connection-minutes, push/fan-out, reconnect/change pulls, billing events, transaction amplification, account storage, backups, hosting and transfer. Polling is a degraded reconnect fallback, not the primary live mechanism. No TURN fleet, pairing directory or free relay bandwidth budget is required. Verify current rates and measured traffic before deployment; do not invent a subscription price or revive historical allowances.
 
 ### Illustrative DynamoDB cost model
 
@@ -215,13 +188,13 @@ Rates checked on 26 October 2026 in us-east-1: USD 0.625 per million write reque
 
 Assume 1,000 users, 20 GB of current content, 20 cloud mutations per user per day, and 30 days. Budget 12 write units per mutation for a transaction containing a note up to 3 KiB plus three metadata items up to 1 KiB each. Transactional writes use twice the ordinary write units. Allow 60 strong-read units per user per day for content retrieval. Separately model two devices per user, each actively polling every 30 seconds for two hours per day. [Request unit definitions](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Constraints.html).
 
-| Component | Calculation | Monthly USD |
-| --- | --- | ---: |
-| Current content at marginal storage rate | 20 x 0.25 | 5.00 |
-| Transactional writes | 600,000 x 12 / 1,000,000 x 0.625 | 4.50 |
-| Content reads | 1,800,000 / 1,000,000 x 0.125 | 0.23 |
-| Polling metadata reads | 14,400,000 / 1,000,000 x 0.125 | 1.80 |
-| Illustrative database subtotal | Unrounded sum, rounded once | 11.53 |
+| Component                                | Calculation                      | Monthly USD |
+| ---------------------------------------- | -------------------------------- | ----------: |
+| Current content at marginal storage rate | 20 x 0.25                        |        5.00 |
+| Transactional writes                     | 600,000 x 12 / 1,000,000 x 0.625 |        4.50 |
+| Content reads                            | 1,800,000 / 1,000,000 x 0.125    |        0.23 |
+| Polling metadata reads                   | 14,400,000 / 1,000,000 x 0.125   |        1.80 |
+| Illustrative database subtotal           | Unrounded sum, rounded once      |       11.53 |
 
 This is a database scenario, not a complete product bill. Add storage for revisions/metadata, extra query pages, retries and conflict reads, Cognito, API Gateway, Lambda, email delivery, CloudFront, transfer, backup, logs, taxes, and native distribution. Polling also generates API calls, so public scale requires measuring API cost as well as database cost. Coalesce cloud uploads, use push for live delivery, back off fallback polling, and set budgets before inviting public users. Reprice using measured dogfood traffic before launch.
 
@@ -237,19 +210,16 @@ The initial Mac/browser editor uses CodeMirror 6 with source-preserving decorati
 
 ```mermaid
 flowchart LR
-    UI[Mac or iPhone or browser editor] --> Core[Shared note commands]
-    Core --> Store[Local SQLite or IndexedDB]
-    Store --> Search[Local word and meaning indexes]
-    Store --> Queue[Durable sync outbox]
-    Queue --> Mode{Library mode}
-    Mode -->|On-device| Peer[Authenticated encrypted peer transport]
-    Peer --> Devices[Other paired local databases]
-    Mode -->|Paid Cloud| API[Authenticated API Gateway and Lambda]
-    API --> DB[DynamoDB cloud notes and change log]
-    DB --> Push[Live change notification service]
-    Push --> Store
-    Auth[Cognito account] --> API
-    AWS[CloudFront and S3 application shell] --> Browser[Browser application]
+    Editor[Editor] --> Tier{Library tier}
+    Tier -->|Local| Local[Independent local database]
+    Tier -->|Cloud| Draft[Account-bound pending draft and cache]
+    Draft -->|Submit or retry| API[Authenticated API]
+    Auth[Cognito and entitlement] --> API
+    API --> DB[Authoritative DynamoDB library]
+    DB -->|Commit acknowledgement| Draft
+    DB --> Push[Committed-change notifications]
+    Push --> Clients[Online Mac, iPhone and web clients]
+    Clients -->|Pull confirmed notes| API
 ```
 
 Source layout (later packages are created as their milestones start):
@@ -260,7 +230,6 @@ apps/native/              Tauri Mac and iPhone shells
 packages/core/            Note commands, types, tags, Markdown, validation
 packages/storage/         Native and browser repository contracts
 packages/sync/            Mode transitions, outbox, cloud conflicts and API client
-packages/peer/            Pairing, remote peer transport, edit stamps and convergence
 packages/search/          Shared lexical ranking and semantic workers
 packages/ui/              Editor, library, status and accessibility
 infra/                    AWS hosting defined as code
@@ -278,7 +247,6 @@ type Collection = {
   id: string;
   kind: "on-device" | "peel-cloud";
   modeGeneration: number;
-  peerGroupId?: string;
   ownerSubject?: string;
   schemaVersion: 1;
 };
@@ -294,11 +262,10 @@ type NoteSnapshot = {
   deletedAt: string | null;
   purgeAfter: string | null;
   serverRevision: number | null;
-  editStamp?: { physicalMs: number; logical: number; deviceId: string; editId: string };
   origin?: { collectionId: string; noteId: string; moveId: string };
 };
 
-type CloudMutationSnapshot = Omit<NoteSnapshot, "serverRevision" | "editStamp">;
+type CloudMutationSnapshot = Omit<NoteSnapshot, "serverRevision">;
 
 type PendingMutation = {
   version: 1;
@@ -318,13 +285,13 @@ type CloudMutationRequest = {
 };
 ```
 
-Tags and display titles derive from body text. Geometry, save status, model files, search vectors and local revisions are device-local. Peer edit stamps travel through the On-device protocol. Cloud mutation requests omit the server-assigned revision and peer stamp; `baseRevision` is the conditional write precondition. Native and browser repositories retain note state, device/peer edit stamps, pairing keys, the latest acknowledged cloud base, pending mutations, local recovery/conflict versions, mode-transition state, cursors, and deletion markers. Internal development collection IDs are migrated explicitly before peer/cloud use.
+Tags/display titles derive from body text. Geometry, save status, model files, search vectors and local revisions stay device-local. Cloud requests omit serverRevision; baseRevision is the conditional write precondition. Clients retain the latest confirmed Cloud base, pending drafts/operations, conflicts, transitions, cursors and deletion markers. Stored identifiers such as on-device/peel-cloud remain compatible internal names for Local/Cloud. Legacy peer fields or prototype packages may remain inactive until separately reviewed cleanup/migration; they do not create a device relationship. Never rewrite an actual library merely to rename the tier.
 
-The following conditional-revision protocol is Cloud-specific; peer sync uses the latest-edit rule above. Coalesce typing into a latest pending snapshot while preserving its acknowledged cloud base revision. An in-flight mutation is immutable; subsequent edits become a new pending draft. On acknowledgement, rebase the subsequent draft onto the acknowledged server revision without dropping its text. Persist this transition atomically. A retry of one operation always uses the same opId and content hash.
+The following protocol applies only to Cloud; Local storage has no sync engine. Coalesce typing into the latest pending snapshot while preserving its acknowledged Cloud base. An in-flight mutation is immutable; later typing becomes a new pending draft. On matching acknowledgement, atomically rebase that subsequent draft without dropping text and retain Pending upload until it too is confirmed. A retry preserves the same opId/content hash.
 
 The [isolated Cloud client reducer](features/cloud-client-conflicts.md) is a prerequisite for this local transition contract, not an app or server implementation. Its [local durability adapter](features/cloud-local-durability.md) commits the note projection and pending operation in one generation-checked state row, with SQLite/IndexedDB failure and restart evidence. The production repository must compare the source generation when committing an asynchronously prepared mutation, so a newer local save cannot be replaced by stale hash work. A queued permanent purge cannot be coalesced back into an upsert under the same note ID; recover text as a new note.
 
-The server assigns monotonically increasing per-note revisions. Apply an upsert only when baseRevision equals the current revision; zero is accepted only for a never-created ID with no deletion marker. A mismatch returns 409 with the current server version. Keep both versions locally, mark Conflict rather than Synced, and require an explicit resolution. Combining versions produces a new mutation based on the latest remote revision; another 409 preserves the merged draft and asks the person to review again. Do not overwrite a remote edit using device time.
+The server assigns monotonically increasing per-note revisions. Apply an upsert only when baseRevision equals the current revision; zero is accepted only for a never-created ID with no deletion marker. A mismatch returns 409 with the current server version. Keep both versions locally, mark Conflict rather than Saved in Cloud, and require an explicit resolution. Combining versions produces a new mutation based on the latest remote revision; another 409 preserves the merged draft and asks the person to review again. Do not overwrite a remote edit using device time.
 
 Public v1 does not automatically persist an unresolved local conflict branch to the cloud. Its status must make clear that the draft is only on the device; Copy and Export are available before sign-out or cache removal. A lost local-only draft is not an acknowledged cloud save.
 
@@ -342,13 +309,13 @@ The [composed foundation evidence](features/cloud-foundations-evidence.md) conne
 
 Initial single-table layout:
 
-| Partition key | Sort key | Purpose |
-| --- | --- | --- |
-| `USER#<subject>` | `META` | Per-user sync sequence and current collection generation |
-| Same | `NOTE#<noteId>` | Current cloud snapshot and server revision |
-| Same | `CHANGE#<zero-padded-sequence>` | Compact note ID, revision, change type, and retention timestamp |
-| Same | `OP#<opId>` | Idempotency outcome and content hash |
-| Same | `TOMB#<noteId>` | Body-free permanent deletion marker |
+| Partition key    | Sort key                        | Purpose                                                         |
+| ---------------- | ------------------------------- | --------------------------------------------------------------- |
+| `USER#<subject>` | `META`                          | Per-user sync sequence and current collection generation        |
+| Same             | `NOTE#<noteId>`                 | Current cloud snapshot and server revision                      |
+| Same             | `CHANGE#<zero-padded-sequence>` | Compact note ID, revision, change type, and retention timestamp |
+| Same             | `OP#<opId>`                     | Idempotency outcome and content hash                            |
+| Same             | `TOMB#<noteId>`                 | Body-free permanent deletion marker                             |
 
 A mutation transaction conditionally updates the note, advances META from an expected sequence to the next sequence, appends the change record, and writes its idempotency result. The request collection and mode generation must match current server metadata, including for a purge without a snapshot. Current account/entitlement state participates in the transaction condition. Retry sequence contention internally; return a note-revision conflict to the client. Check note conditions in the update itself rather than using a separate condition action on the same item. If the opId exists, compare the hash and return its prior outcome; a different payload or scope for the same ID is rejected.
 
@@ -364,16 +331,16 @@ DynamoDB limits an item to 400 KiB including attributes. The body limit is 256 K
 
 API surface:
 
-| Route | Behavior |
-| --- | --- |
-| `POST /v1/sync/bootstrap` | Capture the current server sequence and start a paginated current-state download |
-| `GET /v1/notes?pageToken=...` | Return current snapshots and tombstones for the authenticated account only |
-| `GET /v1/sync?after=...` | Validate a completed checkpoint and start a change round with a stable upper sequence |
-| `GET /v1/sync?pageToken=...` | Continue that round, returning current heads for ordered changes and an opaque next cursor or completed checkpoint |
-| `GET /v1/notes/<id>` | Return the latest snapshot/revision or a purge marker |
-| `POST /v1/mutations` | Apply one idempotent conditional mutation; return acknowledgement or 409 |
-| `POST /v1/account/export` | Authorize export of the caller's collection; stream/page results without a public URL |
-| `DELETE /v1/account` | Start authenticated account deletion with confirmation and a measurable completion status |
+| Route                         | Behavior                                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `POST /v1/sync/bootstrap`     | Capture the current server sequence and start a paginated current-state download                                   |
+| `GET /v1/notes?pageToken=...` | Return current snapshots and tombstones for the authenticated account only                                         |
+| `GET /v1/sync?after=...`      | Validate a completed checkpoint and start a change round with a stable upper sequence                              |
+| `GET /v1/sync?pageToken=...`  | Continue that round, returning current heads for ordered changes and an opaque next cursor or completed checkpoint |
+| `GET /v1/notes/<id>`          | Return the latest snapshot/revision or a purge marker                                                              |
+| `POST /v1/mutations`          | Apply one idempotent conditional mutation; return acknowledgement or 409                                           |
+| `POST /v1/account/export`     | Authorize export of the caller's collection; stream/page results without a public URL                              |
+| `DELETE /v1/account`          | Start authenticated account deletion with confirmation and a measurable completion status                          |
 
 Page tokens are signed, owner-bound, and validated. Bind each to its purpose, account/library/mode generation, round, phase, bounds and progress. The isolated implementation uses an injected nonextractable HMAC-SHA256 key; production key storage, rollout and rotation still need hosting acceptance. Provisional limits are 32 records, a 512 KiB aggregate head budget and a 640 KiB serialized page limit. Continuation tokens expire after 15 minutes; completed checkpoints after 90 days. A byte-limited page never advances past an unreturned head/event. Continue DynamoDB queries until LastEvaluatedKey is absent; a short or empty page does not prove completion. The [DynamoDB pull adapter](features/cloud-dynamodb-pull.md) now supplies base-table key queries and continuation handling to the existing signed service, with isolated engine-boundary and durable-client evidence. Hosted consistency/cost and application activation remain separate gates. [DynamoDB query pagination](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html).
 
@@ -387,7 +354,7 @@ For paid Cloud, submit the newest committed snapshot within 250 ms while connect
 
 Live push is a delivery hint, not a second system of record. Reconnect from the durable cursor, fill gaps, deduplicate notifications, and bootstrap when history has expired. Pull on foreground, reconnect, explicit refresh and before queued writes. Poll with jitter every 30 seconds only as a degraded fallback; back off idle clients. Elect one browser-tab leader. Show Live, Connecting, Waiting to sync, Offline or Sync paused truthfully. Suspended devices catch up when active rather than receiving an impossible render guarantee.
 
-Retry temporary API failures with exponential backoff, jitter, Retry-After, and a five-minute ceiling. A 401 triggers token refresh or Sign in again; 429/503 enters a visible retry state; validation and upgrade errors pause the affected operation. All committed local changes remain usable. Show Synced only after the API acknowledges the mutation; show Conflict or Waiting to sync otherwise.
+Retry temporary API failures with exponential backoff, jitter, Retry-After and a five-minute ceiling. A 401 refreshes auth or shows Sign in again; 429/503 exposes retry; validation/upgrade errors pause upload. Preserve cached confirmed notes and pending drafts. Show Saved in Cloud only after API acknowledgement of the current edit; use Pending upload/Conflict/reasoned pause otherwise. A local draft commit never changes that rule.
 
 The server assigns cloud deletion/retention timestamps from server time; client-supplied clock values cannot shorten or extend cloud retention. Trash becomes non-restorable when purgeAfter passes, regardless of physical cleanup timing. Use a scheduled cleanup path to replace expired content with body-free tombstones and remove retained note content; API reads enforce the deadline immediately. TTL handles expendable change/idempotency cleanup, not correctness or exact deletion deadlines, because AWS deletes expired items asynchronously. Encode those TTL values by rounding the logical millisecond expiry up to epoch seconds, so physical cleanup cannot precede the promised retention deadline. [Boundary regression](features/cloud-ttl-rounding.md). [DynamoDB TTL](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html).
 
@@ -395,13 +362,9 @@ Enable point-in-time recovery for hosted beta, initially a documented 7-day reco
 
 ### Authentication and security
 
-On-device capture requires no cloud account. Peer pairing uses authenticated device keys stored in the OS keychain/native secure store or non-extractable browser keys. It does not confer cloud entitlement. Synkies Cloud uses Amazon Cognito user pools. Email/password with email verification and password reset is the initial auth proposal; passwordless or social login can be evaluated later. Signing in is for Synkies, not for the customer's own AWS account. A verified paid entitlement is also required for Cloud access; a client-side paid flag is never authorization.
+Local storage needs no Cloud account, device registry or connectivity service. Its libraries do not exchange note content or metadata. Explicit tier activation is the only route to uploading a Local library.
 
-Order local pairing confirmation, revocation, session replay claims and received note mutations through the same durable transaction boundary. A revocation committed before an edit, purge or acknowledgement prevents that operation from committing. Reconfirmation invalidates earlier session generations. A stored session claim never restores an active connection after restart; require a fresh verified transcript and local challenge. Local capture remains independent of peer authorization. The isolated [current-trust experiment](features/peer-current-trust.md) is prerequisite evidence, not app pairing or native keystore acceptance.
-
-Before note frames, both endpoints acknowledge readiness after their own durable verified session claims. Bound in-flight work in each direction independently; a receipt can progress while an opposite-direction note commit is pending. Return send credit only after processing the matching durable receipt locally, without clearing a newer pending generation. Lost receipts or failed commits retain the local outbox. Changed installed session descriptions require a fresh bound session. [Session-flow evidence](features/peer-session-flow.md) remains an isolated prerequisite, with production network limits and app integration still open.
-
-Enumerate committed heads, permanent purge markers and pending delivery references in bounded metadata pages. Cursors belong to one library/device and generation; changed or invalid cursors cannot silently turn a partial pass into a complete result. Unrelated receipt/trust writes must not continually restart head inventory. Resolve a requested delivery against its exact current generation, preserving newer pending work and unstamped drafts. Inventory hints never acknowledge content or authorize unsigned forwarding. [Inventory evidence](features/peer-inventory.md) is local prerequisite evidence; network anti-entropy and the reconnect scheduler remain open.
+Cloud uses a Synkies Cognito identity and server-verified entitlement. Users do not supply their own AWS credentials. Authentication, owner/account/library/mode generations and permissions are enforced on the server; no client-paid flag or note-supplied owner grants access. Pending drafts and caches remain bound to their original account. Retired peer authentication/trust/session/inventory experiments are historical evidence, not requirements or Cloud authorization.
 
 Use Cognito managed login with authorization code flow, PKCE S256, state, and pre-registered platform callbacks. Native clients open the system browser and store refresh credentials in the OS keychain. Public clients have no embedded client secret. [Cognito authorization](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html).
 
@@ -413,13 +376,13 @@ The isolated [access-token boundary](features/cloud-access-token-auth.md) uses p
 
 The [browser session boundary](features/cloud-web-sessions.md) issues opaque host-only Secure/HttpOnly cookies after a trusted authentication resolver succeeds, stores credential digests through an explicit persistence interface, and checks exact origin plus a session-bound anti-CSRF header on unsafe API requests. Synthetic session tests exercise rotation/logout, expiry, account isolation and failure before note/body access. The [DynamoDB session adapter](features/cloud-web-session-dynamodb.md) supplies atomic digest-only inserts, strongly consistent lookup and conditional durable revocation, with body-free owner references for future account cleanup. Disposable local-engine tests cover reopen, collisions, concurrent revocation, malformed records and failure before cookie issuance. Managed-login/code exchange/refresh, provider logout, account-wide invalidation/erasure, route/proxy configuration, managed-service acceptance and real browser integration remain open; the app has no Cloud login enabled from these modules alone.
 
-Expired authentication does not prevent local editing. A cloud note's pending edits remain bound to its account until reauthentication or explicit export. Sign-out and account switching never upload a draft under another identity or silently change an On-device library into Cloud mode. Rate-limit sign-up, sign-in, password reset, and sync APIs. Set per-account note/storage and request quotas before public launch; finalized limits and any paid tiers must be reflected in UI and pricing.
+Expired authentication does not prevent local editing. A cloud note's pending edits remain bound to its account until reauthentication or explicit export. Sign-out and account switching never upload a draft under another identity or silently upload an independent Local library. Rate-limit sign-up, sign-in, password reset, and sync APIs. Set per-account note/storage and request quotas before public launch; finalized limits and any paid tiers must be reflected in UI and pricing.
 
 Use HTTPS, DynamoDB encryption at rest, a restrictive content security policy, text-safe rendering, and narrow native IPC permissions. Never log bodies, titles, tags, queries, or credential material. The service can process cloud note plaintext; the design is not end to end encrypted. Local databases, caches, exports, and semantic vectors contain private content protected by their OS/browser context. Delete derived vectors when source content is purged.
 
 ### Paid Cloud entitlement
 
-Cloud activation, API reads/writes, live subscriptions and background jobs require a server-verified entitlement bound to the Cognito subject and library. Billing webhooks must have verified signatures, replay/idempotency protection, and a durable entitlement state. Native/web UI reflects the server state, including pending verification, active, payment failed, cancel-at-period-end and expired. Do not unlock Cloud merely from a checkout return URL. Device pairing and free sync must not depend on payment.
+Cloud activation, API reads/writes, live subscriptions and background jobs require a server-verified entitlement bound to the Cognito subject and library. Billing webhooks must have verified signatures, replay/idempotency protection, and a durable entitlement state. Native/web UI reflects the server state, including pending verification, active, payment failed, cancel-at-period-end and expired. Do not unlock Cloud merely from a checkout return URL. Independent Local capture, search and export must remain available without payment.
 
 Pricing, provider, trials, grace period and retained-cloud-data deadlines remain launch gates. Display exact price/cadence and terms before a real purchase; mockups say Paid and explicitly show that pricing is not set. No live charge or invented entitlement is authorized by a mockup button. Cancellation stops renewal according to published terms and is distinct from data deletion. On lapse, keep local editing, export and a safe downgrade available; show paused Cloud and retention status. Test webhook duplicates, ordering, revoked purchases and account switches before paid deployment.
 
@@ -455,23 +418,22 @@ These are proposed acceptance targets, not benchmark results. Test production bu
 
 Use a repeatable collection of 10,000 notes, averaging 2 KiB of text, with 500 tags, 10 percent archived notes, long-note fixtures, and unresolved conflicts. Cached targets start with the local corpus present. Measure at least 100 interactions and report p50/p95 with device, build, cold/warm conditions, and dataset. Startup measurements use at least 20 runs and report every outlier.
 
-| Measure | Target | Measurement boundary |
-| --- | --- | --- |
-| Mac quick capture | p95 at most 200 ms | Shortcut event to focused editor while resident |
-| Cold Mac start | p95 at most 1 second | Process start to usable cached library |
-| iPhone cached start | p95 at most 1.5 seconds | App launch to usable cached library |
-| Cached web start | p95 at most 1.5 seconds | Navigation to interactive library with application shell cached |
-| Open cached note | p95 at most 100 ms | Selection to usable editor |
-| Local commit | p95 at most 150 ms | Last included document transaction to acknowledged durable commit |
-| Word search | p95 at most 100 ms | Query submission to ranked results; debounce measured separately |
-| Meaning search | p95 at most 500 ms warm | Query submission to results with model resident and index ready |
-| Meaning search first use | At most 5 seconds after cached model load | Explicit search to results, excluding disclosed download/indexing |
-| Live Cloud freshness | p95 at most 2 seconds | Source cloud acknowledgement to another active, authorized connected client’s local commit |
-| Cloud edit delivery | p95 at most 3 seconds | Source acknowledged local commit to recipient local commit on controlled network, excluding an unresolved offline conflict |
-| On-device peer freshness | p95 at most 75 seconds | Both paired clients active/reachable to complete remote convergence at the default 60-second interval |
-| Initial cloud download | At most 2 minutes under controlled 20 Mbps, 100 ms RTT | Authorized start to complete searchable 10,000-note collection using paginated snapshots |
-| Local typing | No task over 50 ms caused by background sync/indexing | Performance trace during sustained typing |
-| Idle Mac memory | At most 150 MB resident before loading semantic model | Library plus one empty note; separately measure ten open windows |
+| Measure                  | Target                                                 | Measurement boundary                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Mac quick capture        | p95 at most 200 ms                                     | Shortcut event to focused editor while resident                                                                                                        |
+| Cold Mac start           | p95 at most 1 second                                   | Process start to usable cached library                                                                                                                 |
+| iPhone cached start      | p95 at most 1.5 seconds                                | App launch to usable cached library                                                                                                                    |
+| Cached web start         | p95 at most 1.5 seconds                                | Navigation to interactive library with application shell cached                                                                                        |
+| Open cached note         | p95 at most 100 ms                                     | Selection to usable editor                                                                                                                             |
+| Local commit             | p95 at most 150 ms                                     | Last included document transaction to acknowledged durable commit                                                                                      |
+| Word search              | p95 at most 100 ms                                     | Query submission to ranked results; debounce measured separately                                                                                       |
+| Meaning search           | p95 at most 500 ms warm                                | Query submission to results with model resident and index ready                                                                                        |
+| Meaning search first use | At most 5 seconds after cached model load              | Explicit search to results, excluding disclosed download/indexing                                                                                      |
+| Live Cloud freshness     | p95 at most 2 seconds                                  | Source cloud acknowledgement to another active, authorized connected client’s local commit                                                             |
+| Cloud edit delivery      | p95 at most 3 seconds                                  | Online source pending-draft retention through authoritative server commit to recipient cache commit, excluding offline waiting and unresolved conflict |
+| Initial cloud download   | At most 2 minutes under controlled 20 Mbps, 100 ms RTT | Authorized start to complete searchable 10,000-note collection using paginated snapshots                                                               |
+| Local typing             | No task over 50 ms caused by background sync/indexing  | Performance trace during sustained typing                                                                                                              |
+| Idle Mac memory          | At most 150 MB resident before loading semantic model  | Library plus one empty note; separately measure ten open windows                                                                                       |
 
 The first web network load, first semantic model download, suspended clients, expired authorization, and offline periods are reported separately. They are not included in cached performance claims. M0 must establish achievable semantic memory/download budgets on iPhone and browser before choosing a model.
 
@@ -479,33 +441,33 @@ No acknowledged save may be lost in the recovery test suite. Cloud or AI failure
 
 ## Acceptance criteria and verification
 
-| ID | Requirement | Observable test |
-| --- | --- | --- |
-| AC-01 | FR-01, FR-08 | Invoke capture from another Mac app 100 times; each editor is focused and meets the capture budget. Shortcut collisions expose a working alternative. |
-| AC-02 | FR-02, FR-13 | Type then immediately close and reopen 100 times; text matches. Kill after Saved on this device; recovery preserves every acknowledged revision. Inject disk-full failure and native close remains blocked with recovery actions. |
-| AC-03 | FR-03, FR-14, FR-17 | Create/edit On-device notes with a signed-in Cloud account present. Verify no server-stored content, titles, tags, vectors, note queues or payload logs. Capture encrypted direct/relayed transfer separately. Only explicit whole-library Cloud activation uploads notes. |
-| AC-04 | FR-04, FR-05, FR-17, FR-20 | Create/edit/archive on Mac and verify web/iPhone in each mode. Repeat across different networks, with direct and relayed peers, then offline/reconnect. Meet the applicable periodic or live budget, with truthful waiting states. |
-| AC-05 | FR-06 | Word, prefix, phrase, archive, and tag fixtures return expected notes offline and within budget; deleted notes never appear. |
-| AC-06 | FR-06, FR-14 | A held-out set of at least 30 dogfood questions retrieves the expected note in the top three for at least 80 percent of questions. After downloading the model, network-disabled meaning search succeeds on each supported platform. |
-| AC-07 | FR-07 | Close preserves; archive remains searchable; delete hides; restore recovers; purge removes retained content and derived indexes. Advance time and exercise 30-day cleanup on native and web. |
-| AC-08 | FR-09, FR-10 | Shared fixtures cover `# Heading`, `##work`, `## work`, escaped tags, Unicode/case variants, checkboxes, lists, unsupported markup, and script input. Source survives edit/export/import round trips. |
-| AC-09 | FR-13, FR-19 | On-device concurrent edits automatically converge to the same latest-edit winner on three replicas under reordering/retries, with the replaced version locally recoverable. Cloud concurrent offline drafts retain both versions and converge after explicit resolution. Include clock skew fixtures. |
-| AC-10 | FR-07, FR-13 | A device offline for more than 30 days cannot resurrect a purged note. Explicit recovery of stale text creates a new ID and never restores the purged identity. |
-| AC-11 | FR-03, FR-12 | Interrupt a whole-library mode transition after each durable step. At least one recoverable full copy remains. Export/import preserves body, tags, archive state, and timestamps without duplicating known revisions. |
-| AC-12 | FR-13 | Duplicate requests, paginated pulls, expired sessions, quotas, deleted accounts, interrupted transactions, and expired 90-day cursors preserve local work and show the specified status. |
-| AC-13 | FR-05, FR-14 | Switch Synkies accounts and browser tabs; no notes, tokens, outbox entries, suggestions, or vectors leak across accounts. Two independent test accounts have no access to each other's cloud data. |
-| AC-14 | FR-08 | Run the repeatable performance fixture on production native and web builds. All applicable budgets pass, with raw measurements attached to the release. |
-| AC-15 | FR-05, FR-10 | Complete creation, editing, checkbox toggling, search, archive, restore, and export using keyboard and VoiceOver. Verify Dynamic Type/text zoom, visible focus, contrast, and reduced motion. |
-| AC-16 | FR-03, FR-13 | Browser persistence denied, quota exceeded, folder permission revoked, external drive removed, and iPhone background termination each preserve committed data and expose a truthful state. |
-| AC-17 | FR-11, FR-15 | Drag a note by its title bar; text selection does not move it. Drag an active library note to the desktop and pin another via right-click. Both remain in the library with the same IDs and mode. Cancelled drops create no window, and pinning an open note never duplicates it. |
-| AC-18 | FR-16 | Each of the four shortcuts and matching menu actions arranges open notes at the requested edge. Repeat with one, three, ten, and thirty notes. Bounds respect usable display areas; other displays and library bounds remain unchanged. |
-| AC-19 | FR-11, FR-16 | Undo last arrangement restores prior geometry without reverting text. Relaunch restores pinned notes without forcing the library open. Disconnect a monitor and verify that restored notes remain reachable. |
-| AC-20 | FR-02, FR-11, FR-15 | Each floating note is an independent top-level window outside the library and has exactly one top-left title-bar control, a green minus (Put away) that saves and closes. Closing/minimizing the library preserves its notes. Closing a note commits and closes only that window while retaining its library entry; failure leaves it open. Keep on top remains independently configurable through menus. Quit preserves the desktop set for restoration. |
-| AC-21 | FR-17 | Pair Mac, iPhone and browser across different networks. Force direct and transient-relay paths, wrong pairing codes, revoked peers, lost connectivity and non-overlapping online periods. Sync only with authenticated peers; no note payload survives on a server. |
-| AC-22 | FR-18 | Free users cannot activate Cloud APIs/live subscriptions by modifying the client. Verified paid test users can. Payment failures, duplicates, cancellation and expiry preserve local work and free-mode access; no real charges in tests. |
-| AC-23 | FR-20 | Two active paid clients receive committed changes within the live budget. Drop/duplicate push events, reconnect after gaps, revoke auth/entitlement and switch accounts. Cursor reconciliation converges with no cross-account events. |
-| AC-24 | FR-03, FR-13, FR-18 | Interrupt upgrade/downgrade during every stage, including billing verification, upload/download, offline peers and cloud-data removal. At least one complete durable copy remains and mode/retention consequences are explicit. |
-| AC-25 | FR-19 | Exercise equal-time edits, Unicode note content, one-year clock skew, three-way offline edits, archive/delete/edit races, seven-day history cleanup and permanent tombstones. Winners converge without a mandatory merge UI in On-device mode. |
+| ID    | Requirement         | Observable test                                                                                                                                                                                                                                                                                                                                                                                |
+| ----- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-01 | FR-01, FR-08        | Invoke capture from another Mac app 100 times; each editor is focused and meets the capture budget. Shortcut collisions expose a working alternative.                                                                                                                                                                                                                                          |
+| AC-02 | FR-02, FR-13        | Type then immediately put away/reopen 100 times. Local acknowledged saves and Cloud durably pending drafts survive termination; Cloud Saved requires matching server confirmation. Lose a response/retry without a false Saved label. Retention/disk-full failure keeps the editor open with recovery.                                                                                         |
+| AC-03 | FR-03, FR-14        | Use laptop, phone and browser Local libraries, even with a Cloud account signed in. Verify independent content and no discovery, pairing, device list, peer traffic, server note/metadata upload or payload logs. Only explicit whole-library Cloud activation uploads Local notes.                                                                                                            |
+| AC-04 | FR-04, FR-05, FR-20 | Create/edit/archive in Cloud on Mac, confirm server commit and verify web/iPhone over different networks. The source can go offline after confirmation and the full Cloud library remains accessible. Reconnect pending drafts, reconcile and meet live budgets without false Saved.                                                                                                           |
+| AC-05 | FR-06               | Word, prefix, phrase, archive, and tag fixtures return expected notes offline and within budget; deleted notes never appear.                                                                                                                                                                                                                                                                   |
+| AC-06 | FR-06, FR-14        | A held-out set of at least 30 dogfood questions retrieves the expected note in the top three for at least 80 percent of questions. After downloading the model, network-disabled meaning search succeeds on each supported platform.                                                                                                                                                           |
+| AC-07 | FR-07               | Close preserves; archive remains searchable; delete hides; restore recovers; purge removes retained content and derived indexes. Advance time and exercise 30-day cleanup on native and web.                                                                                                                                                                                                   |
+| AC-08 | FR-09, FR-10        | Shared fixtures cover `# Heading`, `##work`, `## work`, escaped tags, Unicode/case variants, checkboxes, lists, unsupported markup, and script input. Source survives edit/export/import round trips.                                                                                                                                                                                          |
+| AC-09 | FR-13               | Concurrent offline Cloud drafts preserve both versions and converge after explicit resolution against server revisions, independent of device-clock skew. Local libraries neither exchange nor merge edits. An older acknowledgement never marks newer typing Saved.                                                                                                                           |
+| AC-10 | FR-07, FR-13        | A device offline for more than 30 days cannot resurrect a purged note. Explicit recovery of stale text creates a new ID and never restores the purged identity.                                                                                                                                                                                                                                |
+| AC-11 | FR-03, FR-12        | Interrupt a whole-library mode transition after each durable step. At least one recoverable full copy remains. Export/import preserves body, tags, archive state, and timestamps without duplicating known revisions.                                                                                                                                                                          |
+| AC-12 | FR-13               | Duplicate requests, paginated pulls, expired sessions, quotas, deleted accounts, interrupted transactions, and expired 90-day cursors preserve local work and show the specified status.                                                                                                                                                                                                       |
+| AC-13 | FR-05, FR-14        | Switch Synkies accounts and browser tabs; no notes, tokens, outbox entries, suggestions, or vectors leak across accounts. Two independent test accounts have no access to each other's cloud data.                                                                                                                                                                                             |
+| AC-14 | FR-08               | Run the repeatable performance fixture on production native and web builds. All applicable budgets pass, with raw measurements attached to the release.                                                                                                                                                                                                                                        |
+| AC-15 | FR-05, FR-10        | Complete creation, editing, checkbox toggling, search, archive, restore, and export using keyboard and VoiceOver. Verify Dynamic Type/text zoom, visible focus, contrast, and reduced motion.                                                                                                                                                                                                  |
+| AC-16 | FR-03, FR-13        | Browser persistence denied, quota exceeded, folder permission revoked, external drive removed, and iPhone background termination each preserve committed data and expose a truthful state.                                                                                                                                                                                                     |
+| AC-17 | FR-11, FR-15        | Drag a note by its title bar; text selection does not move it. Drag an active library note to the desktop and pin another via right-click. Both remain in the library with the same IDs and mode. Cancelled drops create no window, and pinning an open note never duplicates it.                                                                                                              |
+| AC-18 | FR-16               | Each of the four shortcuts and matching menu actions arranges open notes at the requested edge. Repeat with one, three, ten, and thirty notes. Bounds respect usable display areas; other displays and library bounds remain unchanged.                                                                                                                                                        |
+| AC-19 | FR-11, FR-16        | Undo last arrangement restores prior geometry without reverting text. Relaunch restores pinned notes without forcing the library open. Disconnect a monitor and verify that restored notes remain reachable.                                                                                                                                                                                   |
+| AC-20 | FR-02, FR-11, FR-15 | Each floating Mac note is an independent top-level window with exactly one top-left green minus Put away. Local closes after its commit; Cloud may close after durable pending-draft retention and remains Pending upload until server confirmation. Retention failure keeps it open. Library close/minimize preserves notes; Quit preserves the desktop set; Keep on top stays a menu choice. |
+| AC-21 | FR-17 (retired)     | Retired in v0.8: peer pairing/direct/relay/nonoverlap acceptance is outside product scope. Retain this ID and failed historical evidence; do not treat removal as a passed test.                                                                                                                                                                                                               |
+| AC-22 | FR-18               | Free users cannot activate Cloud APIs/live subscriptions by modifying the client. Verified paid test users can. Payment failures, duplicates, cancellation and expiry preserve local work and free-mode access; no real charges in tests.                                                                                                                                                      |
+| AC-23 | FR-20               | Two active paid clients receive committed changes within the live budget. Drop/duplicate push events, reconnect after gaps, revoke auth/entitlement and switch accounts. Cursor reconciliation converges with no cross-account events.                                                                                                                                                         |
+| AC-24 | FR-03, FR-13, FR-18 | Interrupt upgrade/downgrade at every stage, including entitlement, upload/download, offline pending drafts and Cloud-data removal. Preserve at least one complete durable copy. Downgrade only this installation into an independent Local library; other clients/Cloud data are unaffected without explicit separate action.                                                                  |
+| AC-25 | FR-19 (retired)     | Retired in v0.8: peer latest-edit/clock/quarantine/history convergence is outside product scope. Cloud conflicts/deletion/retries remain covered by active criteria; do not reassign this ID or claim a pass.                                                                                                                                                                                  |
 
 Use unit tests for parser, revision/rebase handling, ranking, and lifecycle commands; repository contract tests on SQLite and IndexedDB; sync integration tests with a failure-injecting fake plus isolated DynamoDB/Cognito test resources; and user-flow tests on production builds. Real macOS/iPhone interaction checks supplement automation where native WebView tooling cannot observe OS behavior. Attach command results, interaction evidence, and performance traces to the feature or release record.
 
@@ -520,31 +482,32 @@ Use unit tests for parser, revision/rebase handling, ranking, and lifecycle comm
 
 ### M0 technical gates
 
-| Gate | Evidence needed | Consequence of failure |
-| --- | --- | --- |
-| Native capture and desktop | Resident shortcuts, independent draggable windows, cross-window library drag-out, right-click pinning, four-edge arrangement, display recovery, close interception, local commit, and memory on target Mac | Change shell or native window integration before M1 |
-| iPhone viability | Composition input, VoiceOver, keyboard, background flush, native authentication callback, local persistence | Choose a SwiftUI iPhone shell if shared wrapper fails |
-| Remote peer transport | Authenticated pairing, direct and relayed cross-network transfer, no server-persisted note payload, iOS/browser feasibility and measured relay cost | Change transport/runtime before M2; do not narrow free sync to same-LAN |
-| Cloud identity and data | Cognito sign-in and the same account-scoped note work on native and web clients | Revise callbacks/session boundaries before M2 |
-| Mode and sync protocols | Three-device peer latest-edit convergence/clock recovery, Cloud conflicts, deletion, pagination, interrupted transitions, entitlement/push gaps and restart simulation | Revise protocol before syncing real dogfood data |
-| Local semantic retrieval | Pinned model license/hash, top-three retrieval, download size, peak RAM, and cold/warm timing | Select another local model/runtime; change scope only by product decision |
+| Gate                       | Evidence needed                                                                                                                                                                                            | Consequence of failure                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Native capture and desktop | Resident shortcuts, independent draggable windows, cross-window library drag-out, right-click pinning, four-edge arrangement, display recovery, close interception, local commit, and memory on target Mac | Change shell or native window integration before M1                       |
+| iPhone viability           | Composition input, VoiceOver, keyboard, background flush, native authentication callback, local persistence                                                                                                | Choose a SwiftUI iPhone shell if shared wrapper fails                     |
+| Cloud identity and data    | Cognito sign-in and the same account-scoped note work on native and web clients                                                                                                                            | Revise callbacks/session boundaries before M2                             |
+| Mode and sync protocols    | Local isolation; Cloud server-confirmed status, offline drafts/conflicts, deletion, pagination, transitions, entitlement/push gaps and restart simulation                                                  | Revise protocol before syncing real dogfood data                          |
+| Local semantic retrieval   | Pinned model license/hash, top-three retrieval, download size, peak RAM, and cold/warm timing                                                                                                              | Select another local model/runtime; change scope only by product decision |
 
 ### Public launch gates
 
-All ACs must pass on the supported platform matrix. Complete at least 14 days of daily dogfooding without known acknowledged-save loss. Test restoring an export to a clean install and reconnecting a long-offline device. Resolve all defects that lose data, violate account isolation, or break a required flow.
+All active ACs must pass on the supported platform matrix; retired IDs are not tests to pass or completion credit. Complete at least 14 days of daily dogfooding without known acknowledged-save loss. Test restoring an export to a clean install and reconnecting a long-offline device. Resolve all defects that lose data, violate account isolation, or break a required flow.
 
 Native builds need signing, notarization or the appropriate Apple distribution flow, and a tested update/rollback path. Cloud authentication needs working verification and reset emails, registered callbacks, production session settings, and published privacy/account-deletion instructions. Confirm Apple developer access before distribution. Publish browser storage limitations and clear local/cloud status descriptions.
 
-For hosted beta, provision AWS through reviewed infrastructure code, confirm the account/region and cost estimate, set budget alerts, and prove rollback. Choose the domain and support contact. Decide the Cloud subscription price, billing provider, quotas, cancellation grace and cloud-data retention before paid launch. Verify free remote relay budgets and abuse controls as well as Cloud costs. If end to end encryption becomes a launch requirement, design keys, recovery, and migration before inviting public users.
+For hosted beta, provision AWS through reviewed infrastructure code, confirm the account/region and cost estimate, set budget alerts, and prove rollback. Choose the domain and support contact. Decide the Cloud subscription price, billing provider, quotas, cancellation grace and cloud-data retention before paid launch. Verify Cloud quotas, abuse controls, live delivery and operating costs; no peer relay budget is required. If end to end encryption becomes a launch requirement, design keys, recovery, and migration before inviting public users.
 
 ### Current access and unresolved decisions
 
-GitHub authentication is verified as devsandip. AWS authentication was verified using the current admin SSO profile with us-east-1 configured. Two isolated disposable relay experiments were provisioned and fully deleted. Runtime controls passed, but relay transfer failed; the second run observed allocation-quota error 486 and live experiments are stopped pending a controlled follow-up. Remote connectivity remains an open gate. See [relay evidence](features/remote-relay-experiment.md). No hosted app or paid billing is enabled. Apple developer distribution access remains unverified. Google Cloud and Google Drive are not dependencies.
+GitHub authentication is verified as devsandip. Earlier AWS/admin-SSO and disposable-run observations are historical, not current credentials, permission or cost allowance. Two old relay experiments failed and were deleted; their evidence remains [historical](features/remote-relay-experiment.md), but relay connectivity is no longer a product gate. Do not rerun stopped probes. Current controlled Cloud hosting/audit/managed-teardown gates and fresh source/account/region/cost/authorization/budget/cleanup controls remain required. No hosted app, real billing or public beta is enabled. Apple distribution access remains unverified; Google Drive is not a dependency.
 
-Confirmed decisions: the app is Synkies; saving has two app-wide modes: free device-only storage with remote periodic peer sync, or paid DynamoDB-backed Cloud with live sync; iPhone comes first with Android browser access. Recommended defaults are SQLite on native clients, IndexedDB in browsers, local semantic retrieval, Cognito authentication, the Markdown grammar above, 30-day Trash, 90-day sync history, and a single cloud region. Cloud price/billing/grace policy, per-account quotas, encryption requirements, remote peer transport and relay deployment, exact supported OS versions, semantic model, and M0 framework results remain open.
+Confirmed decisions: independent free Local storage, paid cloud-authoritative DynamoDB storage with live updates/full web access, offline pending drafts uploaded on reconnect and Saved only after matching Cloud confirmation. iPhone remains the native mobile target with Android browser access. SQLite/IndexedDB caches, local search, Cognito, Markdown,30-day Trash and90-day Cloud sync history remain. Billing/price/grace/quotas/encryption policy, supported versions, semantic model and platform acceptance remain open; peer transport is removed, not deferred.
 
-Screen mockups for this baseline are documented in [ui-spec.md](ui-spec.md) and available in [the local gallery](mockups/index.html). Mockups do not implement the application or establish that performance and reliability requirements have passed.
+The [UI specification](ui-spec.md) describes the v0.8 tier/status contract. The existing [gallery](mockups/index.html) and PNG inventory depict historical v0.7 and contain retired peer flows; they are labeled accordingly and do not establish v0.8 app/acceptance. Update active UI in focused implementation slices, preserving useful layouts and stored/screen identifiers.
 
 ## Mode revision record
 
-Version 0.7 incorporates Sandip’s confirmed free remote periodic device sync and paid live Cloud modes. It supersedes per-note destination overrides and the earlier claim that local notes never synchronize. The green minus Put away appearance from version 0.6 remains. PRD, PRFAQ and mockups must be aligned before application work resumes. The existing 0.1 local development app is an intermediate build without peer sync, paid entitlement or live Cloud.
+Version 0.8, 29 October 2026: Sandip explicitly replaces remote peer sync with two tiers. Local libraries are independent and know nothing of other devices. Cloud is authoritative, pushes committed changes to online clients and provides complete web access. Sandip separately confirms offline pending drafts, upload on reconnect and Saved only after Cloud confirmation. This supersedesv0.7's peer promise; FR-17/19 and AC-21/25 are retired without renumbering or a false pass. The green minus/native note experience remains. Canonical contract edits are not evidence of enabled Cloud or a completed milestone.
+
+Version 0.7, 26 October 2026 (historical): free remote periodic peer sync and paid live Cloud replaced per-note destinations. Its prototypes, mockups and failed connectivity evidence remain historical; they do not override v0.8. Compatible stored identifiers remain until an explicit separately reviewed migration is necessary.

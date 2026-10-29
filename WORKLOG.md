@@ -2004,3 +2004,18 @@
 
 **Next:**
 - Finish145 focused review/scans/all exact-head hosted gates, normal integration and actual main/closure/Project evidence. Then scope the actual fixed-v2 source-bound bootstrap/lineage separately with plan before code; M2.2 and actual managed/independent teardown remain unmet. Keep ignored immutable resumes current.
+
+
+## 2026-10-29 - Adopt independent Local and cloud-authoritative tiers
+
+**Did:**
+- Verified all three actual-main40827762486 gates at PR146 merge97a2316; source40826904252/review6489284355/ready6489403118 and actual145closure/ProjectDone remain valid, proof6489536245. No app outcome is inferred from that storage foundation.
+- Recorded Sandip's explicit removal of peer sync and follow-up choice of durable offline Cloud pending drafts, upload on reconnect and Saved only after server confirmation. Updated the existing continuing automation in place, retaining its thread/schedule/active state and safety controls.
+- Canceled plan-only147 as NOT_PLANNED, removed milestone/progress label and retained its unpushed2ed8809 branch/plan. No source-facts code or experiment was implemented; it is not shipped work. Created148/current Project and committed plan4b212cf before canonical edits.
+- Revised PRFAQ/PRD/SPEC/UI/README and AGENTS to v0.8, explicitly retiring FR-17/19 and AC-21/25 without ID reuse or a pass. Updated Local isolation, Cloud authority/web/push/status/offline-draft/Put-away behavior and removed active peer architecture/cost/performance/release gates. Preserved compatible IDs and unrelated product requirements. Marked old gallery/exports historical, including an HTML notice, while preserving historical inventory/export bytes.
+
+**State now:**
+- Product contract only; runtime/tests/workflow/dependencies match passing base97a2316. Static requirement/AC mapping, changed links, historical HTML notice and scoped formatting checks pass. Local runtime suites are not rerun for prose. Existing Cloud app integration/status UI, hosted access/live delivery/billing/iPhone and managed/teardown acceptance remain unmet. No actual/default DB/account/AWS/billing/app launch or stopped retry.
+
+**Next:**
+- Finish148 review/scans/all exact-source hosted gates and normal integration with honest docs-only main evidence. Then choose one current user-facing tier/status implementation slice with its own plan; keep Cloud disabled until actual hosting/auth/entitlement gates pass. Preserve new v0.8 decisions if a queued heartbeat still contains old peer instructions.
