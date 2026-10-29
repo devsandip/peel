@@ -374,3 +374,163 @@ it("protects actual HTTP mutations before body/note access and preserves two-acc
     rmSync(folder, { recursive: true, force: true });
   }
 });
+
+it("binds captured safe discovery and note reads to the supplied token before account access", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "synkies-safe-session-")),
+    server = new SQLiteCloudServerStore(join(folder, "server.sqlite3")),
+    env = fixture();
+  try {
+    for (const letter of ["a", "b"])
+      await server.seedAccount({
+        version: 1,
+        ownerSubject: `owner-${letter}`,
+        collectionId: `library-${letter}`,
+        modeGeneration: 2,
+        status: "active",
+        entitlement: "active",
+        revision: 1,
+        sequence: 0,
+        wall: 0,
+      });
+    const handler = createCloudMutationHandler(
+        new CloudMutationService(server, () => BASE),
+        env.boundary.resolveCaller,
+      ),
+      a = await env.issue(),
+      b = await env.issue("synthetic-b", a.cookie),
+      accountReads = vi.spyOn(server, "readAccount"),
+      noteReads = vi.spyOn(server, "read"),
+      commits = vi.spyOn(server, "commit");
+    const read = (csrf?: string, path = "/v1/library-context") =>
+      new Request(origin + path, {
+        headers: {
+          cookie: b.cookie,
+          ...(csrf === undefined ? {} : { "x-peel-csrf": csrf }),
+          "x-peel-collection": "library-b",
+          "x-peel-mode-generation": "2",
+        },
+      });
+    const stale = await handler(read(a.body.csrfToken));
+    expect({ status: stale.status, body: await stale.json() }).toEqual({
+      status: 403,
+      body: { error: "csrf-rejected" },
+    });
+    expect(accountReads).not.toHaveBeenCalled();
+    expect(
+      (await handler(read(a.body.csrfToken, "/v1/notes/synthetic-note")))
+        .status,
+    ).toBe(403);
+    expect(noteReads).not.toHaveBeenCalled();
+    const expected = {
+      version: 1,
+      ownerSubject: "owner-b",
+      collectionId: "library-b",
+      modeGeneration: 2,
+    };
+    expect(await (await handler(read(b.body.csrfToken))).json()).toEqual(
+      expected,
+    );
+    expect(await (await handler(read())).json()).toEqual(expected);
+    expect(accountReads.mock.calls.map((call) => call[0])).toEqual([
+      "owner-b",
+      "owner-b",
+    ]);
+    await server.setPolicy("owner-b", "active", "inactive");
+    const unpaid = await handler(read(b.body.csrfToken));
+    expect(unpaid.status).toBe(403);
+    expect(await unpaid.json()).toEqual({
+      error: "cloud-entitlement-inactive",
+    });
+    expect(commits).not.toHaveBeenCalled();
+  } finally {
+    await server.close();
+    rmSync(folder, { recursive: true, force: true });
+  }
+});
+
+it.each(["GET", "HEAD", "OPTIONS"])(
+  "checks supplied session binding on %s while retaining plain safe requests",
+  async (method) => {
+    const env = fixture(),
+      a = await env.issue(),
+      b = await env.issue("synthetic-b");
+    expect(
+      await env.boundary.resolveCaller(
+        env.request(a.cookie, undefined, { method }),
+      ),
+    ).toBe("owner-a");
+    expect(
+      await env.boundary.resolveCaller(
+        env.request(a.cookie, a.body.csrfToken, { method }),
+      ),
+    ).toBe("owner-a");
+    await expect(
+      env.boundary.resolveCaller(
+        env.request(b.cookie, a.body.csrfToken, { method }),
+      ),
+    ).rejects.toMatchObject({ status: 403, code: "csrf-rejected" });
+    expect(
+      await env.boundary.resolveCaller(
+        env.request(b.cookie, b.body.csrfToken, { method }),
+      ),
+    ).toBe("owner-b");
+  },
+);
+
+it("privately rejects malformed, empty and duplicate supplied tokens on a safe request", async () => {
+  const env = fixture(),
+    a = await env.issue(),
+    csrf = a.body.csrfToken as string,
+    wrong = (csrf[0] === "a" ? "b" : "a") + csrf.slice(1);
+  for (const value of ["", "short-private-value", "x".repeat(44), wrong]) {
+    const request = env.request(a.cookie, undefined, { method: "GET" });
+    request.headers.set("x-peel-csrf", value);
+    await expect(env.boundary.resolveCaller(request)).rejects.toMatchObject({
+      status: 403,
+      code: "csrf-rejected",
+      message: "Cloud server: csrf-rejected",
+    });
+  }
+  const duplicate = env.request(a.cookie, csrf, { method: "GET" });
+  duplicate.headers.append("x-peel-csrf", csrf);
+  await expect(env.boundary.resolveCaller(duplicate)).rejects.toMatchObject({
+    status: 403,
+    code: "csrf-rejected",
+  });
+});
+
+it("never lets a matching supplied read token override cookie, origin, expiry or revocation gates", async () => {
+  const env = fixture(),
+    a = await env.issue();
+  vi.mocked(env.store.read).mockClear();
+  for (const headers of [
+    { origin: "https://foreign.invalid" },
+    { "sec-fetch-site": "cross-site" },
+  ]) {
+    const request = env.request(a.cookie, a.body.csrfToken, { method: "GET" });
+    for (const [name, value] of Object.entries(headers))
+      request.headers.set(name, value!);
+    await expect(env.boundary.resolveCaller(request)).rejects.toMatchObject({
+      status: 403,
+    });
+  }
+  const missing = env.request(a.cookie, a.body.csrfToken, { method: "GET" });
+  missing.headers.delete("cookie");
+  await expect(env.boundary.resolveCaller(missing)).rejects.toMatchObject({
+    status: 401,
+  });
+  expect(env.store.read).not.toHaveBeenCalled();
+  for (const record of env.records.values()) record.revoked = true;
+  await expect(
+    env.boundary.resolveCaller(
+      env.request(a.cookie, a.body.csrfToken, { method: "GET" }),
+    ),
+  ).rejects.toMatchObject({ status: 401 });
+  for (const record of env.records.values()) record.revoked = false;
+  env.now.value += 3600000;
+  await expect(
+    env.boundary.resolveCaller(
+      env.request(a.cookie, a.body.csrfToken, { method: "GET" }),
+    ),
+  ).rejects.toMatchObject({ status: 401 });
+});

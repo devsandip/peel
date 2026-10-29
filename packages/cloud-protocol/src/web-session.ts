@@ -145,7 +145,8 @@ export function createCloudWebSessionBoundary(
       return fail("session-clock-unavailable", 503);
     if (record.revoked || current >= record.expiresAt)
       return fail("unauthorized", 401);
-    if (unsafe) {
+    // A supplied token also binds captured safe reads to this exact session.
+    if (unsafe || request.headers.has("x-peel-csrf")) {
       const csrf = request.headers.get("x-peel-csrf");
       if (
         !token(csrf) ||
