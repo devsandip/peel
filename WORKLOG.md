@@ -2299,3 +2299,21 @@
 
 **Decisions:**
 - Honor an explicitly supplied binding even for safe methods, while keeping original plain safe requests compatible. No new auth endpoint, stored credential/schema, entitlement or UI grant is introduced.
+
+
+## 2026-10-30 - Capture browser Cloud context discovery
+
+**Did:**
+- Completed186/185 atc8c8998: source40953528773/main40955147731 all3 first attempts, review5704874835/Ready6508355305/proof6508555226; actual adapter30/Cloud609/shared817/browser75, closure/bothProjectDone/labels/guarded primary/unknown paths/scanned Root-only cleanup verified. Frozen0224 and all peer refs/checkouts preserved.
+- Committed187 plancfb4231 before tests/runtime. Added an explicit captured browser context reader using unchanged bounded JSON transport and strict scope validation, with coalesced requests, immutable results, fixed private errors and original-lifetime cancellation. No database ownership, note effects or automatic retry/polling/context replacement.
+- Verified120 focused Node24 cases including30 new actual Fetch/session/temporary SQLite and held-response cases, full shared847/80, type/full format/whitespace/deterministic artifact smoke/build and all8 default bundle hashes unchanged. Added the new consumer to the43-file Node24 hosted list. No previous assertion/default/worker/timeout/retry/isolation changes; peer181 files/props untouched.
+- Coordinated169 test-window claim6508844003. Local adapter runtime acquisition remains unrun after the previous timeout; fresh hosted adapter/Cloud evidence remains required. No actual/default data/profile/provider/native/stopped/expired probe used.
+
+**State now:**
+- Context discovery remains a development prerequisite, not authentication, a paid grant, note confirmation or enabled Cloud. Real login/activation/full web/live/reconnect/platform/performance and M2.2 managed/independent teardown remain open. Peer181 retains its independent six-file conflict-preview assignment.
+
+**Next:**
+- Finish187 exact-source focused review/all3 hosted gates, normal integration/separate main/closure/Project/guarded primary/scanned Root-only cleanup. Check169/181 and any frozen peer Ready first; preserve all peer refs/checkout and unknown user changes.
+
+**Decisions:**
+- A reader keeps its captured issued token/origin/original signal for its whole lifetime; later cookie rotation cannot silently retarget it. The parent owns cache selection, drafts and replacement lifetime. Never reuse a successful scope after a failed request or label discovery as Saved/Live.

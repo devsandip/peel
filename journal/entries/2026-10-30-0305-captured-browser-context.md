@@ -1,0 +1,11 @@
+# Browser context discovery keeps its original lifetime
+
+30 October 2026, 03:05 IST. Frozen pre-source-gate checkpoint.
+
+PR186/185 fully completed atc8c8998, proof6508555226. Source40953528773 and separate actual-main40955147731 pass all3 required gates on run/job attempt1; review5704874835/Ready6508355305. Observed actual adapter30/5, Cloud609/42, shared817/79 and75 browser cases plus actual closure/Project/guarded primary/scanned Root-only cleanup are verified. Local adapter acquisition remains unrun; frozen0224 and all peer refs/checkouts are preserved.
+
+Issue187 plancfb4231 preceded code. The new browser reader captures the issued token, validated origin and original auth lifetime, explicitly GETs only library-context metadata and returns a cloned/frozen strict scope. Overlapping reads share one task; later requests require another explicit call in the same lifetime. No success cache, automatic retry/polling, scope selector, database access/ownership, note transfer or default activation is added. Fixed local errors hide raw responses/configuration/exceptions/abort reasons; cancellation discards late responses.
+
+Actual Fetch/session/account-handler and fresh temporary SQLite evidence proves normal discovery and old-token/new-cookie refusal before account/note access, followed by a new explicit reader for the new account. The cookie harness is synthetic, not browser login/IdP acceptance. All120 focused Node24 cases (30 new), full shared847/80, type/full format/whitespace/deterministic packaged artifact/build and all8 unchanged default bundle hashes pass. The43-file hosted Node24 matrix includes this reader; fresh source/main all3 gates, observed hosted evidence, focused review and normal integration/tracking/owned cleanup remain next. No old assertions or validation controls change; local adapter acquisition is not retried.
+
+Peer181 still owns its six conflict-preview files and unchanged interface; test windows are coordinated through169. Default Cloud is unavailable. Real authentication/paid activation/full web/live/reconnect/native/iPhone/performance and M2.2 managed teardown acceptance remain open. No actual/default notes/operator DB/profile/provider/native launch/stopped probe/expired AWS allowance/private archive history was used.
