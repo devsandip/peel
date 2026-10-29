@@ -1956,3 +1956,18 @@
 
 **Next:**
 - Finish issue139 review/scans/all exact-head hosted gates and normal integration; report docs-only main path-filter evidence honestly. Then scope one independently reviewable actual prerequisite with a plan before code. M2.2 and actual managed/independent teardown remain unmet; keep immutable resumes current.
+
+
+## 2026-10-29 - Freeze a passive v2 catalog and measure physical bounds
+
+**Did:**
+- Finished PR140/source5da6bab after all three40816792263 gates/reviews6487793323+6487940448, normalmerge293f300, actual139closure/ProjectDone/label/ownedbranch cleanup and safe primary advancement. Docs-only main has no eligible new run; tested-tree/runtime equality verified, proof6488024668. No unrun main check is called passing.
+- Created issue141/current Project and committed full DDL plana3356a8 before independent Python SQLite golden/first passive artifact9d2cf10. First12focused/393Cloud/608shared/type/format/build pass. Geometry review measured465ascending/507descending/470shuffled pages, all within512; not a failure, but materially different packing margins.
+- Committed revised plan43c8247 BEFORE a second independent golden and artifact5fc593c, requiring contiguous append IDs from1 and rejecting gaps/backfill/reorder. No cap raised, no v2 operator database/migration. Final DDL/catalog hashes and28 exact objects match independent Python3.53.3 versus actual Node24/SQLite3.53.4.
+- Passed13 final actual-SQLite cases and actual Node24 direct/394Cloud31files then609shared69/type/format/build sequentially. Meaningful ordinary-bound omission fails its intended overflow refusal with golden assertion unselected; exact source7863e716 restored. Final actual maximum SQL-valid data465pages/1,904,640bytes; rollback21,032bytes; DBSTAT observation/root payload2006/1997bytes; header/quick/FK checks pass. All temporary DBs removed. No failed positive141 run; negative controls and first-candidate proof remain distinct. Existing browser chunk warning remains.
+
+**State now:**
+- Passive frozen descriptor only; no path/schema/callback executor, protected namespace/store/initializer/typed row acceptance/session/current/preparation/fence or provider permission. SQL padding is physical capacity evidence, not valid domain/ownership/cleanup proof. Existing v1 source/tests/dependencies remain byte-identical. No actual/default DB, credential/account/provider/budget/billing/app action or stopped retry.
+
+**Next:**
+- Finish141 focused review/scans/exact-head hosted gates and normal integration, actual closure/Project/main proof. Then scope protected v2 initial storage separately, preserving v1 and original ACK/current-gate requirements. M2.2 and actual managed/independent teardown remain unmet; keep immutable resumes current.
