@@ -2229,3 +2229,21 @@
 
 **Decisions:**
 - Accept only a complete known preparation or exact known acknowledgement transition, with actual operation hash verification and one retry. Preserve copyable recovery when proof or conflict safety fails.
+
+
+## 2026-10-29 - Reopen retained Cloud views with one upload owner
+
+**Did:**
+- Completed175/174 atbaee with all3 first-attempt source40917707857/main40919628847, review6503218319/Ready6503457009/proof6503676649, actualclosure/Project/guardedprimary/unknownpaths/scannedRootownedcleanup. Completed peer172/169 at74fcff after frozenReady6503862517/review5702256566/ready6503936933, source40921131306/main40923169809 all3 first attempts/proof6504154806. Only Root merge ref cleaned; active peer checkout/local/remote100153 preserved.
+- Planned176 in8cc840a before code and coordinated API6504200320/peercompat6504276630. An actual SQLite/service counterexample first passed16 old cases and failed the reopened view with paused after duplicate-owner ACK consumption. Kept that diagnostic separately, then added explicit original-store/scope/signal-bound coalesced reopen with read-only fresh session, unchanged owner/transport/pause and no network wait or store ownership.
+- Added10 model cases and3 actual IndexedDB/HTTP/browser flows. Paused remount needs explicit recovery, held old ACK cannot save newer typing or duplicate the old operation, abort/read/empty/scope failures preserve the closed owner, and direct mounted views get fresh history.
+- Focused review strengthened parent-render/undo coverage and first exposed a second late remount from redundant session selectors. Kept the existing note-editor session boundary and inner effect/subscription checks. Final49focused, sequential Node24Cloud558/39/shared773/77/all66browser/type/format/whitespace/build/defaultbundle checks pass. Earlier full positives and both reds remain distinct; original assertions/defaults/workers/timeouts/retries/isolation unchanged.
+
+**State now:**
+- The primitive supports a retained Cloud owner across closed/reopened editing views. Parent registry/authentication and app activation remain separate. Default Cloud remains unavailable; real paid/full-web/live/reconnect/platform/performance/M2.2 managed teardown acceptance is unmet.
+
+**Next:**
+- Finish176 exact-source review/hosted gates, normal integration/separate main proof/tracking/Root-owned cleanup. Keep peer169 informed and preserve its source/checkout; no new UI assignment yet.
+
+**Decisions:**
+- Preserve the same transport owner and immutable operation while replacing only its locally closed editing session. Keep current-session history stable across later parent renders and preserve pause on incidental mount; established explicit Put-away flush remains unchanged.
