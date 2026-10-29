@@ -2210,3 +2210,22 @@
 **Decisions:**
 
 - Coordinate local validation windows rather than changing existing tests or stopping unrelated processes. Green hosted checks do not replace focused behavioral review.
+
+
+## 2026-10-29 - Preserve autosave during known upload transitions
+
+**Did:**
+- Completed PR173/issue171 at d6d48dd: all3 source40910952734 and actual-main40912555135 first-attempt gates, review6502273911/ready6502462718/proof6502648584. Actual closure/ProjectDone/label/guarded primary/unknown paths and scanned owned-only cleanup verified; peer checkout preserved.
+- Planned issue174 in4eecf10 before code after peer ab64 exposed an unchanged cached-editor close failure. Deterministic actual SQLite controls first reproduced preparation-CAS and known-ACK races; the exact hosted schedule is not reconstructed. Added a typed local CAS refusal and one strictly verified real protocol transition before one retention retry. Disk/unknown/multi-transition/repeated-race failures stay recovery.
+- Focused review reproduced an ACK consuming an observed conflicting head and added a conservative conflict guard. Final39 focused session/upload, sequential Node24 Cloud548/39/shared763/77,56 actual browser/type/format/whitespace/build/default-bundle checks pass. The prior547/762/56 full pass precedes that guard and is retained separately.
+- Added two real M0 IndexedDB/HTTP/SQLite browser interleavings with held preparation/ACK and retention commits. Put away closes while network is held, newest text stays Pending and an independent scoped API read confirms the eventual matching committed source. Existing browser assertions and worker/timeout/retry/isolation controls remain unchanged.
+- Retained all initial runtime reds and new-fixture mistakes separately: ineffective disk-fault injection after SQLite CAS, missing scope headers on the new API read, and omitted ACK gate classification. Fixed the new fixture paths; no existing test was weakened. Peer169 holds ab64 and awaits the next verified base; coordinated test window released after validation.
+
+**State now:**
+- Default Cloud stays unavailable. This is explicit scoped development composition, not real auth/paid activation/provider/full-web/live/reconnect/native/iPhone/performance acceptance or M2.2 managed/independent teardown.
+
+**Next:**
+- Finish174 exact-source review/all3 hosted gates, normal integration/separate main proof/tracking/owned cleanup. Post verified base in169, then review the peer's freshly rebased frozen Ready head and both prior lifecycle/focus regressions before integration.
+
+**Decisions:**
+- Accept only a complete known preparation or exact known acknowledgement transition, with actual operation hash verification and one retry. Preserve copyable recovery when proof or conflict safety fails.
