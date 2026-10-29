@@ -234,7 +234,7 @@ export function Library() {
         </a>
         <div className="collection-label">
           <span className="device-dot" />
-          On-device · Free
+          Local storage · Free
         </div>
         <nav aria-label="Notes collections">
           {(["active", "archived", "trashed"] as const).map((s) => (
@@ -713,33 +713,25 @@ function Settings({
         </button>
         <p className="eyebrow">MAKE YOURSELF AT HOME</p>
         <h2 id="settings-title">Settings</h2>
-        <h3>Saving mode</h3>
+        <h3>Storage tier</h3>
         <div className="setting-row">
           <div>
-            <strong>On-device · Free</strong>
+            <strong>Local storage · Free</strong>
             <p>
               {native
-                ? "Your notes live in a small local database."
-                : "Notes belong to this browser profile. Clearing site data removes them."}
+                ? "Your notes are stored only on this device. Each device has an independent library."
+                : "Notes belong to this browser profile and do not sync to other devices. Clearing site data removes them."}
             </p>
           </div>
-          <span className="badge">Current mode</span>
+          <span className="badge">Current tier</span>
         </div>
         <div className="setting-row">
           <div>
-            <strong>Device sync</strong>
+            <strong>Cloud storage · Paid</strong>
             <p>
-              No device is paired in this development build. Your notes are
-              saved here; remote sync is not enabled yet.
-            </p>
-          </div>
-        </div>
-        <div className="setting-row">
-          <div>
-            <strong>Synkies Cloud · Paid</strong>
-            <p>
-              Not available in this build. Cloud mode will store the whole
-              library and sync live.
+              Not available in this build. Notes are saved to Cloud first, then
+              shared with your devices and the web. Offline drafts stay pending
+              until Cloud confirms the save.
             </p>
           </div>
         </div>

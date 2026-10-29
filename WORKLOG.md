@@ -2019,3 +2019,17 @@
 
 **Next:**
 - Finish148 review/scans/all exact-source hosted gates and normal integration with honest docs-only main evidence. Then choose one current user-facing tier/status implementation slice with its own plan; keep Cloud disabled until actual hosting/auth/entitlement gates pass. Preserve new v0.8 decisions if a queued heartbeat still contains old peer instructions.
+
+
+## 2026-10-29 - Align active Local and unavailable Cloud tier settings
+
+**Did:**
+- Integrated PR149 as5bd90f4 after all three40831360224 source gates/review6489963316. Verified148closure/Project Done, safe primary advancement/owned branch cleanup, and actual docs-only main no-run/tested-tree/runtime equality, proof6490137637. Canceled147 remains historical/unshipped.
+- Created issue150/current Project and committed plan23e68dc before changing only library/sidebar/Settings copy. Named Local storage, explained independent device/browser libraries, removed Device sync, and kept Cloud unavailable with server-first/pending-draft wording. Stored IDs/save/status/schema/network/billing logic unchanged.
+- Passed11 existing browser flows and one-time two-fresh-context isolation/settings inspection on owned unique-port servers; synthetic Local note survives reload in A while B remains empty, no note network write/page error/Cloud activation. Visually inspected the settings screenshot, closed owned processes, and passed type/format/build with the existing chunk warning. No actual/default DB/profile or native app launch.
+
+**State now:**
+- Visible Local tier copy matches v0.8; Cloud implementation/activation and full platform acceptance remain unavailable. No new tests mirroring copy or unrelated defaults changed.
+
+**Next:**
+- Finish150 focused review/scans/all exact-source hosted gates and normal merge/main/closure/Project evidence. Continue with one concrete Cloud user-flow slice under its required hosting/auth/entitlement controls; no revived stopped probe or expired allowance.

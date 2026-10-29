@@ -4,7 +4,7 @@ Formerly Peel. The app now uses **Synkies** and Antigravity's **Folded Horizon**
 
 A Mac app centered on independent floating notes and a searchable Notes Library, with a local browser development client and an iPhone client planned. Two app-wide tiers are confirmed: independent free Local storage, and paid cloud-authoritative Synkies Cloud with server-confirmed saves, live updates and complete web access.
 
-A local Mac development build and browser-local client exist. The 29 October 2026 v0.8 contract removes peer sync entirely: each Local library is independent. Cloud login/app integration, server-confirmed save states, hosted web access, live delivery, billing, iPhone and meaning search remain incomplete or disabled. Cloud clients may retain offline pending drafts and upload on reconnect, but may show Saved only after matching server confirmation. This is a contract revision, not evidence that those app features are enabled. Current development labels may still say On-device until the focused UI alignment lands.
+A local Mac development build and browser-local client exist. The 29 October 2026 v0.8 contract removes peer sync entirely: each Local library is independent. Cloud login/app integration, server-confirmed save states, hosted web access, live delivery, billing, iPhone and meaning search remain incomplete or disabled. Cloud clients may retain offline pending drafts and upload on reconnect, but may show Saved only after matching server confirmation. This is a contract revision, not evidence that those app features are enabled. The sidebar and Settings now describe independent Local storage and an unavailable Cloud tier; this copy alignment does not enable Cloud.
 
 ## Canonical documents
 
