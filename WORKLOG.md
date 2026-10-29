@@ -2048,3 +2048,18 @@
 
 **Next:**
 - Finish152 focused review/scans/all three exact-source hosted gates and normal integration/main/closure/Project proof. Then scope one further Cloud client composition slice with a requirement-linked plan before code, retaining actual hosting/auth/entitlement gates and the stopped-probe/expired-budget boundaries.
+
+
+## 2026-10-29 - Retain scoped Cloud drafts before Put away
+
+**Did:**
+- Verified PR153 source40838877679 and all3 actual-main40840091152 gates at a79eb5c, actual152closure/ProjectDone/label removal/primary advancement/owned cleanup, proof6491628289. No repeat or enabled Cloud credit.
+- Created154/current Project and committed planf7bb56e before code. Added an explicitly scoped session for cached active notes: immediate serialized pending retention, exact attempted-draft recovery after lost local commit reply, competing-projection refusal, stale-refresh guards and freeze/await-before-closed Put away. No default app/Local DB/transport/auth/entitlement/schema/protocol/store/dependency change.
+- Passed10 actual fresh SQLite/service cases, actual Node24 focused30/4, shared635/72 and27 browser flows (3new actual IndexedDB session cases plus24prior). Type/full checked-source format/whitespace/build pass. Await omission fails held actual-commit refusal; exact1ef8cc51 source restored before positives. Existing bundle hashes/warning unchanged.
+- Preserved initial circular snapshot typing failure and the review-discovered late-refresh-error regression. Fixed with explicit snapshot type and refresh sequence; earlier positive9/634 results do not erase that failed strengthened test. Closed owned test stores/browser/server, no default/operator DB/native/provider/AWS action or stopped retry. No legacy assertion/worker/retry/timeout change.
+
+**State now:**
+- Disabled cached-note retention/session prerequisite only. A retained pending draft or closed session is not a Cloud save. Actual Cloud authentication/editor/new-note/reconnect/live/full inventory, native/iPhone and M2.2 managed/teardown acceptance remain unmet.
+
+**Next:**
+- Finish154 focused review/scans/all3 exact-source hosted gates, normal merge and actual main/closure/Project proof. Then scope the smallest complete Cloud editor composition slice with a pre-code requirement-linked plan, keeping default Cloud unavailable until its actual hosting/auth/entitlement/cache gates pass.
