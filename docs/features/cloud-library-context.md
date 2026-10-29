@@ -1,0 +1,19 @@
+# Authenticated Cloud library context discovery
+
+[Issue183](https://github.com/devsandip/peel/issues/183) follows verified PR182/main7793dfb and proof6506883860. This plan precedes code. SPEC FR-03/05/13/14/18 and AC-03/12/13 prerequisites, [server mutations](cloud-server-mutations.md), [token authentication](cloud-access-token-auth.md), [web sessions](cloud-web-sessions.md) and [DynamoDB mutations](cloud-dynamodb-mutations.md) define existing authority and storage boundaries.
+
+## One purpose and API
+
+A signed-in parent needs its server-selected library scope before constructing scoped caches/transports. Add GET /v1/library-context to the existing data handler, returning only version1 ownerSubject/collectionId/modeGeneration from the authenticated caller's actual active, paid server account. No expected library/owner is accepted from a request payload/query/header. Unsupported methods/queries/bodies refuse consistently; successful responses remain no-store. This is discovery metadata, not an authentication or entitlement grant. Existing data calls continue checking current server account, scope/generation and paid policy independently.
+
+Add readAccount(subject) to the server store interface. SQLite reads only its recognized account table in a schema-checked read transaction. DynamoDB performs one existing TransactGetItems operation for exactly the caller's META key and validates response completeness, physical keys, serialized record/revision and owner. Reuse the already reviewed operation/permissions; no IAM expansion, note probe, note-head scan, schema or dependency is needed. Reuse the existing account identity/integrity/status/entitlement/time gates without changing the existing scope-check error ordering. Missing, deleted, unpaid, corrupt, foreign, unavailable and clock failures never disclose raw metadata or exceptions. Add the API row to canonical SPEC in this same branch.
+
+## Evidence and review boundary
+
+Use new owned temporary SQLite/service/HTTP cases to prove exact safe projection, two-owner separation, ignored/spoofed request selectors, strict routing, authenticated-before-store access, current account policy and private storage errors. Inspect actual pinned SDK command serialization/response validation and exercise DynamoDB Local's disposable in-memory adapter. Cover the existing Lambda data route and bearer/web-session boundaries using synthetic credentials and real existing verification mechanisms; no login/issuer/session issuance/activation shortcut. Keep all existing assertions/defaults/workers/deadlines/retries/isolation. Add this consumer to the Node24 hosted matrix if a new unit suite is introduced.
+
+Run focused relevant checks and focused adapter evidence, then relevant shared/browser/static/build/default-bundle verification in a coordinated local window. Preserve failed or unrun evidence; do not blindly rerun the prior full local operator deadline matrix. Fresh exact-source hosted all3 gates, focused review, scanned no-reply normal merge and separate main/closure/Project proof are required. Backfill182 completion in append-only WORKLOG/new immutable journal/INDEX; keep frozen0111 unchanged.
+
+## Ownership and limits
+
+Root owns backend/protocol/SPEC/this plan/tests. Peer181 owns only its six new conflict-preview files; this endpoint changes no workspace/conflict UI interface. Use Root's retained own worktree and never inspect or edit the peer's WIP checkout. Coordinate local full-test windows in169 (Root strict65527/peer65528, no reuse). No provider provisioning, actual/default note/operator DB/profile/native launch, stopped probe, expired lease, private archive history or unrelated-process changes. Default Cloud remains unavailable; this does not implement real Cognito/paid activation/full web/live/reconnect/native/iPhone/performance or M2.2 managed/independent teardown acceptance.
