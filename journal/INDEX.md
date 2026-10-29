@@ -1,8 +1,8 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-29 11:12 IST.
+Last refreshed: 2026-10-29 11:32 IST.
 
-Latest entry: [Keep the old store while moving its engine](entries/2026-10-29-1112-keep-the-old-store.md).
+Latest entry: [Initial state is not a session](entries/2026-10-29-1132-initial-state-is-not-a-session.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free remote device-only sync and optional paid live Cloud. It was called Peel until28 October2026.
 
@@ -12,9 +12,11 @@ I have a local Mac development build and browser client. The complete promised s
 
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Cloud foundations and the creation-journal design are merged; actual managed smoke and independent teardown remain unproven. Audit51, managed31 and native72 keep their explicit stopped gates.
 
-Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. PR 127 integrated the separate test worker budget. PR 128 integrated request feature 125 with all source/main checks passing. Its complete unsigned input and transient NoEcho value stay behind private active handles; safe metadata cannot reconstruct them. PR 130 integrated private session lineage with all source/main checks passing. PR 132 integrated the phase/provenance design with passing source checks and honest docs-only main not-run evidence. PR 134 integrated the pure supplied-facts checker with all source/main gates passing and explicitly unproven authority. PR136 integrated the unsigned Query contract with all source/main gates passing. PR138 integrated bounded supplied response observations with all source/main gates passing. Their provider/ownership/settlement authority stays unproven. PR140 integrated the fixed v2 transition design with source gates and honest docs-only main not-run proof. PR142 integrated issue141’s passive fixed SQL catalog with independent golden and actual synthetic SQLite capacity evidence; all source and actual main gates passed. No protected v2 store/namespace/current assessment or execution capability is implemented. Issue143 moves unchanged v1 bytes behind the same public exports and verifies a pre-move synthetic database without creating v2 functionality. Actual current gates, durable preparation, dispatch, lifecycle and managed/independent teardown remain. No local record is a create capability.
+Synkies/Folded Horizon remain adopted across the app and110canonical mockups plus five dark exports, with stored identities preserved. Source-bound original genesis is integrated through PR118/120/122/124 and parent114 is closed. PR 127 integrated the separate test worker budget. PR 128 integrated request feature 125 with all source/main checks passing. Its complete unsigned input and transient NoEcho value stay behind private active handles; safe metadata cannot reconstruct them. PR 130 integrated private session lineage with all source/main checks passing. PR 132 integrated the phase/provenance design with passing source checks and honest docs-only main not-run evidence. PR 134 integrated the pure supplied-facts checker with all source/main gates passing and explicitly unproven authority. PR136 integrated the unsigned Query contract with all source/main gates passing. PR138 integrated bounded supplied response observations with all source/main gates passing. Their provider/ownership/settlement authority stays unproven. PR140 integrated the fixed v2 transition design with source gates and honest docs-only main not-run proof. PR142 integrated issue141’s passive fixed SQL catalog with independent golden and actual synthetic SQLite capacity evidence; all source and actual main gates passed. PR144 integrated the compatible v1 engine extraction with all source/main gates passing. Issue145 now persists/reads only the protected v2 initial state under exact header/catalog/original/state0/empty-row checks, with synthetic ACK/process-crash evidence awaiting its own review/gates/merge. No actual v2 source-bound initializer, fresh lineage, current assessment or execution capability is implemented. Actual current gates, durable preparation, dispatch, lifecycle and managed/independent teardown remain. No local record is a create capability.
 
 ## Recent entries
+
+- [2026-10-29 11:32 IST: initial state is not a session](entries/2026-10-29-1132-initial-state-is-not-a-session.md)
 
 - [2026-10-29 11:12 IST: keep the old store while moving its engine](entries/2026-10-29-1112-keep-the-old-store.md)
 

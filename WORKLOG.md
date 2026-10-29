@@ -1989,3 +1989,18 @@
 **Next:**
 
 - Finish143 focused review/scans/all exact-head hosted gates, normal integration, actual main/closure/Project proof. Then scope a separate fixed-v2 initial store with strict empty-state/catalog/header/ACK evidence. M2.2 and actual managed/independent teardown remain unmet; keep immutable resumes current.
+
+
+## 2026-10-29 - Persist only the protected fixed-v2 initial journal
+
+**Did:**
+- Integrated PR144/sourceb2fb2c8 after all three40824934585 gates/review6488998639 as86bc20e. All three actual-main40825587792 gates passed. Actual143closure, both ProjectDone/label removal/safe primary advancement and owned branch cleanup verified, proof6489213787. The extraction proof remains scoped to its original byte-identical move.
+- Created issue145/current Project and committed plan55a57fc before baseline experiments/code6b2815f. Added a fixed-v2 initial-state store with pre-SQL held-header checks, exact28-object independent catalog root and original genesis/state0/empty future tables. Shared private fixed1/2 mechanics, preserving old public APIs/hooks/error/lifecycle behavior. Added no schema override/migration/public mutation/provider permission.
+- Reopened the same fresh synthetic v1 database created BEFORE sharing through the post-change public API. DB/marker/header/catalog/canonical original/persistent metadata and class/error identities matched, then the new owned fixture was removed. No actual/default DB/source ACK/funding/account/provider action.
+- Passed11 new actual-SQLite cases including unsupported state/catalog/version/anchor and namespace preservation, lost ACKs/final-close uncertainty, actual independent creator race and pre/postcommit SIGKILL, all observed resources closed. Observation-empty omission fails its intended refusal with exact catalog/revision0/quick/FK otherwise valid; exact engine7a785f33 restored. Actual Node24 direct/405Cloud32files then620shared70/type/format/build pass sequentially under unchanged defaults; all legacy tests/catalog/files/source/session/dependencies unchanged. No failed positive145 run. Existing browser chunk warning remains.
+
+**State now:**
+- Low-level fixed-v2 initial-byte persistence only; frozen distinguished metadata reports unproven ownership/run authority and zero provider writes. No actual v2 funding/source-bound initializer or fresh session/current/preparation/fence/provider authority. SQL-valid future rows remain unsupported/refused. Known-format inspection retains reviewed SQLite recovery behavior, without a physically write-free guarantee. App/branding/stored IDs, stopped gates and expired allowances remain unchanged.
+
+**Next:**
+- Finish145 focused review/scans/all exact-head hosted gates, normal integration and actual main/closure/Project evidence. Then scope the actual fixed-v2 source-bound bootstrap/lineage separately with plan before code; M2.2 and actual managed/independent teardown remain unmet. Keep ignored immutable resumes current.
