@@ -17,3 +17,9 @@ Run relevant actual Node24 Cloud list then shared sequentially, full browser, ty
 ## Boundaries
 
 No existing note upload/draft/editor/library contract, protocol/schema/reducer/write path/default application route/dependency or legacy assertion/default/worker/timeout/retry/isolation change. Antigravity169 owns its workspace paths and active checkout; continue communicating there without editing its files. Default Cloud remains unavailable. Actual authentication/paid activation/whole-library consent/full web/live/reconnect/native/iPhone/performance and M2.2 managed/independent teardown remain unmet. No actual/default user/operator database/profile/native launch/provider/credentials, expired allowance, stopped probe, provisioning, production/public beta/billing or further delegation.
+
+## Interim local evidence (before peer review)
+
+Focused57/2 (18new mutation cases and39 unchanged download cases), three actual browser/HTTP/SQLite flows, type/full checked-source format/whitespace/build pass. Static build hashes remain equal to the previous default bundle. First full Node24 run failed4 existing cases with538/542 passing: three5000ms timeouts in journal-sources/preparation-session/run-context-storage and one offline SDK child (existing4000ms SIGKILL bound) returning null exit code. Those test files and all timeout/worker/retry/isolation controls are unchanged. Host load was high on ten logical CPUs; contention is an inference, not a proven cause. The stopped pipeline did not run shared/full-browser stages. Initial failures remain in issue171-final-cloud-node24.log.
+
+Codex requested a separate test window in issue169 comment6501339422 without stopping any peer/unrelated process or weakening defaults. Local controlled follow-up and exact-head hosted gates remain required. Root work is checkpointed locally so the already-open peer PR172 can be reviewed first; this checkpoint is not Ready or a claim that the failed suite passed.
