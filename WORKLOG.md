@@ -2352,3 +2352,20 @@
 
 **Decisions:**
 - Keep the new hint envelope separate from the unchanged internal retention record. A hint is an input to authenticated pull, never an acknowledgement, paid grant, cursor commit or evidence of enabled live delivery.
+
+
+## 2026-10-30 - Validate body-free scoped Cloud change hints
+
+**Did:**
+- Implemented191 after pre-code3dbfda7 and prior190 final handoffcf5caf9. Added a strict seven-field cloned/frozen hint reader bound to captured scope and derivation from explicit committed change records, with fixed private errors. Updated the canonical SPEC wire reference without changing stored schemas or existing APIs.
+- Verified35 focused Node24/3 suites (23 new), shared882/82, type/full format/whitespace/deterministic artifact smoke/build/all8 unchanged default bundle hashes. Actual SQLite upsert/archive/Trash/purge sequences, replay/conflict and rollback distinguish committed change evidence; pure capture/privacy/immutability cases pass.
+- Retained initial34pass/1fail from a new invalid Trash fixture, corrected to required30-day retention dates with existing validator/assertions unchanged; owned fixture cleanup ran. Added the new consumer to the45-file hosted Node24 list. Local browser and adapter acquisition remain unrun, with fresh exact-source hosted evidence required.
+
+**State now:**
+- Hints are metadata only: no authentication/paid/subscription grant, note acknowledgement, cursor/cache write, listener/transport, live delivery or default Cloud activation. M2.2 managed/independent teardown and real app/provider/platform acceptance remain open. Peer181 files/props/refs remain untouched.
+
+**Next:**
+- Finish191 exact-source focused review/all3 hosted gates/observed evidence, normal integration and separate actual-main/closure/Project/guarded primary/scanned Root-only cleanup. Check169/181/open peer PRs first; preserve old controls, unknown user paths and all peer refs.
+
+**Decisions:**
+- A validated hint can request authenticated catch-up later; it never acknowledges a pending draft or proves a supplied record committed. Server integration must obtain actual committed evidence and a trusted scope under fresh policy/lifetime checks.

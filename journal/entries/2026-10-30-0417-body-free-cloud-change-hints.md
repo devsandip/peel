@@ -1,0 +1,11 @@
+# Cloud change hints carry only scoped metadata
+
+2026-10-30 04:17 IST. Frozen pre-source-gate checkpoint.
+
+Issue191 follows fully verified190/maine697bc6/proof6510001991 and pre-code plan3dbfda7; prior handoffcf5caf9/frozen0407 already record that final integration. The new pure codec provides a captured-scope reader and derivation from explicit committed CloudChange records. Exactly seven fields survive as a cloned/frozen flat result: version, known kind, owner/library/mode generation, committed sequence and note ID. Unknown/private/hidden/malformed/foreign input and clone failures produce fixed local errors. Existing schemas and all shared UI/HTTP/storage contracts are unchanged; SPEC links the isolated wire contract.
+
+Actual owned SQLite upsert/archive/Trash/purge records produce sequences1-4 without note content; replay/conflict add no fresh change, and transaction rollback leaves none. Final35 focused Node24/3 suites (23 new), shared882/82, type/full source format/whitespace/deterministic packaged artifact/build/all8 unchanged default bundle hashes pass. Initial34pass/1fail was a new invalid Trash fixture missing retention dates; valid30-day dates corrected the fixture, original core validation/assertions stayed intact and finally cleanup ran. No actual/default DB/provider/native/stopped probe or expired authorization was used.
+
+The45-file Node24 hosted list includes the new suite; fresh exact-source all3 gates/actual observed adapter/Cloud/browser evidence, focused review, normal merge and separate actual-main/closure/Project/guarded primary/Root-only cleanup remain next. Local browser is unrun for this unused protocol-only change; local adapter acquisition was not retried after its previous timeout. Peer181 owns its unchanged six-file conflict-preview scope.
+
+A hint is no auth/paid grant, acknowledgement, cursor commit, conflict resolution, full inventory or Live/Saved signal. Actual sender integration must use real committed evidence under server-owned scope and policy; no listener/fanout/transport or default Cloud exists from this codec. M2.2 managed/independent teardown and real auth/paid/full web/live/reconnect/platform/performance/public acceptance remain unmet. Frozen0407/0342 and older evidence remains untouched.
