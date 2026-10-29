@@ -2033,3 +2033,18 @@
 
 **Next:**
 - Finish150 focused review/scans/all exact-source hosted gates and normal merge/main/closure/Project evidence. Continue with one concrete Cloud user-flow slice under its required hosting/auth/entitlement controls; no revived stopped probe or expired allowance.
+
+
+## 2026-10-29 - Add a disabled scoped Cloud cache panel
+
+**Did:**
+- Verified PR151 source40833280283 and all three actual-main40834314683 gates at7c24ab7, actual closure/Project Done/label removal/primary advancement/owned cleanup, proof6490662321. This remains visible Local tier copy, not enabled Cloud.
+- Created152/current Project and committed planffbb6a5 before code. Added read-only cache projection/panel using existing strict scoped DurableCloudClient reads; pending/in-flight/conflict/missing/purge states stay truthful. Render-selection and late-read guards prevent stale account/note text/status. No default app entry, Local repository, transport, auth/entitlement flag or protocol/store change.
+- Passed5 actual-SQLite local/service receipt cases; actual Node24 focused20tests/3files,625shared/71files,13actual IndexedDB/React cases plus11existing browser flows, type/full checked-source format/build. Guard omission fails the held-account refusal; exact956e79b9 panel hash restored before full positive browser checks. No timeouts/retries/defaults/legacy assertions changed. Existing bundle warning remains.
+- Preserved initial typing/import/fixture-preamble failures and the owned-port refusal, corrected their causes and closed owned test servers/browsers/databases. No actual/default note/operator DB, native app, account/provider/AWS action or stopped retry.
+
+**State now:**
+- A disabled cached-note presentation prerequisite only. Default Cloud remains unavailable. Cache validation and synthetic receipts do not establish authentication, paid entitlement, live server access, full inventory, editor save/reconnect/push, native/iPhone or M2.2 managed/teardown acceptance.
+
+**Next:**
+- Finish152 focused review/scans/all three exact-source hosted gates and normal integration/main/closure/Project proof. Then scope one further Cloud client composition slice with a requirement-linked plan before code, retaining actual hosting/auth/entitlement gates and the stopped-probe/expired-budget boundaries.
