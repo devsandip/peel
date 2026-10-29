@@ -2108,3 +2108,18 @@
 
 **Next:**
 - Finish160 focused review/scans/no-reply/all3 exact-source hosted gates, normal integration and actual main/closure/Project proof. Preserve the initial DOM-test failure and negative control separately, and leave stopped probes/expired allowances unchanged.
+
+
+## 2026-10-29 - Connect editing to server confirmation
+
+**Did:**
+- Verified161 source40862463586/main40863710699 all3PASS first attempts, review6494941687/ready6495118233/mergeaa601d2/proof6495297819, actual160closure/ProjectDone/label/primary/owned cleanup. Preserved prior failures and unknown user paths.
+- Created162/current Project and plan97ee278 before code. Added scoped upload/session ownership, immutable prepare/retry and validated receipt dispatch, account cancellation/commit guards, queued success draining and failure/conflict pause. Wired retention/mount/Put away through the existing editor without waiting for network or changing default Cloud/Local/native routes.
+- Added actual browser-fetch/loopback HTTP/SQLite fixture and independent API read. Twelve new unit cases, Node24 focused29/2, exactCloud440/35 then shared655/73 sequential, all41browser/type/full checked-source format/whitespace/build PASS; default bundle hashes/580kB warning unchanged. Legacy test assertions/defaults preserved; workflow only adds new Node24 suite.
+- Recorded genuine review regression: cancellation from upload-start observer initially still sent1request instead of0. Recheck after notification fixes it; final positives include abort during held ACK read, old retry revealing newer remote head, lost successful response/reopen, real401/conflict, receipt/status mismatch and captured scope. Earlier smaller positives do not erase that failing strengthened test. Owned fixtures/DBs/processes closed/removed; no actual user/operator DB/profile/native/provider/OS clipboard or stopped retry.
+
+**State now:**
+- The scoped editor can upload through its explicit authenticated sender and observe durable confirmation; a separate fixture client reads committed text. Default app Cloud remains unavailable. Real authenticated parent/context binding, bounded sender/deadlines, full inventory/reconnect/live and actual platform/managed teardown remain unmet.
+
+**Next:**
+- Finish162 focused review/scans/no-reply/all3 exact-source gates and normal merge/main/closure/Project proof. Keep the cancellation failure and prior historical failures explicit, preserve unrelated changes and do not renew expired allowances.

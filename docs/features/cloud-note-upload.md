@@ -1,6 +1,6 @@
 # Connect editing to server confirmation
 
-[Issue162](https://github.com/devsandip/peel/issues/162) connects the existing [capture/session](cloud-new-note-capture.md) and [editor](cloud-note-editor.md) to an actual mutation sender. This plan precedes code. [SPEC](../SPEC.md) FR-02/04/08/11/13/14 and AC-02/04/09/12/13/20 remain the contract. Sandip's latest feedback prioritizes a working save-and-read path over further isolated components or documentation chores.
+[Issue162](https://github.com/devsandip/peel/issues/162) connects the existing [capture/session](cloud-new-note-capture.md) and [editor](cloud-note-editor.md) to an actual mutation sender. This plan precedes code. [SPEC](../SPEC.md) FR-02/04/08/11/13/14 and AC-02/04/09/12/13/20 remain the contract. This slice connects the existing components into a working save-and-read path while preserving the planning, review and validation approach Sandip reaffirmed.
 
 ## One working slice
 
@@ -17,3 +17,11 @@ Use focused actual Node24 SQLite/service tests for commit-before-Saved, newer ty
 Run focused runtime/browser/type/format/build checks; hosted gates cover the complete prescribed suites. Review scope/lifecycle/authenticated dispatch, scan/verify no-reply author AND committer before every push, require all exact-source gates and normal integration/main/tracking proof. Preserve prior161 finalproof6495297819 in WORKLOG/new immutable journal/INDEX. Reuse already-loaded unchanged instruction/canonical context rather than repeatedly reading it.
 
 This is a runnable synthetic save-to-server/read-back integration, not Cognito login, enabled paid Cloud, complete web inventory/live delivery, native/iPhone or M2.2 managed/teardown acceptance. No expired allowance or stopped31/51/72 probe is revived. The old hosting plan's v0.7 sentence is historical; canonical v0.8 controls this slice, and this work performs no deployment or cost observation.
+
+## Validation evidence
+
+Twelve new actual SQLite/HTTP-service unit cases pass, with Node24 focused29/2 and the exact Cloud440/35 list, then shared655/73 sequentially under unchanged defaults. They cover real commit-before-ACK, queued newer typing, lost successful reply/reopen/identical retry, real401 recovery/conflict, mismatched receipt/status refusal, immutable initiating scope, late-response and held-ACK-read cancellation, synchronous observer cancellation and newer remote-head recovery. The observer-cancellation regression initially failed0expected/1actual request; the added post-notification check fixes it. That failed strengthened case is preserved separately. No temporary source weakening or unrun check is labeled passing.
+
+Four new actual browser/HTTP/SQLite cases pass with all37 prior browser cases (41total). A separate API client sees the committed text before the originating browser receives confirmation; newer unconfirmed typing stays local until its own upload. Actual reload,401Retry, Put away during a held reply and context replacement pass. Fixture authentication/HTTP is synthetic and loopback only; this does not prove Cognito, a complete web library or DynamoDB hosting. Sender scope/authentication/deadlines/response bounds remain the trusted parent's explicit contract. An already-started local transaction may settle only in its original store.
+
+Type/full checked-source formatting/whitespace/build pass, default bundle hashes/580kB warning unchanged. Default Local/native/app routes, protocol/store/schema/dependencies are unchanged; the existing editor gains an optional retained callback and the Node24 gate includes the new suite. Owned browser/HTTP servers, M0 namespaces and SQLite stores are cleaned. Focused source review/all3 hosted gates and normal integration/main proof follow. Prior161 integrationproof6495297819 and its source/main first attempts are now tracked in WORKLOG/new immutable journal/INDEX; frozen1632 is unchanged.
