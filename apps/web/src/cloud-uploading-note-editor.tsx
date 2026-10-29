@@ -32,22 +32,27 @@ function SelectedUploadEditor({
   onPutAway: (session: CloudDraftSession) => void | Promise<void>;
 }) {
   const [revision, setRevision] = useState(0);
+  const session = upload.session;
   useEffect(() => {
     let active = true;
     const unsubscribe = upload.subscribe(() => {
       if (active) setRevision((previous) => previous + 1);
     });
-    void upload.upload();
+    // Session identity can advance between rendering and installing this subscription.
+    if (upload.session !== session) setRevision((previous) => previous + 1);
+    const initial = upload.snapshot();
+    if (initial.kind === "idle" || initial.kind === "uploading")
+      void upload.upload();
     return () => {
       active = false;
       unsubscribe();
     };
-  }, [upload]);
+  }, [upload, session]);
   const view = upload.snapshot();
   return (
     <>
       <CloudNoteEditor
-        session={upload.session}
+        session={session}
         refreshKey={revision}
         uploadNotice={
           view.message

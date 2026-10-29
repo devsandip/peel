@@ -35,6 +35,7 @@ type UploadSnapshot = Readonly<{
 export class CloudNoteUpload {
   private client: DurableCloudClient;
   private task: Promise<UploadSnapshot> | null = null;
+  private reopening: Promise<CloudNoteUpload> | null = null;
   private queued = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private clearScheduled = () => {
@@ -45,8 +46,8 @@ export class CloudNoteUpload {
   private view: UploadSnapshot = Object.freeze({ kind: "idle", message: null });
   private listeners = new Set<() => void>();
   private constructor(
-    readonly session: CloudDraftSession,
-    store: CloudStateStore,
+    private currentSession: CloudDraftSession,
+    private store: CloudStateStore,
     private scope: CloudScope,
     private send: CloudMutationSender,
     private signal: AbortSignal,
@@ -89,6 +90,40 @@ export class CloudNoteUpload {
     const scope = validateCloudScope(input),
       session = await CloudDraftSession.open(store, scope, noteId);
     return new CloudNoteUpload(session, store, scope, send, signal);
+  }
+  get session() {
+    return this.currentSession;
+  }
+  /** The parent has closed its prior view; retain this owner and any pending reply. */
+  reopen(): Promise<CloudNoteUpload> {
+    if (this.reopening) return this.reopening;
+    const closed = this.currentSession;
+    if (this.signal.aborted || !closed.snapshot().closed)
+      return Promise.reject(Error("Could not reopen Cloud note"));
+    const task = Promise.resolve()
+      .then(async () => {
+        this.signal.throwIfAborted();
+        const session = await CloudDraftSession.open(
+          this.store,
+          this.scope,
+          closed.snapshot().noteId,
+        );
+        this.signal.throwIfAborted();
+        if (this.currentSession !== closed)
+          throw Error("Could not reopen Cloud note");
+        this.currentSession = session;
+        // Notify still-mounted views of the new editing session without changing pause state.
+        this.publish(this.view.kind, this.view.message);
+        return this;
+      })
+      .catch(() => {
+        throw Error("Could not reopen Cloud note");
+      })
+      .finally(() => {
+        this.reopening = null;
+      });
+    this.reopening = task;
+    return task;
   }
   snapshot() {
     return this.view;

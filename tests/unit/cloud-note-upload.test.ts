@@ -509,3 +509,289 @@ it("automatically prepares newer typing after a real local generation race", asy
     );
     expect(f.upload.session.snapshot().status).toBe("Saved in Cloud");
   }));
+
+it("reopens one retained owner while an older ACK is held and sends only the newer next operation", async () =>
+  fixture(async (f) => {
+    const firstGate = f.hold(),
+      secondGate = f.hold();
+    let replies = 0;
+    f.control.afterServer = async (reply) => {
+      const held = ++replies === 1 ? firstGate : secondGate;
+      held.entered.resolve();
+      await held.release.promise;
+      return reply;
+    };
+    f.upload.session.edit("First retained view");
+    const first = f.upload.upload();
+    await firstGate.entered.promise;
+    const closed = f.upload.session,
+      original = structuredClone(f.requests[0].mutation);
+    await closed.putAway();
+    expect(await f.upload.reopen()).toBe(f.upload);
+    expect(f.upload.session).not.toBe(closed);
+    expect(closed.snapshot().closed).toBe(true);
+    expect(f.upload.session.snapshot().canEdit).toBe(true);
+    f.upload.session.edit("Newer reopened view source");
+    await f.upload.session.flush();
+    const mounted = f.upload.upload();
+    expect(f.requests).toHaveLength(1);
+    expect(await f.client.retry(closed.snapshot().noteId)).toEqual(original);
+    firstGate.release.resolve();
+    await first;
+    await mounted;
+    await secondGate.entered.promise;
+    expect(f.requests).toHaveLength(2);
+    expect(f.requests[1].mutation.opId).not.toBe(original.opId);
+    expect(f.requests[1].mutation.baseRevision).toBe(1);
+    expect(f.requests[1].mutation.snapshot!.bodyMarkdown).toBe(
+      "Newer reopened view source",
+    );
+    expect(f.upload.session.snapshot().status).toBe("Pending upload");
+    const head = await f.service.get(
+      cloudScope.ownerSubject,
+      cloudScope,
+      closed.snapshot().noteId,
+    );
+    expect(head.kind === "note" && head.snapshot.bodyMarkdown).toBe(
+      "Newer reopened view source",
+    );
+    secondGate.release.resolve();
+    expect((await f.upload.upload()).kind).toBe("idle");
+    expect(f.upload.session.snapshot().status).toBe("Saved in Cloud");
+    expect(f.requests).toHaveLength(2);
+  }));
+
+it("keeps an authentication pause and immutable operation through reopen until explicit retry", async () =>
+  fixture(async (f) => {
+    f.control.unauthorized = true;
+    f.upload.session.edit("Pending through authentication recovery");
+    expect((await f.upload.upload()).kind).toBe("sign-in-required");
+    const paused = f.upload.snapshot(),
+      original = structuredClone(f.requests[0].mutation);
+    await f.upload.session.putAway();
+    expect(await f.upload.reopen()).toBe(f.upload);
+    expect(f.upload.snapshot()).toEqual(paused);
+    expect(f.upload.session.snapshot().status).toBe("Pending upload");
+    f.upload.schedule();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(f.requests).toHaveLength(1);
+    expect(await f.client.retry(f.upload.session.snapshot().noteId)).toEqual(
+      original,
+    );
+    f.control.unauthorized = false;
+    expect((await f.upload.upload()).kind).toBe("idle");
+    expect(f.requests).toHaveLength(2);
+    expect(f.requests[1].mutation).toEqual(original);
+    expect(f.upload.session.snapshot().status).toBe("Saved in Cloud");
+  }));
+
+it("coalesces concurrent cached reopen reads without changing storage lifetime or sending", async () =>
+  fixture(async (f) => {
+    f.upload.session.edit("Retained before two open requests");
+    await f.upload.session.putAway();
+    const closed = f.upload.session,
+      held = f.hold(),
+      reads = vi.spyOn(f.store, "read"),
+      close = vi.spyOn(f.store, "close");
+    f.control.read = async () => {
+      held.entered.resolve();
+      await held.release.promise;
+    };
+    const first = f.upload.reopen(),
+      second = f.upload.reopen();
+    expect(first).toBe(second);
+    await held.entered.promise;
+    expect(f.upload.session).toBe(closed);
+    held.release.resolve();
+    expect(await first).toBe(f.upload);
+    expect(await second).toBe(f.upload);
+    expect(reads).toHaveBeenCalledTimes(1);
+    expect(close).not.toHaveBeenCalled();
+    expect(f.requests).toEqual([]);
+    expect(f.upload.session.snapshot()).toMatchObject({
+      closed: false,
+      canEdit: true,
+      bodyMarkdown: "Retained before two open requests",
+    });
+  }));
+
+it("refuses account cancellation during reopen without replacing the closed session", async () =>
+  fixture(async (f) => {
+    f.upload.session.edit("Retained in original account");
+    await f.upload.session.putAway();
+    const closed = f.upload.session,
+      held = f.hold(),
+      reads = vi.spyOn(f.store, "read");
+    f.control.read = async () => {
+      held.entered.resolve();
+      await held.release.promise;
+    };
+    const opening = f.upload.reopen(),
+      check = expect(opening).rejects.toThrow("Could not reopen Cloud note");
+    await held.entered.promise;
+    f.controller.abort();
+    held.release.resolve();
+    await check;
+    expect(f.upload.session).toBe(closed);
+    await expect(f.upload.reopen()).rejects.toThrow(
+      "Could not reopen Cloud note",
+    );
+    expect(reads).toHaveBeenCalledTimes(1);
+    expect(f.requests).toEqual([]);
+  }));
+
+it("keeps the closed owner recoverable after a private read failure", async () =>
+  fixture(async (f) => {
+    f.upload.session.edit("Retained before failed read");
+    await f.upload.session.putAway();
+    const closed = f.upload.session,
+      view = f.upload.snapshot();
+    f.control.read = async () => {
+      throw Error("Synthetic private storage exception");
+    };
+    await expect(f.upload.reopen()).rejects.toThrow(
+      /^Could not reopen Cloud note$/,
+    );
+    expect(f.upload.session).toBe(closed);
+    expect(f.upload.snapshot()).toBe(view);
+    expect(await f.upload.reopen()).toBe(f.upload);
+    expect(f.upload.session.snapshot().bodyMarkdown).toBe(
+      "Retained before failed read",
+    );
+    expect(f.requests).toEqual([]);
+  }));
+
+it("does not reset a live draft or create a row when reopening an untouched closed capture", async () =>
+  fixture(async (f) => {
+    const original = f.upload.session,
+      reads = vi.spyOn(f.store, "read"),
+      commits = vi.spyOn(f.store, "commit");
+    await expect(f.upload.reopen()).rejects.toThrow(
+      "Could not reopen Cloud note",
+    );
+    expect(reads).not.toHaveBeenCalled();
+    await original.putAway();
+    await expect(f.upload.reopen()).rejects.toThrow(
+      "Could not reopen Cloud note",
+    );
+    expect(f.upload.session).toBe(original);
+    expect(commits).not.toHaveBeenCalled();
+    expect(await f.client.get(original.snapshot().noteId)).toBeNull();
+    expect(f.requests).toEqual([]);
+  }));
+
+it("uses the original captured scope when caller inputs change before reopen", async () =>
+  fixture(async (f) => {
+    const input = { ...cloudScope },
+      owner = CloudNoteUpload.capture(
+        f.store,
+        input,
+        f.send,
+        f.controller.signal,
+      );
+    input.ownerSubject = "another-owner";
+    input.collectionId = "another-library";
+    input.modeGeneration++;
+    owner.session.edit("Original scoped cache");
+    await owner.session.putAway();
+    const noteId = owner.session.snapshot().noteId;
+    expect(await owner.reopen()).toBe(owner);
+    expect(owner.session.snapshot().bodyMarkdown).toBe("Original scoped cache");
+    expect((await f.client.get(noteId))!.collectionId).toBe(
+      cloudScope.collectionId,
+    );
+    await expect(
+      new DurableCloudClient(f.store, input).get(noteId),
+    ).rejects.toThrow("another account");
+    expect(f.requests).toEqual([]);
+  }));
+
+it("reads the latest scoped cached source instead of restoring the previous closed view", async () =>
+  fixture(async (f) => {
+    f.upload.session.edit("Previous closed view");
+    await f.upload.session.putAway();
+    const closed = f.upload.session,
+      noteId = closed.snapshot().noteId,
+      previous = (await f.client.get(noteId))!;
+    await f.client.save(
+      noteId,
+      {
+        kind: "upsert",
+        snapshot: { ...cloudDraft("Updated cached source"), noteId },
+      },
+      previous.generation,
+    );
+    await f.upload.reopen();
+    expect(closed.snapshot().bodyMarkdown).toBe("Previous closed view");
+    expect(f.upload.session.snapshot()).toMatchObject({
+      bodyMarkdown: "Updated cached source",
+      status: "Pending upload",
+      canEdit: true,
+    });
+    expect(f.requests).toEqual([]);
+  }));
+
+it("preserves a lost-response pause on reopen and explicitly retries the already committed operation", async () =>
+  fixture(async (f) => {
+    f.control.afterServer = async () => {
+      throw Error("Synthetic private connection failure");
+    };
+    f.upload.session.edit("Committed before the response was lost");
+    expect((await f.upload.upload()).kind).toBe("paused");
+    const original = structuredClone(f.requests[0].mutation),
+      view = f.upload.snapshot();
+    await f.upload.session.putAway();
+    await f.upload.reopen();
+    expect(f.upload.snapshot()).toEqual(view);
+    expect(f.upload.session.snapshot().status).toBe("Pending upload");
+    f.upload.schedule();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(f.requests).toHaveLength(1);
+    f.control.afterServer = null;
+    expect((await f.upload.upload()).kind).toBe("idle");
+    expect(f.requests[1].mutation).toEqual(original);
+    const head = await f.service.get(
+      cloudScope.ownerSubject,
+      cloudScope,
+      f.upload.session.snapshot().noteId,
+    );
+    expect(head.revision).toBe(1);
+    expect(f.upload.session.snapshot().status).toBe("Saved in Cloud");
+  }));
+
+it("reopens a conflict for local editing without resending or discarding either branch", async () =>
+  fixture(async (f) => {
+    const noteId = f.upload.session.snapshot().noteId;
+    f.upload.session.edit("Retained local conflict branch");
+    await f.upload.session.flush();
+    const remote = await startCloudMutation(
+      saveCloudDraft(createCloudClient(cloudScope.collectionId, noteId), {
+        kind: "upsert",
+        snapshot: { ...cloudDraft("Retained remote conflict branch"), noteId },
+      }),
+      "reopen-remote-conflict",
+    );
+    await f.service.mutate(cloudScope.ownerSubject, {
+      version: 1,
+      collectionId: cloudScope.collectionId,
+      modeGeneration: cloudScope.modeGeneration,
+      mutation: remote.inFlight!,
+    });
+    expect((await f.upload.upload()).kind).toBe("conflict");
+    await f.upload.session.putAway();
+    const calls = f.requests.length;
+    await f.upload.reopen();
+    expect(f.upload.snapshot().kind).toBe("conflict");
+    expect(f.upload.session.snapshot().status).toBe("Conflict");
+    f.upload.session.edit("Newest local conflict branch after reopen");
+    await f.upload.session.flush();
+    f.upload.schedule();
+    expect(f.requests).toHaveLength(calls);
+    const state = (await f.client.get(noteId))!;
+    expect(state.conflict!.local.snapshot!.bodyMarkdown).toBe(
+      "Newest local conflict branch after reopen",
+    );
+    expect(state.conflict!.remote!.bodyMarkdown).toBe(
+      "Retained remote conflict branch",
+    );
+  }));

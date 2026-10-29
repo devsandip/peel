@@ -153,3 +153,159 @@ test("replacing a context hides old text and suppresses held old upload notifica
   await editor.fill("New context source");
   await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
 });
+
+test("one retained owner reopens while its old HTTP ACK is held and confirms only the newer edit", async ({
+  page,
+  playwright,
+}) => {
+  server.control.hold = true;
+  const editor = page.getByRole("textbox", { name: "Note text" });
+  await editor.fill("First view before reopening");
+  await expect.poll(() => server.control.committed).toBe(1);
+  const noteId = await page.evaluate(
+    () => window.cloudUploadFixture.snapshot().noteId,
+  );
+  await page.getByRole("button", { name: "Put away note" }).click();
+  await expect(page.getByText("Note put away", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.reuseClosed()),
+  ).toBe(true);
+  await expect(editor).toContainText("First view before reopening");
+  await editor.fill("Latest source in the reopened view");
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.cloudUploadFixture.snapshot().retained),
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.requests().length),
+  ).toBe(1);
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.snapshot().noteId),
+  ).toBe(noteId);
+  await expect(page.getByRole("status")).toHaveText("Pending upload");
+  server.release();
+  server.control.hold = true;
+  await expect.poll(() => server.control.committed).toBe(2);
+  await expect(page.getByRole("status")).toHaveText("Pending upload");
+  const requests = await page.evaluate(() =>
+    window.cloudUploadFixture.requests(),
+  );
+  expect(requests).toHaveLength(2);
+  expect(requests[1].mutation.opId).not.toBe(requests[0].mutation.opId);
+  expect(requests[1].mutation.baseRevision).toBe(1);
+  expect(requests[1].mutation.snapshot!.bodyMarkdown).toBe(
+    "Latest source in the reopened view",
+  );
+  const other = await playwright.request.newContext({
+    extraHTTPHeaders: {
+      "x-synthetic-fixture": server.token,
+      "x-peel-collection": server.scope.collectionId,
+      "x-peel-mode-generation": String(server.scope.modeGeneration),
+    },
+  });
+  try {
+    const remote = await other.get(server.api + "/v1/notes/" + noteId);
+    expect((await remote.json()).head.snapshot.bodyMarkdown).toBe(
+      "Latest source in the reopened view",
+    );
+  } finally {
+    await other.dispose();
+  }
+  server.release();
+  await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.requests().length),
+  ).toBe(2);
+});
+
+test("remounting the same auth-paused owner keeps recovery visible and sends nothing until Retry", async ({
+  page,
+}) => {
+  server.control.unauthorized = true;
+  const editor = page.getByRole("textbox", { name: "Note text" });
+  await editor.fill("Pending draft survives a paused remount");
+  await expect(page.getByRole("alert")).toContainText("Sign in again");
+  await page.getByRole("button", { name: "Put away note" }).click();
+  await expect(page.getByText("Note put away", { exact: true })).toBeVisible();
+  // Preserve the existing explicit Put-away flush, then isolate incidental remount.
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.cloudUploadFixture.requests().length),
+    )
+    .toBe(2);
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.cloudUploadFixture.uploadStatus().kind),
+    )
+    .toBe("sign-in-required");
+  const before = await page.evaluate(() =>
+    window.cloudUploadFixture.requests(),
+  );
+  server.control.unauthorized = false;
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.reuseClosed()),
+  ).toBe(true);
+  await expect(editor).toContainText("Pending draft survives a paused remount");
+  await expect(page.getByRole("alert")).toContainText("Sign in again");
+  await page.waitForTimeout(350); // Observe an idle window beyond automatic batching, without recovery input.
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.requests()),
+  ).toEqual(before);
+  await page.getByRole("button", { name: "Retry upload" }).click();
+  await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
+  const after = await page.evaluate(() => window.cloudUploadFixture.requests());
+  expect(after).toHaveLength(before.length + 1);
+  expect(after.at(-1)!.mutation).toEqual(before[0].mutation);
+  expect(server.control.committed).toBe(1);
+});
+
+test("a still-mounted same-owner editor gets a fresh session and cannot undo into its closed view", async ({
+  page,
+}) => {
+  const editor = page.getByRole("textbox", { name: "Note text" });
+  await editor.fill("Retained text before a new editing session");
+  await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
+  const previousEditor = await editor.elementHandle();
+  expect(previousEditor).not.toBeNull();
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.reopenMounted()),
+  ).toBe(true);
+  await expect
+    .poll(() => previousEditor!.evaluate((node) => node.isConnected))
+    .toBe(false);
+  await previousEditor!.dispose();
+  await expect(editor).toContainText(
+    "Retained text before a new editing session",
+  );
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.snapshot().canEdit),
+  ).toBe(true);
+  await editor.focus();
+  await editor.press(`${process.platform === "darwin" ? "Meta" : "Control"}+z`);
+  await expect(editor).toContainText(
+    "Retained text before a new editing session",
+  );
+  await editor.fill("Fresh session edits remain automatic");
+  await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.requests().length),
+  ).toBe(2);
+  const currentEditor = await editor.elementHandle();
+  try {
+    await page.evaluate(() => window.cloudUploadFixture.refreshView());
+    expect(await currentEditor!.evaluate((node) => node.isConnected)).toBe(
+      true,
+    );
+  } finally {
+    await currentEditor!.dispose();
+  }
+  await editor.press(`${process.platform === "darwin" ? "Meta" : "Control"}+z`);
+  await expect(editor).toContainText(
+    "Retained text before a new editing session",
+  );
+  await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
+  expect(
+    await page.evaluate(() => window.cloudUploadFixture.requests().length),
+  ).toBe(3);
+});

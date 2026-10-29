@@ -11,6 +11,7 @@ import {
 import { CloudUploadingNoteEditor } from "../../apps/web/src/cloud-uploading-note-editor";
 import { IndexedDBCloudStateStore } from "../../packages/cloud-protocol/src/store-idb";
 import type { CloudScope } from "../../packages/cloud-protocol/src/durable";
+import type { CloudMutationRequest } from "../../packages/cloud-protocol/src/server";
 
 const config = Reflect.get(window, "syntheticUploadConfig") as {
   api: string;
@@ -29,8 +30,10 @@ if (!name || !/^peel-m0-cloud-upload-[a-z0-9-]+$/.test(name))
   throw Error("Explicit synthetic namespace required");
 const store = new IndexedDBCloudStateStore(name),
   root = createRoot(document.getElementById("fixture")!),
-  opened = new Set<CloudNoteUpload>();
+  opened = new Set<CloudNoteUpload>(),
+  requests: CloudMutationRequest[] = [];
 const send: CloudMutationSender = async (request, signal) => {
+  requests.push(structuredClone(request));
   const response = await fetch(config.api + "/v1/mutations", {
     method: "POST",
     signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
@@ -79,6 +82,19 @@ function render() {
 const api = {
   snapshot: () => upload.session.snapshot(),
   uploadStatus: () => upload.snapshot(),
+  requests: () => structuredClone(requests),
+  refreshView: () => render(),
+  async reuseClosed() {
+    const same = (await upload.reopen()) === upload;
+    shown = true;
+    render();
+    return same;
+  },
+  async reopenMounted() {
+    await upload.session.putAway();
+    // Keep both owner identity and React parent props unchanged.
+    return (await upload.reopen()) === upload;
+  },
   async open(noteId: string) {
     controller.abort();
     controller = new AbortController();
