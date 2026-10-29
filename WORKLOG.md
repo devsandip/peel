@@ -2369,3 +2369,20 @@
 
 **Decisions:**
 - A validated hint can request authenticated catch-up later; it never acknowledges a pending draft or proves a supplied record committed. Server integration must obtain actual committed evidence and a trusted scope under fresh policy/lifetime checks.
+
+
+## 2026-10-30 - Verify change hints and plan bounded catch-up
+
+**Did:**
+- Fully integrated192/191 atf64a027, source40968749836/main40969798481 all3 first attempts, review5705991033/Ready6510476071/proof6510656494. Observed actual adapter30/5, Node24Cloud674/45, shared882/82/browser79; all23 new hint cases executed in both Node runtimes.
+- Verified actual closure/bothProjectDone/obsolete label removal/guarded primary/unknown paths/no-reply author AND committer/scanned Root-only source+merge cleanup. All peer refs/checkouts and frozen0417/older evidence remain preserved. Local35 focused/static/artifact/build/default bundle positives and initial fixture/unrun local evidence remain distinct.
+- Created193 Ready in the existing milestone/Project and committed pre-code plan7ed75e0. Decided the exact new bounded acceptHint method in169 before any edit; no193 runtime/tests exist.
+
+**State now:**
+- Fully verified main isf64a027; default Cloud/live transport/real auth/paid/full web/platform/performance/public acceptance and M2.2 managed teardown remain unmet. Peer181 retains its six files/props and needs its own fresh rebase/frozen Ready/all3.
+
+**Next:**
+- Update193 toInprogress and implement CloudLibraryDownload.acceptHint from docs/features/cloud-hint-catchup.md; read original download/progress code first, keep all old no-hint semantics/controls, and prove held-hint/partial-round/pending-work/auth-cancellation cases. Check169/181/openPRs before code; full-test window released6510311718.
+
+**Decisions:**
+- A completed older partial round cannot disprove a later valid hint. Preserve pending target and request a later explicit fresh round; only fresh authoritative evidence after the hint may safely pause an ahead-of-server target. Keep each call bounded with no implicit loop.
