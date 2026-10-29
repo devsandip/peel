@@ -1,0 +1,34 @@
+# Preserve immediate Cloud retention during upload races
+
+[Issue174](https://github.com/devsandip/peel/issues/174) follows verified PR173 (source40910952734/main40912555135 all3 first attempts, proof6502648584). This plan precedes code. SPEC FR-02/04/05/14 and AC-02/04/13 prerequisites, [draft retention](cloud-draft-session.md), [automatic upload](cloud-note-upload.md) and [cached library](cloud-cached-library.md) control this slice.
+
+## Observed failure and scope
+
+Peer PR172's published ab64 web job123584960900 passes both workspace fixes but fails the unchanged cached-library immediate typing/Put-away case62, with60/61 browser cases passing. Existing main separately passes. Hypothesis, not demonstrated cause: a concurrent legitimate upload preparation/acknowledgement advances the local generation between draft retention read and CAS, unnecessarily surfacing recovery. Antigravity owns only its new workspace files; Root owns this existing shared boundary and must not hide this failure with a wait-for-Saved precondition.
+
+## Plan before implementation
+
+1. Use an explicit fresh owned SQLite store and deterministic commit/read gates to reproduce preparation or acknowledgement advancing the generation while typing/Put away retains a newer draft. Preserve a red result and inspect actual state. If this does not explain the browser failure, investigate before changing runtime.
+2. Make the smallest correctness change. A bounded reobservation may recover only after actual newer generation with the expected unchanged current projection is verified. Preserve immutable in-flight operation and concurrent remote/conflict metadata through the existing validated client save. Different text/account, unproven write outcomes, storage failures and repeated contention remain recovery rather than guessed adoption or blind retry.
+3. Cover conservative negatives and older ACK/newer typing. Keep every edit immediately retained, existing200ms Cloud batching/no Save button, Put away independent of response latency and Saved only matching current confirmation. Add a controlled actual browser interleaving if needed; preserve all old assertions/defaults/timeouts/retries/workers/isolation.
+4. Run focused existing/new session/upload cases, sequential relevant Node24 Cloud then shared, browser, type/format/whitespace/build/default-bundle checks. Stage explicit owned files/scans/no-reply author AND committer, review exact public source/all3 required hosted gates, normal merge, separate actual-main/closure/Project proof and owned-only cleanup. Backfill173 final proof in WORKLOG/new immutable journal/INDEX; preserve frozen2150.
+
+## Boundaries and remaining acceptance
+
+No new workspace UI/CSS/plan/browser files owned by Antigravity, UI contract/protocol/schema/dependency/default route or provider changes. Default Cloud stays unavailable. No actual/default user/operator DB/profile/credentials/native launch/provider/expired allowances/stopped probes. Real authentication/paid activation/full web/live/reconnect/native/iPhone/performance and M2.2 managed/independent teardown remain unmet. Coordinate issue169 and local test windows; no spawned agents or unrelated-process cleanup.
+
+## Demonstrated cause and implementation decision
+
+The first deterministic actual SQLite case fails as intended:17 existing session cases pass and the new preparation-wins-retention-CAS case rejects Put away with Could not retain draft (issue174-session-red.log). This demonstrates a valid runtime race with the observed symptom; it does not reconstruct the unrecorded exact hosted interleaving.
+
+Recover only one precisely verified startCloudMutation transition from the prior state, not any newer generation or acknowledgement. Use the real transition/hash function and whole-state comparison. Add an internal typed local-generation error (same existing message) so storage exceptions/unknown commit replies cannot trigger recovery. This is local CAS classification, with no wire protocol/schema/UI API change. Preserve the original multi-transition/new-base negative assertion and explicit Retry behavior. A second CAS failure stays recovery.
+
+The strengthened known-operation acknowledgement interleaving also reproduces a real failure after the preparation-only repair (21pass/1newfail, issue174-ack-red.log). Extend the same single-transition proof to an exact acknowledgement of the previously known, hash-verified in-flight operation. Reconstruct its expected committed snapshot/revision from that operation and the real acknowledgement reducer, then compare the complete state. Do not accept a conflict, later remote head, unknown intermediate operation or multi-transition generation jump. Both red controls remain evidence; the original multi-transition negative stays unchanged.
+
+## Review and local evidence before final gates
+
+Focused38/2 session/upload and8 actual browser cases pass, including deterministic preparation/known-ACK races, held responses, matching latest confirmation and independently scoped service reads. One initial strengthened negative fixture injected disk failure after SQLite's CAS check, so it saw2 attempts rather than1; moving only the new exception injection before the actual commit proves storage exceptions do not trigger recovery. A new independent GET initially omitted scope headers (400), and the new ACK gate classifier initially omitted its ACK branch (7pass/1wait failure). Corrected only those new fixture paths; all original assertions/defaults remain unchanged.
+
+The first sequential full run passed Node24 Cloud547/39, shared762/77,56 browser, type/format/whitespace/build and unchanged default bundle. Focused review then found that a known ACK can consume a previously observed remote head and create a conflict. A new controlled state/SQLite regression first failed22pass/1fail because close automatically continued into that conflict. Explicitly refuse advanced.conflict during automatic CAS recovery; explicit Retry still preserves both conflict branches and newest copyable text. Original full positives are retained as issue174-before-conflict-guard-* and final validation is repeated for this material new guard, with unchanged controls. The new observed remote head is an explicit synthetic protocol fixture; browser/service acceptance remains the two actual held-transition cases.
+
+Final reviewed source passes39 focused session/upload cases, sequential Node24 Cloud548/39 then shared763/77, all56 browser cases, type/full checked-source format/whitespace/build and unchanged default-bundle hashes. The repeated full run is justified by the new observed-conflict guard; the earlier547/762/56 run remains separate. Test window6502861901 is released after this completion. Exact public-source review/hosted gates and normal integration/separate main proof still follow. No runtime change follows these final checks.

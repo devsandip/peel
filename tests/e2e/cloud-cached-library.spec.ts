@@ -248,3 +248,62 @@ test("cached library controls remain readable and separate from status on a narr
     path: testInfo.outputPath("cached-library-mobile.png"),
   });
 });
+
+for (const transition of ["prepare", "ack"] as const)
+  test(`immediate typing and Put away survive a held initial upload ${transition} before retention CAS`, async ({
+    page,
+  }) => {
+    server.control.hold = transition === "prepare";
+    await page.evaluate((phase) => {
+      window.cloudLibraryFixture.holdCommitPhase(phase);
+      window.cloudLibraryFixture.holdCommitPhase("retain");
+    }, transition);
+    const panel = page.getByRole("region", { name: "Cached Cloud library" });
+    await panel
+      .getByRole("button", { name: "Open Account A cached note" })
+      .click();
+    await page.waitForFunction(
+      (phase) => window.cloudLibraryFixture.heldCommitPhases().includes(phase),
+      transition,
+    );
+    const editor = page.getByRole("textbox", { name: "Note text" });
+    await editor.fill("Immediate typing across initial upload transition");
+    await page.waitForFunction(() =>
+      window.cloudLibraryFixture.heldCommitPhases().includes("retain"),
+    );
+    await page.evaluate(
+      (phase) => window.cloudLibraryFixture.releaseCommitPhase(phase),
+      transition,
+    );
+    if (transition === "prepare")
+      await expect.poll(() => server.control.committed).toBe(1);
+    else {
+      await page.waitForFunction(
+        () => window.cloudLibraryFixture.committedPhases().ack === 1,
+      );
+      server.control.hold = true;
+    }
+    await page.getByRole("button", { name: "Put away note" }).click();
+    await page.evaluate(() =>
+      window.cloudLibraryFixture.releaseCommitPhase("retain"),
+    );
+    await expect(editor).toHaveCount(0);
+    const card = panel.getByRole("listitem").filter({
+      hasText: "Immediate typing across initial upload transition",
+    });
+    await expect(card).toContainText("Pending upload");
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    server.release();
+    await expect(card).toContainText("Saved in Cloud");
+    const response = await fetch(`${server.api}/v1/notes/shared-note`, {
+      headers: {
+        "x-synthetic-fixture": server.contexts[0].token,
+        "x-peel-collection": server.scope.collectionId,
+        "x-peel-mode-generation": String(server.scope.modeGeneration),
+      },
+    });
+    expect(response.status).toBe(200);
+    expect((await response.json()).head.snapshot.bodyMarkdown).toBe(
+      "Immediate typing across initial upload transition",
+    );
+  });

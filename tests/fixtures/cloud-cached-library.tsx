@@ -46,6 +46,10 @@ const names = [prefix + "-a", prefix + "-b"],
   ),
   opened = new Set<CloudNoteUpload>(),
   held: { resolve: (fail: boolean) => void }[] = [];
+type CommitPhase = "prepare" | "ack" | "retain";
+const committedPhases = { prepare: 0, ack: 0, retain: 0 },
+  blockedCommits = new Set<CommitPhase>(),
+  commitGates: { phase: CommitPhase; resolve: () => void }[] = [];
 const reads = [0, 0];
 let badProgressOwner: number | null = null,
   holdOwner: number | null = null,
@@ -53,7 +57,22 @@ let badProgressOwner: number | null = null,
   foreignOwner: number | null = null;
 const wrappers: CloudLibraryStateStore[] = stores.map((store, owner) => ({
   read: (...args) => store.read(...args),
-  commit: (...args) => store.commit(...args),
+  async commit(...args) {
+    const next = args[3],
+      phase: CommitPhase =
+        next.inFlight && !next.pending
+          ? "prepare"
+          : !next.inFlight && !next.pending && next.baseRevision > 0
+            ? "ack"
+            : "retain";
+    if (blockedCommits.has(phase))
+      await new Promise<void>((resolve) =>
+        commitGates.push({ phase, resolve }),
+      );
+    const committed = await store.commit(...args);
+    if (committed) committedPhases[phase]++;
+    return committed;
+  },
   close: () => store.close(),
   async listLibrary(scope, request) {
     reads[owner]++;
@@ -254,6 +273,16 @@ function create(context: CloudLibraryContext) {
   render();
 }
 const api = {
+  holdCommitPhase(phase: CommitPhase) {
+    blockedCommits.add(phase);
+  },
+  heldCommitPhases: () => commitGates.map((gate) => gate.phase),
+  committedPhases: () => ({ ...committedPhases }),
+  releaseCommitPhase(phase: CommitPhase) {
+    blockedCommits.delete(phase);
+    for (let n = commitGates.length - 1; n >= 0; n--)
+      if (commitGates[n].phase === phase) commitGates.splice(n, 1)[0].resolve();
+  },
   select(owner: number) {
     controller.abort();
     controller = new AbortController();
@@ -352,6 +381,9 @@ const api = {
     controller.abort();
     root.unmount();
     api.release();
+    api.releaseCommitPhase("prepare");
+    api.releaseCommitPhase("ack");
+    api.releaseCommitPhase("retain");
     await Promise.all([...opened].map((upload) => upload.upload()));
     await Promise.all(stores.map((store) => store.close()));
     await Promise.all(names.map((name) => deleteDB(name)));

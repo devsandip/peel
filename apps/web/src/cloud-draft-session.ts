@@ -1,11 +1,15 @@
 import { validateBody } from "../../../packages/core/src/index";
 import {
   validateCloudDraft,
+  startCloudMutation,
+  acknowledgeCloudMutation,
+  verifyMutationHash,
   type CloudClientState,
   type CloudDraft,
 } from "../../../packages/cloud-protocol/src/index";
 import {
   DurableCloudClient,
+  CloudLocalGenerationChangedError,
   cloudStateInScope,
   validateCloudNoteId,
   validateCloudScope,
@@ -53,6 +57,17 @@ function same(a: CloudDraft, b: CloudDraft) {
     draft.origin?.moveId,
   ];
   return JSON.stringify(values(a)) === JSON.stringify(values(b));
+}
+
+// Compare complete validated state without relying on stored object key order.
+function stateJSON(state: CloudClientState) {
+  return JSON.stringify(state, (_, value) =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(
+          Object.entries(value).sort(([a], [b]) => a.localeCompare(b)),
+        )
+      : value,
+  );
 }
 
 /** Local retention only. The caller owns storage and authenticated composition. */
@@ -195,11 +210,53 @@ export class CloudDraftSession {
           generation: previous?.generation ?? null,
         };
         this.attempted = attempt;
-        const saved = await this.client.save(
-          this.noteId,
-          { kind: "upsert", snapshot: attempt.draft },
-          attempt.generation,
-        );
+        let saved: CloudClientState;
+        try {
+          saved = await this.client.save(
+            this.noteId,
+            { kind: "upsert", snapshot: attempt.draft },
+            attempt.generation,
+          );
+        } catch (error) {
+          if (!(error instanceof CloudLocalGenerationChangedError) || !previous)
+            throw error;
+          const advanced = await this.read();
+          if (
+            !advanced ||
+            advanced.generation !== previous.generation + 1 ||
+            previous.conflict ||
+            advanced.conflict
+          )
+            throw error;
+          let expected: CloudClientState;
+          if (previous.inFlight) {
+            if (!(await verifyMutationHash(previous.inFlight))) throw error;
+            const revision = previous.baseRevision + 1;
+            expected = acknowledgeCloudMutation(previous, {
+              opId: previous.inFlight.opId,
+              contentHash: previous.inFlight.contentHash,
+              revision,
+              snapshot: previous.inFlight.snapshot
+                ? { ...previous.inFlight.snapshot, serverRevision: revision }
+                : null,
+            });
+          } else {
+            if (!advanced.inFlight || !previous.pending) throw error;
+            expected = await startCloudMutation(
+              previous,
+              advanced.inFlight.opId,
+            );
+          }
+          if (stateJSON(expected) !== stateJSON(advanced)) throw error;
+          // One proven preparation/known ACK, never a guessed write outcome.
+          // A second race/storage failure is deliberately left for recovery.
+          attempt.generation = advanced.generation;
+          saved = await this.client.save(
+            this.noteId,
+            { kind: "upsert", snapshot: attempt.draft },
+            attempt.generation,
+          );
+        }
         this.known = cloudStateInScope(this.scope, this.noteId, saved);
         this.attempted = null;
         if (attempt.version === this.version) this.dirty = false;

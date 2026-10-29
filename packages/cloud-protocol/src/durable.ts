@@ -102,10 +102,15 @@ export function cloudStateWrite(
     throw Error("Invalid Cloud local generation transition");
   return next;
 }
-const changed = () =>
-  Error(
-    "Cloud local generation changed; latest text remains saved, reload and retry",
-  );
+/** A refused local CAS, distinct from an unproven storage exception. */
+export class CloudLocalGenerationChangedError extends Error {
+  constructor() {
+    super(
+      "Cloud local generation changed; latest text remains saved, reload and retry",
+    );
+  }
+}
+const changed = () => new CloudLocalGenerationChangedError();
 export class DurableCloudClient {
   private scope: CloudScope;
   constructor(

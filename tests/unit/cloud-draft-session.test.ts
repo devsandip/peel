@@ -11,7 +11,10 @@ import { SQLiteCloudStateStore } from "../../packages/cloud-protocol/src/store-s
 import { SQLiteCloudServerStore } from "../../packages/cloud-protocol/src/server-sqlite";
 import { CloudMutationService } from "../../packages/cloud-protocol/src/server";
 import { applyCloudServerReply } from "../../packages/cloud-protocol/src/client-response";
-import { mutationHash } from "../../packages/cloud-protocol/src/index";
+import {
+  mutationHash,
+  applyRemoteCloudHead,
+} from "../../packages/cloud-protocol/src/index";
 import { cloudScope, cloudDraft } from "../fixtures/cloud-durable-contract";
 
 const id = "synthetic-note",
@@ -38,6 +41,7 @@ async function create() {
       lost: false,
       missing: false,
       commits: 0,
+      commitError: false,
       commitGate: null as ReturnType<typeof gate> | null,
       readGate: null as ReturnType<typeof gate> | null,
     },
@@ -69,6 +73,8 @@ async function create() {
         await held.release.promise;
       }
       control.commits++;
+      if (control.commitError)
+        throw Error("synthetic private storage exception");
       const saved = await local.commit(...args);
       if (control.lost) {
         control.lost = false;
@@ -123,7 +129,11 @@ async function create() {
       );
     },
     async cleanup() {
-      control.fail = control.lost = control.missing = false;
+      control.fail =
+        control.lost =
+        control.missing =
+        control.commitError =
+          false;
       control.commitGate = control.readGate = null;
       for (const held of gates) held.release.resolve(false);
       await Promise.allSettled(sessions.map((session) => session.flush()));
@@ -643,4 +653,186 @@ it("a late refresh error cannot replace a newer successful refresh without typin
       retained: true,
       error: null,
     });
+  }));
+
+it("retains and puts away newer typing when initial upload preparation wins the retention CAS", async () =>
+  fixture(async (f) => {
+    const session = await f.open(),
+      held = f.hold("commitGate");
+    session.edit("Newer typing while initial upload prepares");
+    await held.entered.promise;
+    const request = await f.prepare("concurrent-initial-upload"),
+      closing = session.putAway(),
+      check = expect(closing).resolves.toMatchObject({
+        bodyMarkdown: "Newer typing while initial upload prepares",
+        retained: true,
+        closed: true,
+        status: "Pending upload",
+        error: null,
+      });
+    held.release.resolve(false);
+    await check;
+    const retained = (await f.client.get(id))!;
+    expect(retained.current!.snapshot!.bodyMarkdown).toBe(
+      "Newer typing while initial upload prepares",
+    );
+    expect(retained.inFlight).toEqual(request.mutation);
+    await applyCloudServerReply(
+      f.client,
+      request,
+      await f.service.mutate(cloudScope.ownerSubject, request),
+    );
+    expect((await session.refresh()).status).toBe("Pending upload");
+    await f.confirm("concurrent-newer-upload");
+    expect((await session.refresh()).status).toBe("Saved in Cloud");
+  }));
+
+it("does not treat a storage exception as a recoverable CAS even after a concurrent preparation", async () =>
+  fixture(async (f) => {
+    const session = await f.open(),
+      held = f.hold("commitGate");
+    session.edit("Copyable typing after a disk failure");
+    await held.entered.promise;
+    const request = await f.prepare("prepare-before-disk-error"),
+      closing = session.putAway(),
+      check = expect(closing).rejects.toThrow("Could not retain draft");
+    f.control.commitError = true;
+    held.release.resolve(false);
+    await check;
+    expect(f.control.commits).toBe(1);
+    expect(session.snapshot()).toMatchObject({
+      closed: false,
+      retained: false,
+      bodyMarkdown: "Copyable typing after a disk failure",
+    });
+    f.control.commitError = false;
+    expect((await f.client.get(id))!.inFlight).toEqual(request.mutation);
+    expect(await session.putAway()).toMatchObject({ closed: true });
+  }));
+
+it("does not recover an independent same-text write as if it were upload preparation", async () =>
+  fixture(async (f) => {
+    const session = await f.open(),
+      held = f.hold("commitGate");
+    session.edit("My newer volatile source");
+    await held.entered.promise;
+    const previous = (await f.client.get(id))!;
+    await f.client.save(id, action("Original fixture"), previous.generation);
+    const other = await f.client.get(id),
+      closing = session.putAway(),
+      check = expect(closing).rejects.toThrow("Could not retain draft");
+    held.release.resolve(false);
+    await check;
+    expect(f.control.commits).toBe(1);
+    expect(await f.client.get(id)).toEqual(other);
+    expect(session.snapshot().bodyMarkdown).toBe("My newer volatile source");
+  }));
+
+it("stops after a second CAS race and retains copyable text for explicit recovery", async () =>
+  fixture(async (f) => {
+    const session = await f.open(),
+      first = f.hold("commitGate");
+    session.edit("Newer typing across two storage transitions");
+    await first.entered.promise;
+    const request = await f.prepare("prepare-before-second-race"),
+      second = f.hold("commitGate"),
+      closing = session.putAway(),
+      check = expect(closing).rejects.toThrow("Could not retain draft");
+    first.release.resolve(false);
+    await second.entered.promise;
+    await applyCloudServerReply(
+      f.client,
+      request,
+      await f.service.mutate(cloudScope.ownerSubject, request),
+    );
+    second.release.resolve(false);
+    await check;
+    expect(f.control.commits).toBe(2);
+    expect(session.snapshot()).toMatchObject({
+      closed: false,
+      retained: false,
+      bodyMarkdown: "Newer typing across two storage transitions",
+    });
+    expect((await f.client.get(id))!.baseRevision).toBe(1);
+    expect(await session.putAway()).toMatchObject({
+      closed: true,
+      retained: true,
+      status: "Pending upload",
+    });
+  }));
+
+it("retains newer typing when its known older operation is acknowledged during retention CAS", async () =>
+  fixture(async (f) => {
+    const request = await f.prepare("ack-during-retention"),
+      session = await f.open(),
+      held = f.hold("commitGate");
+    session.edit("Newer typing across the older acknowledgement");
+    await held.entered.promise;
+    await applyCloudServerReply(
+      f.client,
+      request,
+      await f.service.mutate(cloudScope.ownerSubject, request),
+    );
+    const closing = session.putAway(),
+      check = expect(closing).resolves.toMatchObject({
+        closed: true,
+        retained: true,
+        status: "Pending upload",
+        bodyMarkdown: "Newer typing across the older acknowledgement",
+      });
+    held.release.resolve(false);
+    await check;
+    const retained = (await f.client.get(id))!;
+    expect(retained.baseRevision).toBe(1);
+    expect(retained.inFlight).toBeNull();
+    expect(retained.pending!.snapshot!.bodyMarkdown).toBe(
+      "Newer typing across the older acknowledgement",
+    );
+    await f.confirm("newer-after-raced-ack");
+    expect((await session.refresh()).status).toBe("Saved in Cloud");
+  }));
+
+it("keeps recovery when a raced known acknowledgement consumes an observed conflicting head", async () =>
+  fixture(async (f) => {
+    const request = await f.prepare("ack-observed-conflict");
+    let previous = (await f.client.get(id))!;
+    await f.client.save(id, action("Original fixture"), previous.generation);
+    previous = (await f.client.get(id))!;
+    const observed = applyRemoteCloudHead(previous, {
+      revision: 2,
+      snapshot: {
+        ...cloudDraft("Observed competing source"),
+        serverRevision: 2,
+      },
+    });
+    expect(
+      await f.store.commit(cloudScope, id, previous.generation, observed),
+    ).toBe(true);
+    const session = await f.open(),
+      held = f.hold("commitGate");
+    session.edit("Copyable newest typing when conflict arrives");
+    await held.entered.promise;
+    await applyCloudServerReply(
+      f.client,
+      request,
+      await f.service.mutate(cloudScope.ownerSubject, request),
+    );
+    const closing = session.putAway(),
+      check = expect(closing).rejects.toThrow("Could not retain draft");
+    held.release.resolve(false);
+    await check;
+    expect(session.snapshot()).toMatchObject({
+      closed: false,
+      retained: false,
+    });
+    expect((await f.client.get(id))!.conflict!.remote!.bodyMarkdown).toBe(
+      "Observed competing source",
+    );
+    expect(await session.putAway()).toMatchObject({
+      closed: true,
+      status: "Conflict",
+    });
+    expect(
+      (await f.client.get(id))!.conflict!.local.snapshot!.bodyMarkdown,
+    ).toBe("Copyable newest typing when conflict arrives");
   }));
