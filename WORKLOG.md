@@ -2063,3 +2063,18 @@
 
 **Next:**
 - Finish154 focused review/scans/all3 exact-source hosted gates, normal merge and actual main/closure/Project proof. Then scope the smallest complete Cloud editor composition slice with a pre-code requirement-linked plan, keeping default Cloud unavailable until its actual hosting/auth/entitlement/cache gates pass.
+
+
+## 2026-10-29 - Compose a disabled scoped Cloud editor
+
+**Did:**
+- Verified155 all3 source40844477578 and actual-main40845613221 gates at9bb50cd, actual154closure/ProjectDone/label removal/primary advancement/owned cleanup, proof6492415014. No repeated integration or enabled Cloud credit.
+- Created156/current Project and committed plan055deb8 before code. Added an explicit-session React/Markdown editor with sole green minus, honest pending/confirmed status, latest-retention before owner dismissal, recovery and session-key remount/undo isolation/late-callback guards. No default app/Local repository/native bridge/transport/auth/entitlement/protocol/store/dependency change.
+- Passed7 new actual IndexedDB/React/CodeMirror flows and all27 prior browser cases (34total), type/full checked-source format/whitespace/build. Guard omission fails the intended old-session callback refusal; exact8976d4f8 source restored before full positives. Initial positive runtime/type runs passed. One wrong-checkout formatter lookup failed without tracked writes, then owned formatting passed. No legacy assertion/timeout/worker/retry change.
+- Inspected the owned functional fixture screenshot and verified one titlebar/no footer controls, pending retained source, no default DB/page error/nonGET note request. Closed owned browser/server/temp stores; test clipboard stub prevents actual OS clipboard writes. Backend/model code/tests and production bundle hashes/warning unchanged; no repeated local unit claim, actual provider/native or stopped probe.
+
+**State now:**
+- Disabled cached-note editor component only. A future authenticated parent must hide old selection during account loading and own actual window dismissal. New-note/menu/reconnect/full web/live/native/iPhone and M2.2 managed/independent teardown acceptance remain unmet; Cloud stays unavailable.
+
+**Next:**
+- Finish156 focused review/scans/all3 exact-source hosted gates, normal merge and actual main/closure/Project proof. Continue one small requirement-linked slice without claiming fixtures are enabled app acceptance or reviving expired budgets/stopped probes.
