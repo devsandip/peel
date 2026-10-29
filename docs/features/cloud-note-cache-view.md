@@ -1,0 +1,19 @@
+# Scoped Cloud cached-note panel
+
+[Issue152](https://github.com/devsandip/peel/issues/152) implements one app-presentation prerequisite for [SPEC](../SPEC.md) FR-02/04/08/13/14 and AC-02/04/09/12/13 under the [v0.8 contract](two-tier-cloud-first.md). This plan precedes code. Current Cloud remains unavailable; no default Local repository or actual operator/note database is opened.
+
+## Scope
+
+Add a read-only Cloud cache projection and React panel in app source. Reuse the existing strict Cloud client-state/scope codecs and DurableCloudClient. Render the current local projection as text, not raw HTML or a historical/remote branch. Pending/in-flight work is Pending upload, conflicts are Conflict, and Saved in Cloud requires a positive confirmed base with no newer pending/in-flight/conflict state. Missing/initial state never says Saved; purge state exposes no retained body and confirmed purge may say Deleted in Cloud. This is a cache snapshot, not an editing session or a network/authentication grant.
+
+Take only an explicit CloudStateStore, independently selected CloudScope/note ID and nonnegative integer refresh key. Validate/capture scope values on each render, so in-place caller object mutation cannot retain an old selection. Construct the existing scoped client internally. Bind async reads to store/account/library/mode/note/refresh selection identity; immediately hide a previous selection during render and ignore late completions/errors after selection change/unmount. Missing, malformed, foreign, failed or closed reads show generic loading/missing/unavailable content, never old text, raw exceptions or a false Saved state. Do not log note/identity/error payloads.
+
+Keep the component outside the default app route until actual Cloud activation/authentication/entitlement/cache adoption gates pass. Add no auth/paid/ready boolean, request sender, endpoint, write API, schema migration, storage default or new dependency. A validated cache or rendered status is not independently authenticated server evidence. Production composition must supply the actual authenticated account context and dispatch verified receipts to their original client. Existing Local UI/identifiers, protocol/store implementations and Cloud-unavailable setting remain unchanged.
+
+## Verification
+
+Use fresh test-owned SQLite client/server stores through their existing APIs to exercise missing/initial/pending/in-flight, actual service commit/reply/local acknowledgement, later typing after an older receipt, conflict, failed local acknowledgement/reopen and purge projections. No real/default DB or actual account/provider. Preserve all legacy tests/defaults.
+
+Add a browser-only synthetic fixture outside the production entry, with explicit fresh peel-m0-cloud namespaces and actual IndexedDB/DurableCloudClient/React. Verify pending/confirmed/reload, account/note/refresh switches with held reads, late results/errors, foreign/failed/closed store and text-safe rendering. The fixture's controlled acknowledgements are not real provider/auth proof. Close/delete its own namespaces and use an owned loopback server/browser, never a native app. Remove only the current-selection render guard as a negative control; the held new-account read must expose the old account in that control and fail its intended refusal. Restore/hash the exact source before positive checks.
+
+Run focused shared/store tests, existing browser flows plus the new panel cases, type/format/build and all required exact-source hosted gates before normal merge. Keep Cloud disabled. Review scope/races/status semantics and source privacy, no-reply author AND committer and staged/range scans. Verify actual closure/Project/main separately, append WORKLOG/new immutable journal/INDEX and keep the ignored resume current. No full Cloud save-to-web/live/auth/editor/iPhone/native/M2.2 managed or teardown acceptance is claimed. Existing stopped probes and expired allowances remain unchanged.
