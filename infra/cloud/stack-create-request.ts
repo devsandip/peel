@@ -361,7 +361,14 @@ function snapshot(d: Definition, unsignedSha256: string) {
     resourceWrites: 0 as const,
   });
 }
-const active = new WeakMap<object, Record<string, unknown>>();
+const active = new WeakMap<
+  object,
+  {
+    input: Record<string, unknown>;
+    pin: Pin;
+    stackKind: Definition["kind"];
+  }
+>();
 
 /** Pure original request binding. Secret-bearing material is process-local and never enumerable here. */
 export function createCloudStackCreateRequest(value: Input) {
@@ -371,7 +378,11 @@ export function createCloudStackCreateRequest(value: Input) {
       unsigned = frame(d, r.cursorKey as Input["cursorKey"]),
       encoded = bytes(JSON.stringify(unsigned), 128 * 1024),
       result = snapshot(d, hash(encoded));
-    active.set(result, frozen(material(unsigned.input)));
+    active.set(result, {
+      input: frozen(material(unsigned.input)),
+      pin: result.pin,
+      stackKind: d.kind,
+    });
     return result;
   });
 }
@@ -401,9 +412,96 @@ export function cloudStackCreateRequestInput(
   handle: unknown,
 ): Record<string, unknown> {
   return privateCall(() => {
-    const input = active.get(handle as object);
-    if (!input) return fail();
-    return frozen(structuredClone(input));
+    const state = active.get(handle as object);
+    if (!state) return fail();
+    return frozen(structuredClone(state.input));
+  });
+}
+
+/** Supplied unsigned transport view only; headers/signing and actual transport provenance are unproven. */
+export function checkCloudStackCreateQuery(handle: unknown, view: unknown) {
+  return privateCall(() => {
+    const state = active.get(handle as object);
+    if (!state) return fail();
+    const v = record(view, [
+      "method",
+      "protocol",
+      "hostname",
+      "port",
+      "path",
+      "query",
+      "body",
+    ]);
+    if (
+      v.method !== "POST" ||
+      v.protocol !== "https:" ||
+      v.hostname !== "cloudformation.us-east-1.amazonaws.com" ||
+      (v.port !== null && v.port !== 443) ||
+      v.path !== "/"
+    )
+      return fail();
+    record(v.query, []);
+    const body = bytes(v.body, 256 * 1024);
+    if (!body.length || !/^[\x20-\x7e]+$/.test(body)) return fail();
+    const pairs = body.split("&");
+    if (pairs.length > 128) return fail();
+    const actual = new Map<string, string>();
+    for (const pair of pairs) {
+      const separator = pair.indexOf("=");
+      if (separator <= 0) return fail();
+      const decode = (s: string) => decodeURIComponent(s.replace(/\+/g, " ")),
+        key = decode(pair.slice(0, separator)),
+        value = decode(pair.slice(separator + 1));
+      if (
+        key.length > 128 ||
+        !/^[A-Za-z][A-Za-z0-9]*(\.[A-Za-z0-9]+)*$/.test(key) ||
+        actual.has(key)
+      )
+        return fail();
+      actual.set(key, value);
+    }
+    const expected = new Map<string, string>([
+      ["Action", "CreateStack"],
+      ["Version", "2010-05-15"],
+    ]);
+    function append(value: unknown, path: string) {
+      if (Array.isArray(value)) {
+        if (!value.length) return fail();
+        value.forEach((v, i) => append(v, `${path}.member.${i + 1}`));
+      } else if (value && typeof value === "object") {
+        const entries = Object.entries(value);
+        if (!entries.length) return fail();
+        for (const [key, v] of entries) append(v, `${path}.${key}`);
+      } else if (
+        typeof value === "string" ||
+        typeof value === "boolean" ||
+        (typeof value === "number" && Number.isSafeInteger(value))
+      ) {
+        if (expected.has(path)) return fail();
+        expected.set(path, String(value));
+      } else return fail();
+    }
+    for (const [key, value] of Object.entries(state.input)) append(value, key);
+    if (
+      actual.size !== expected.size ||
+      [...expected].some(([key, value]) => actual.get(key) !== value)
+    )
+      return fail();
+    return frozen({
+      format: 1 as const,
+      kind: "synkies-cloud-stack-create-query" as const,
+      stackKind: state.stackKind,
+      requestSha256: state.pin.sha256,
+      unsignedSha256: state.pin.unsignedSha256,
+      bodyBytes: Buffer.byteLength(body),
+      fieldCount: actual.size,
+      unsignedConsistency: "matches-original" as const,
+      ownership: "unproven" as const,
+      runAuthority: "unproven" as const,
+      currentAuthority: "unproven" as const,
+      transportAuthority: "unproven" as const,
+      resourceWrites: 0 as const,
+    });
   });
 }
 /** Drop the internal reference. Caller copies and physical memory erasure are not controlled here. */

@@ -1912,3 +1912,18 @@
 
 **Next:**
 - Finish issue133 review/all exact-head checks and normal integration, actual issue/Project/main proof. Keep actual private current provenance/source ACK/journal-state/runway requirements separate before trusted preparation/fencing. Preserve all stopped M2.2/managed/teardown/app gates and keep immutable resumes current.
+
+
+## 2026-10-29 - Check original Query serialization offline
+
+**Did:**
+- Finished PR134/source8133936 after all three exact-source gates and focused review6486811416; normal merge b4179c5, actual issue133/ProjectDone, safe primary advancement and owned-branch cleanup. All three actual main gates40810555610 pass; proof6486959232. No actual/provider/app authority follows.
+- Created issue135/current Project item and committed requirement-linked plan15b2ab0 before adding only dev-only CF SDK3.1157.0 and implementing the pure original unsigned Query checker653819b. Existing request goldens/APIs remain compatible; no dependency upgrades or runtime SDK runner.
+- Used actual SDK outputs for all four originals in12 isolated synthetic child scenarios. File/network guards and checker RNG remain zero; bodies/headers/NoEcho stay in memory, public output contains original commitments/counts/unproven authority only. Wrong material/copies/recovery/discard, every actual field mutation/deletion, absent fields, duplicates, indexes, encoding/bounds/destination and privacy cases pass.
+- Omitted only duplicate-name rejection for a meaningful negative control, observed intended refusal-test failure and restored exact source hash before final checks. Actual Node24 direct/373Cloud30files then588shared68/type/format/build PASS sequentially; unchanged defaults and existing chunk warning. No failed positive run.
+
+**State now:**
+- Offline unsigned consistency only. Review/exact-head hosted gates precede normal merge; actual main proof follows separately. No actual/default note/operator data, credentials, account/resource/billing/app activation or stopped retry. Current provenance/private assessments/preparation/fence/real transport/owned teardown remain.
+
+**Next:**
+- Finish issue135 focused review/scans/hosted gates and normal integration, then scope the next independent prerequisite under30. Keep original phase/source/authorization/time/budget/provenance gates explicit and M2.2 open. Update ignored immutable resume with actual state.

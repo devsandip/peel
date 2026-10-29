@@ -38,6 +38,7 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@aws-sdk/client-cloudformation": "3.1157.0",
     "@aws-sdk/client-s3": "3.1157.0",
     "@aws-sdk/credential-provider-sso": "3.973.21",
     "@huggingface/transformers": "4.3.1",
