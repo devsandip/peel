@@ -1,0 +1,24 @@
+{
+  "observedAt": "2026-10-27T12:01:00.000Z",
+  "stackUuid": "10000000-0000-4000-8000-000000000099",
+  "operationId": "synthetic-operation-1",
+  "requestId": "synthetic-request",
+  "cases": {
+    "artifacts": {
+      "sha256": "082da07acb1f90d339c2463a6c7357aed1714004af3bd678024d65c9ce422e26",
+      "utf8Bytes": 756
+    },
+    "guard": {
+      "sha256": "f662fb7b3c72f78f7f9159230d400653694b9d2dd4ae1012f267962fda5df76f",
+      "utf8Bytes": 748
+    },
+    "sentinel": {
+      "sha256": "f31f26d72a631a1c79098ff5edda62772dec4b18097e1c358ed68d48de41f53e",
+      "utf8Bytes": 754
+    },
+    "data": {
+      "sha256": "e8e3708c77dbfcfe9061daebc2c452bcc1dd87996c97cd47a09cd857cbbe2eb3",
+      "utf8Bytes": 746
+    }
+  }
+}
