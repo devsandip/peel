@@ -386,3 +386,70 @@ it("resolves durable cookies with CSRF and current paid policy without bearer or
   now += 60000;
   data(await run({ ...cookieEvent, body: "Not JSON" }), 401);
 });
+
+it("discovers caller-selected-by-auth scope through Lambda bearer and durable web-session boundaries", async () => {
+  const second = {
+    ...account(owner("b")),
+    collectionId: "context-server-b",
+    modeGeneration: 5,
+  };
+  await seed(second);
+  const api = handler(),
+    path = "/v1/library-context";
+  expect(
+    data(
+      await api(
+        event("GET", path, {
+          ...native("a"),
+          "x-peel-subject": owner("b"),
+          "x-peel-collection": second.collectionId,
+        }),
+      ),
+    ),
+  ).toEqual({ ...scope, ownerSubject: owner("a") });
+  expect(data(await api(event("GET", path, native("b"))))).toEqual({
+    version: 1,
+    ownerSubject: owner("b"),
+    collectionId: second.collectionId,
+    modeGeneration: 5,
+  });
+  expect((await api(event("GET", path))).statusCode).toBe(401);
+  expect(
+    (await api(event("GET", path + "?ownerSubject=" + owner("b"), native("a"))))
+      .statusCode,
+  ).toBe(400);
+  const boundary = createCloudWebSessionBoundary(
+    { origin, lifetimeMs: 3600000 },
+    new DynamoDBCloudWebSessionStore(client, table),
+    async () => owner("b"),
+    () => now,
+  );
+  const issued = await boundary.issue(
+    new Request(origin + "/auth/session", {
+      method: "POST",
+      headers: { origin },
+    }),
+  );
+  const cookie = issued.headers.get("set-cookie")!.split(";")[0],
+    web = handler({ kind: "web-session", lifetimeMs: 3600000 });
+  expect(data(await web(event("GET", path, { cookie })))).toEqual({
+    version: 1,
+    ownerSubject: owner("b"),
+    collectionId: second.collectionId,
+    modeGeneration: 5,
+  });
+  expect(
+    (
+      await web(
+        event("GET", path, { cookie, origin: "https://foreign.invalid" }),
+      )
+    ).statusCode,
+  ).toBe(403);
+  expect(
+    (await web(event("GET", path, { cookie, ...native("a") }))).statusCode,
+  ).toBe(401);
+  await seed({ ...second, entitlement: "inactive", revision: 2 });
+  expect((await web(event("GET", path, { cookie }))).statusCode).toBe(403);
+  now += 3600001;
+  expect((await web(event("GET", path, { cookie }))).statusCode).toBe(401);
+});

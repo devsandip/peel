@@ -77,6 +77,32 @@ export class DynamoDBCloudServerStore implements CloudServerStore {
     if (!/^[a-zA-Z0-9_.-]{3,255}$/.test(tableName))
       throw Error("Invalid Cloud table name");
   }
+  async readAccount(owner: string) {
+    validateServerSubject(owner);
+    const result = await this.client.send(
+      new TransactGetItemsCommand({
+        TransactItems: [
+          {
+            Get: {
+              TableName: this.tableName,
+              Key: cloudDynamoKey(owner, "META"),
+            },
+          },
+        ],
+      }),
+    );
+    if (result.Responses?.length !== 1 || !result.Responses[0])
+      throw new CloudServerError("incomplete-store-read", 503);
+    const account = decodeCloudDynamoRecord(
+      result.Responses[0].Item,
+      owner,
+      "META",
+      validateCloudAccount,
+    );
+    if (account && account.ownerSubject !== owner)
+      throw new CloudServerError("stored-scope-mismatch", 503);
+    return account;
+  }
   async read(
     owner: string,
     noteId: string,

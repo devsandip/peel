@@ -2265,3 +2265,20 @@
 
 **Decisions:**
 - Abort each safe-to-forget owner's derived signal before eviction because idle notification can precede its queued timer. Keep failed or uncertain storage conservative and copyable; close/reopen never invents a Cloud confirmation or grants auth.
+
+## 2026-10-30 - Discover the authenticated Cloud library context
+
+**Did:**
+- Completed182/179 at7793dfb with exact source40942462103/main40943093029 all3 first attempts, review5703971070/Ready6506702122/proof6506883860; actual closure/bothProjectDone/labels/guarded primary/unknown paths/scanned Root-only cleanup. Frozen0111 remains unchanged; all peer refs/checkouts preserved.
+- Planned183 inb06af70 before code. Added metadata-only readAccount to actual SQLite/DynamoDB adapters and authenticated GET/v1/library-context selecting the caller's actual active paid scope. Reused policy/time checks while preserving existing scope error order; canonical SPEC API row updated. No schema/dependency/IAM expansion/default UI activation.
+- Verified51 focused Node24 cases including20 new SQLite/offline SDK cases, full shared811/79, type/full format/deterministic packaged artifact smoke/build/default-bundle equality. Policy/generation changes still block later old-context reads. Added2 actual DynamoDB Local metadata/Lambda/auth/session cases; local tests are unrun because the existing pinned runtime download timed out before startup. Fresh hosted gates must supply29-case adapter and41-suite Cloud matrix evidence.
+- Corrected new-fixture invalid initial account setup (28 pass/9 setup failures) and2 new TypeScript inference errors, with failures retained separately. Seed setup now participates in cleanup; nine owned failed-setup dirs were identified by exact birth/modification metadata and removed without DB reads. Original assertions/defaults/workers/timeouts/retries/isolation unchanged.
+
+**State now:**
+- Scope discovery is an explicit server development prerequisite; default Cloud remains unavailable. Real auth/paid activation/full web/live/reconnect/native/iPhone/performance and M2.2 managed/independent teardown remain open. Peer181 independently owns six new conflict-preview files.
+
+**Next:**
+- Finish183 exact-source review/all3 hosted gates (including actual adapter tests), normal integration/separate main/closure/Project/guarded primary/scanned Root-only cleanup. Check169/181 and ready peer PRs first; no default data/provider/native/stopped/expired probe is authorized.
+
+**Decisions:**
+- Read exactly account metadata without arbitrary note probes or note-head scans. Discovery never becomes an auth/paid grant; later requests revalidate server policy and generation. Record unavailable local adapter evidence instead of retrying an unverified runtime or weakening controls.

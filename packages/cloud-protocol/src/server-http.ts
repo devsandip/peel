@@ -74,11 +74,18 @@ export function createCloudMutationHandler(
       if (url.search && !pullPath)
         return json({ error: "unsupported-query" }, 400);
       const noteMatch = /^\/v1\/notes\/([^/]+)$/.exec(url.pathname);
-      if (url.pathname !== "/v1/mutations" && !noteMatch && !pullPath)
+      const contextPath = url.pathname === "/v1/library-context";
+      if (
+        url.pathname !== "/v1/mutations" &&
+        !noteMatch &&
+        !pullPath &&
+        !contextPath
+      )
         return json({ error: "not-found" }, 404);
       if (
         (url.pathname === "/v1/mutations" && request.method !== "POST") ||
         (noteMatch && request.method !== "GET") ||
+        (contextPath && request.method !== "GET") ||
         (pullPath &&
           request.method !==
             (url.pathname === "/v1/sync/bootstrap" ? "POST" : "GET"))
@@ -86,6 +93,16 @@ export function createCloudMutationHandler(
         return json({ error: "method-not-allowed" }, 405);
       // Resolve authority before consuming an untrusted payload. There is no paid request flag.
       const subject = await resolveCaller(request);
+      if (contextPath) {
+        const length = request.headers.get("content-length");
+        if (
+          request.body !== null ||
+          request.headers.has("transfer-encoding") ||
+          (length !== null && length !== "0")
+        )
+          return json({ error: "unexpected-request-body" }, 400);
+        return json(await service.libraryContext(subject));
+      }
       if (pullPath) {
         if (url.pathname === "/v1/sync/bootstrap") {
           if (url.search) return json({ error: "unsupported-query" }, 400);

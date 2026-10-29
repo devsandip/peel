@@ -499,3 +499,57 @@ describe("actual DynamoDB Local conditional mutations, FR-04/14 partial", () => 
     expect(await rows()).toEqual(before);
   });
 });
+
+it("discovers only active paid account metadata without probing notes or changing DynamoDB records", async () => {
+  const other = {
+    ...initialAccount("synthetic-context-b"),
+    collectionId: "another-server-library",
+    modeGeneration: 3,
+  };
+  await putAccount(other);
+  const before = await rows();
+  expect(await store.readAccount(owner)).toEqual(initialAccount());
+  expect(await service.libraryContext(owner)).toEqual({
+    version: 1,
+    ownerSubject: owner,
+    collectionId,
+    modeGeneration: 1,
+  });
+  expect(await service.libraryContext(other.ownerSubject)).toEqual({
+    version: 1,
+    ownerSubject: other.ownerSubject,
+    collectionId: other.collectionId,
+    modeGeneration: 3,
+  });
+  expect(await rows()).toEqual(before);
+  await expect(
+    service.libraryContext("synthetic-missing"),
+  ).rejects.toMatchObject({ status: 401 });
+  await putAccount({ ...other, entitlement: "inactive", revision: 2 });
+  await expect(
+    service.libraryContext(other.ownerSubject),
+  ).rejects.toMatchObject({ status: 403 });
+  await putAccount({ ...other, status: "deleted", revision: 3 });
+  await expect(
+    service.libraryContext(other.ownerSubject),
+  ).rejects.toMatchObject({ status: 410 });
+  await client.send(
+    new PutItemCommand({
+      TableName: table,
+      Item: {
+        PK: { S: `USER#${owner}` },
+        SK: { S: "META" },
+        revision: { N: "99" },
+        record: { S: JSON.stringify(initialAccount()) },
+      },
+    }),
+  );
+  const response = await createCloudMutationHandler(
+    service,
+    async () => owner,
+  )(new Request("https://synthetic.invalid/v1/library-context"));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({
+    error: "unrecognized-stored-record",
+  });
+});
