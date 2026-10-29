@@ -1,0 +1,17 @@
+# Browse cached Cloud notes
+
+[Issue164](https://github.com/devsandip/peel/issues/164) makes the existing [automatic Cloud editor](cloud-note-upload.md) discoverable through a cached library. This plan precedes code. [SPEC](../SPEC.md) FR-02/04/05/07/08/13/14 and AC-02/04/09/12/13 are prerequisites; default Cloud remains unavailable.
+
+## One focused boundary
+
+Add a read-only metadata catalog to the existing explicit M0 SQLite/IndexedDB adapters, without a schema or write-path change. Capture/validate account/library/mode scope before work. Page globally by descending edit time and deterministic note ID, with1..32 results and independently scope/collection-bound cursors. Validate every scanned state and return only title/lifecycle/save-state/time/ID metadata, never body/conflict text. Each page uses one read transaction including pull progress. These M0 implementations scan records while retaining only a top limit+1 metadata window; storage work is linear, not a production performance claim. Measure against the app budgets and add a derived index if needed before activation.
+
+Respect Notes/Archive/Trash/Needs attention. Remote deletion/purge observed against a local edit belongs in recovery with no retained title exposed in ordinary Notes. Confirmed status requires positive base and no newer pending/in-flight/conflict work. A completed pull cursor is separate from per-note confirmation and never means all edits saved.
+
+Add a reusable cached-library panel with scoped open/new callbacks, recent-first pages and explicit refresh/load-more. Always label the surface as cached content. Distinguish unknown/incomplete/completed last download without claiming a complete current server library or Live. Hide old account/filter/refresh rows immediately; ignore late successes/errors and canceled context clicks. Pass the original store/scope/note selection to callbacks so callers need not look up later global state. The authenticated parent remains responsible for actual identity/entitlement, callback lifetime and preserving drafts before account changes.
+
+## Verification and limits
+
+Use fresh actual SQLite/IndexedDB fixtures for global order/ties/page bounds, cursor scope/filter refusal, pending/confirmed/conflict/lifecycle/recovery, malformed rows/progress and close/foreign store failures. A test-only browser composition lists real cached notes, opens the original ID through CloudNoteUpload, creates/retains a new draft and observes actual HTTP/SQLite confirmation after Put away. Exercise held old selection reads, filter/refresh changes, cancellation, literal titles and generic failure without default DB/profile/native/clipboard/provider access. Preserve all legacy assertions/defaults; validate relevant Node24/shared/browser/static checks and exact-source hosted gates before normal no-reply/scanned reviewed merge, actual-main/tracking proof and owned cleanup.
+
+Append163 finalproof6496455511/source40870572977/main40871261039 all3 first-attempt success and verified closure/Project/owned cleanup in WORKLOG/new immutable journal/INDEX. Keep ignored resumes current. No production Cloud/auth/entitlement/transport grant, full remote bootstrap/live/reconnect/native/iPhone or M2.2 managed/independent teardown acceptance is claimed. No actual/default user/operator DB, stopped31/51/72 probe or expired allowance is used. Autosave remains immediate local retention and fixed200ms Cloud windows, with no Save button.
