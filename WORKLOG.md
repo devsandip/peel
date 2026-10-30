@@ -2403,3 +2403,37 @@
 
 **Decisions:**
 - Settlement must cover hints/abort queued by completion observers, then reset the active task before resolving its public promise. A cached collection cursor never acknowledges a pending note; target metadata stays in memory and caller-owned stores stay open.
+
+
+## 2026-10-30 — Verify bounded hint catch-up; plan connection tickets
+
+**Did:**
+- Fully integrated194/193 at e0d9868, source40975921499/main40977159526 all3 first run/job attempts; review5706450690/Ready6511461687/proof6511585700. Observed actual adapter30/5, Cloud692/46, shared900/83 and browser79; all18 new cases execute in both Node runtimes.
+- Verified actual closure/both ProjectDone/label removal/guarded primary/unknown paths/no-reply author AND committer/scanned Root-only cleanup. All peer refs/active181 checkout remain preserved; completed cleanup helper must not be rerun. Initial local timeout and separate settlement counterexamples/unrun evidence remain explicit.
+- Created195 in the current milestone/Project and wrote the requirement-linked connection-ticket plan before runtime/tests. Server-only session resolver coordination is required before its edit.
+
+**State now:**
+- Hint catch-up is one explicit bounded pass, with no live listener/default Cloud or public acceptance. M2.2 remains open. No195 runtime/tests or evidence yet; peer181 six files/props remain unchanged.
+
+**Next:**
+- Commit the195 plan, record additive resolveSession interface in169, set195 Inprogress, then implement short-lived digest-stored single-use tickets with actual isolated SQLite transaction/lifetime evidence. Preserve old controls and complete any newly ready peer PR first.
+
+**Decisions:**
+- Connection-time tickets are only a point-in-time prerequisite; continuing revocation and fan-out authorization require later independent checks. Strict original-session/scope/time checks and one-use durable claims precede any actual transport.
+
+
+## 2026-10-30 — Bind one-use connection tickets to current authority
+
+**Did:**
+- Implemented195 after pre-code615fe4e/interface1696511635573. Server-only tickets bind digest/session/current scope/deadline, with post-storage rechecks and original cancellation; additive resolveSession leaves old methods unchanged. Explicit isolated SQLite claims enforce atomic single use/persisted time/bounded metadata without note access.
+- Verified66 focused Node24/3 suites (33 new), shared933/84, type/full format/whitespace/deterministic artifact/build/all8 unchanged default bundle hashes.47-file Node24 list includes the new unit. Actual session/account/SQLite evidence covers replay/reopened concurrent claims, revocation/policy/cancellation, expiry/clock rollback, private corruption/transaction failure and bounds.
+- Controlled final-session-guard removal passed1/failed2 late logout/rotation cases; exact bytes restored and targeted3 pass. Preserved initial34pass/29 new setup failures (invalid initial account wall, owned cleanup ran) and unit-inclusive type failure (new spy spread). Fixed only new fixture setup/typed callback; old validation/assertions/controls unchanged.
+
+**State now:**
+- A point-in-time server prerequisite only: no real WebSocket/listener/route/registry/fan-out/hosted ticket store or enabled Cloud. Local browser and adapter acquisition unrun/no retry; peer181 files/props preserved. M2.2 and app/public acceptance remain open.
+
+**Next:**
+- Finish195 exact-source review/all3 hosted gates/observed evidence, normal scanned no-reply merge and separate actual-main/closure/Project/guarded primary/Root-only cleanup. Check169/181/new Ready first and preserve all user/peer data.
+
+**Decisions:**
+- Current session/account reads are separate point-in-time observations. Future connection registration and fan-out must independently enforce continuing policy/revocation; ticket consumption cannot supply that lifecycle.
