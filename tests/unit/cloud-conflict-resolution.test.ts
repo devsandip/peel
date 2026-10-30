@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { expect, it, vi } from "vitest";
 import { CloudLibraryOwners } from "../../apps/web/src/cloud-library-owners";
 import { CloudConflictResolutionError } from "../../apps/web/src/cloud-conflict-resolution";
@@ -45,6 +46,7 @@ async function create() {
     controller = new AbortController(),
     service = new CloudMutationService(server),
     requests: CloudMutationRequest[] = [],
+    signals: AbortSignal[] = [],
     tasks: Promise<unknown>[] = [],
     releases: (() => void)[] = [];
   let local = new SQLiteCloudStateStore(path);
@@ -52,12 +54,16 @@ async function create() {
     read: null as null | (() => Promise<void>),
     commit: null as null | (() => Promise<void>),
     afterSend: null as null | (() => Promise<void>),
+    afterRead: null as null | (() => void),
+    replyStatus: null as number | null,
+    commitScopes: [] as (typeof cloudScope)[],
     failRead: false,
     failCommit: false,
     lostCommit: false,
     unauthorized: false,
     status: 200,
     badReply: false,
+    allowOwnerSignal: false,
     reads: 0,
     commits: 0,
     closes: 0,
@@ -70,10 +76,12 @@ async function create() {
       control.read = null;
       if (hold) await hold();
       if (control.failRead) throw Error("private read detail");
+      control.afterRead?.();
       return result;
     },
     commit: async (...args) => {
       control.commits++;
+      control.commitScopes.push(structuredClone(args[0]));
       const hold = control.commit;
       control.commit = null;
       if (hold) await hold();
@@ -104,7 +112,8 @@ async function create() {
       return cloudScope.ownerSubject;
     }),
     send = vi.fn(async (request: CloudMutationRequest, signal: AbortSignal) => {
-      expect(signal).toBe(controller.signal);
+      if (!control.allowOwnerSignal) expect(signal).toBe(controller.signal);
+      signals.push(signal);
       requests.push(structuredClone(request));
       if (control.status !== 200)
         return { status: control.status, body: { private: "never display" } };
@@ -122,7 +131,7 @@ async function create() {
       if (hold) await hold();
       return control.badReply
         ? { status: 200, body: { private: "secret reply" } }
-        : result;
+        : { ...result, status: control.replyStatus ?? result.status };
     }),
     context = { store, scope: { ...cloudScope } },
     owners = new CloudLibraryOwners(context, send, controller.signal),
@@ -169,11 +178,16 @@ async function create() {
       control,
       send,
       requests,
+      signals,
       context,
       owners,
       model,
       client,
-      async remote(body: string, kind: "upsert" | "purge" = "upsert") {
+      async remote(
+        body: string,
+        kind: "upsert" | "purge" = "upsert",
+        lifecycle: "active" | "archived" | "trashed" = "active",
+      ) {
         const head = await service.get(
           cloudScope.ownerSubject,
           cloudScope,
@@ -187,7 +201,22 @@ async function create() {
               head.kind === "note" ? head.snapshot : null,
             ),
             kind === "upsert"
-              ? action(body)
+              ? {
+                  kind: "upsert",
+                  snapshot: {
+                    ...cloudDraft(body),
+                    noteId,
+                    state: lifecycle,
+                    deletedAt:
+                      lifecycle === "trashed"
+                        ? "2026-10-30T10:00:00.000Z"
+                        : null,
+                    purgeAfter:
+                      lifecycle === "trashed"
+                        ? "2026-11-29T10:00:00.000Z"
+                        : null,
+                  },
+                }
               : { kind: "purge", snapshot: null },
           ),
           crypto.randomUUID(),
@@ -198,6 +227,21 @@ async function create() {
           modeGeneration: 1,
           mutation: state.inFlight!,
         });
+      },
+      dropRemoteHead() {
+        // Model absence in this fresh owned synthetic server only.
+        const db = new DatabaseSync(join(folder, "server.sqlite3"));
+        try {
+          expect(
+            db
+              .prepare(
+                "DELETE FROM m0_cloud_server_notes WHERE owner=? AND note_id=?",
+              )
+              .run(cloudScope.ownerSubject, noteId).changes,
+          ).toBe(1);
+        } finally {
+          db.close();
+        }
       },
       async reopen() {
         await local.close();
@@ -311,6 +355,9 @@ it.each(["local", "cloud", "merge"] as const)(
       expect(head.kind).toBe("note");
       if (head.kind === "note") expect(head.snapshot.bodyMarkdown).toBe(body);
       expect(f.requests).toHaveLength(kind === "cloud" ? 0 : 1);
+      expect(f.signals.every((signal) => signal === f.controller.signal)).toBe(
+        true,
+      );
       expect(f.control.commits).toBeGreaterThan(before);
       expect(f.control.closes).toBe(0);
     }),
@@ -526,21 +573,35 @@ it("refuses a note whose owner is opening, before any resolution commit", async 
     await opening;
   }));
 
-it("retires only the closed durable owner and cancels its queued timer before resolution", async () =>
+it("retires a closed durable owner and cancels its timer while the resolution send is held", async () =>
   fixture(async (f) => {
     const upload = await f.owners.open({ ...f.owners.context, noteId });
     await f.closeOwner(upload);
     vi.useFakeTimers();
     try {
+      const oldAttempt = vi.spyOn(upload, "upload"),
+        h = f.hold();
+      f.control.afterSend = h.wait;
+      f.control.allowOwnerSignal = true;
       upload.schedule();
       const view = await f.model.read(noteId);
-      expect(
-        (await f.model.resolve(noteId, view.generation!, { kind: "local" }))
-          .kind,
-      ).toBe("complete");
+      const task = f.track(
+        f.model.resolve(noteId, view.generation!, { kind: "local" }),
+      );
+      await Promise.race([
+        h.entered,
+        task.then(() => {
+          throw Error("Expected held resolution send");
+        }),
+      ]);
+      expect(f.signals[0]).toBe(f.controller.signal);
       await vi.advanceTimersByTimeAsync(250);
+      expect(oldAttempt).not.toHaveBeenCalled();
       expect(f.requests).toHaveLength(1);
+      expect(upload.resolutionReady()).toBe(false);
       expect(f.owners.retainedOwners()).not.toContain(upload);
+      h.release();
+      expect((await task).kind).toBe("complete");
     } finally {
       vi.useRealTimers();
     }
@@ -573,6 +634,7 @@ it.each(["read", "commit", "send"] as const)(
   async (phase) =>
     fixture(async (f) => {
       const view = await f.model.read(noteId),
+        before = await f.client.get(noteId),
         h = f.hold();
       if (phase === "read") f.control.read = h.wait;
       else if (phase === "commit") f.control.commit = h.wait;
@@ -591,6 +653,24 @@ it.each(["read", "commit", "send"] as const)(
       h.release();
       const result = await task;
       expect(result).toEqual({ kind: "canceled", view: null });
+      const stored = (await f.client.get(noteId))!;
+      expect(
+        f.control.commitScopes.every(
+          (scope) => JSON.stringify(scope) === JSON.stringify(cloudScope),
+        ),
+      ).toBe(true);
+      if (phase === "read") expect(stored).toEqual(before);
+      else {
+        expect(stored.current!.snapshot!.bodyMarkdown).toBe("Device branch");
+        expect(stored.collectionId).toBe(cloudScope.collectionId);
+        expect(stored.baseRevision).toBe(before!.conflict!.remoteRevision);
+        expect(stored.conflict).toBeNull();
+        if (phase === "send") {
+          expect(stored.inFlight).toEqual(f.requests[0].mutation);
+          expect(f.requests).toHaveLength(1);
+        } else
+          expect(stored.pending!.snapshot!.bodyMarkdown).toBe("Device branch");
+      }
       expect(f.control.closes).toBe(0);
     }),
 );
@@ -835,4 +915,235 @@ it("copies a merged choice before async reads and does not resend a completed st
       ).kind,
     ).toBe("stale");
     expect(f.requests).toHaveLength(1);
+  }));
+
+it.each(["stale", "no-conflict"] as const)(
+  "preserves a queued pending owner when resolve refuses%s",
+  async (refusal) =>
+    fixture(async (f) => {
+      const initial = await f.model.read(noteId);
+      expect(
+        (await f.model.resolve(noteId, initial.generation!, { kind: "cloud" }))
+          .kind,
+      ).toBe("complete");
+      const saved = (await f.client.get(noteId))!;
+      await f.client.save(
+        noteId,
+        action("Queued pending draft"),
+        saved.generation,
+      );
+      const upload = await f.owners.open({ ...f.owners.context, noteId });
+      await f.closeOwner(upload);
+      vi.useFakeTimers();
+      try {
+        const attempt = vi.spyOn(upload, "upload");
+        upload.schedule();
+        const view = await f.model.read(noteId),
+          before = f.control.commits;
+        expect(
+          (
+            await f.model.resolve(
+              noteId,
+              view.generation! + (refusal === "stale" ? 1 : 0),
+              { kind: "cloud" },
+            )
+          ).kind,
+        ).toBe("stale");
+        expect(f.control.commits).toBe(before);
+        expect(f.owners.retainedOwners()).toContain(upload);
+        expect(upload.resolutionReady()).toBe(true);
+        f.control.allowOwnerSignal = true;
+        await vi.advanceTimersByTimeAsync(250);
+        expect(attempt).toHaveBeenCalledTimes(1);
+        await attempt.mock.results[0].value;
+        expect(f.requests).toHaveLength(1);
+        expect(
+          (await f.client.get(noteId))!.current!.snapshot!.bodyMarkdown,
+        ).toBe("Queued pending draft");
+        expect((await f.client.get(noteId))!.inFlight).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    }),
+);
+
+it.each(["archived", "trashed"] as const)(
+  "refuses combined text against observed%s and preserves an explicit full-version choice",
+  async (lifecycle) =>
+    fixture(async (f) => {
+      await f.remote("Observed inactive version", "upsert", lifecycle);
+      const old = await f.model.read(noteId);
+      expect(
+        (await f.model.resolve(noteId, old.generation!, { kind: "local" }))
+          .kind,
+      ).toBe("conflict");
+      const view = await f.model.read(noteId);
+      expect(view.conflict!.remote!.state).toBe(lifecycle);
+      expect(view.canMerge).toBe(false);
+      const before = f.control.commits,
+        sends = f.requests.length;
+      expect(
+        (
+          await f.model.resolve(noteId, view.generation!, {
+            kind: "merge",
+            bodyMarkdown: "A body merge must not restore",
+          })
+        ).kind,
+      ).toBe("unavailable");
+      expect(f.control.commits).toBe(before);
+      expect(f.requests).toHaveLength(sends);
+      expect(
+        (await f.service.get(cloudScope.ownerSubject, cloudScope, noteId)).kind,
+      ).toBe("note");
+      // Local means the full device version, including its lifecycle, selected explicitly.
+      expect(
+        (await f.model.resolve(noteId, view.generation!, { kind: "local" }))
+          .kind,
+      ).toBe("complete");
+      const restored = await f.service.get(
+        cloudScope.ownerSubject,
+        cloudScope,
+        noteId,
+      );
+      expect(restored.kind).toBe("note");
+      if (restored.kind === "note")
+        expect(restored.snapshot.state).toBe("active");
+    }),
+);
+
+it("publishes the durable Pending transition before a held preparation can send", async () =>
+  fixture(async (f) => {
+    const view = await f.model.read(noteId),
+      before = f.owners.snapshot().refreshKey,
+      h = f.hold();
+    let reads = 0;
+    f.control.afterRead = () => {
+      if (++reads === 2) f.control.read = h.wait;
+    };
+    const task = f.track(
+      f.model.resolve(noteId, view.generation!, { kind: "local" }),
+    );
+    await Promise.race([
+      h.entered,
+      task.then(() => {
+        throw Error("Expected held preparation read");
+      }),
+    ]);
+    expect(f.owners.snapshot().refreshKey).toBeGreaterThan(before);
+    expect((await f.model.read(noteId)).status).toBe("Pending upload");
+    expect(f.requests).toHaveLength(0);
+    h.release();
+    expect((await task).kind).toBe("complete");
+  }));
+
+it.each([200, 409])(
+  "pauses a valid result with mismatched HTTP%s without losing retry generation",
+  async (status) =>
+    fixture(async (f) => {
+      if (status === 200) await f.remote("Another remote revision");
+      const view = await f.model.read(noteId);
+      f.control.replyStatus = status;
+      const result = await f.model.resolve(noteId, view.generation!, {
+        kind: "local",
+      });
+      expect(result.kind).toBe("paused");
+      expect(result.view!.status).toBe("Pending upload");
+      expect(result.view!.generation).toBeGreaterThan(view.generation!);
+      const stored = (await f.client.get(noteId))!;
+      expect(stored.inFlight).toEqual(f.requests[0].mutation);
+      expect(stored.conflict).toBeNull();
+    }),
+);
+
+it("refuses stale retry of an existing immutable in-flight operation before send or commit", async () =>
+  fixture(async (f) => {
+    const view = await f.model.read(noteId);
+    f.control.status = 503;
+    const pending = await f.model.resolve(noteId, view.generation!, {
+      kind: "local",
+    });
+    const before = await f.client.get(noteId),
+      sends = f.requests.length,
+      commits = f.control.commits;
+    expect(
+      (await f.model.retry(noteId, pending.view!.generation! - 1)).kind,
+    ).toBe("stale");
+    expect(f.requests).toHaveLength(sends);
+    expect(f.control.commits).toBe(commits);
+    expect(await f.client.get(noteId)).toEqual(before);
+  }));
+
+it("keeps a missing current server head reconcile-required without ACK or automatic resend", async () =>
+  fixture(async (f) => {
+    f.dropRemoteHead();
+    const view = await f.model.read(noteId);
+    const result = await f.model.resolve(noteId, view.generation!, {
+      kind: "local",
+    });
+    expect(result.kind).toBe("paused");
+    expect(result.view!.status).toBe("Pending upload");
+    const stored = (await f.client.get(noteId))!;
+    expect(stored.inFlight).toEqual(f.requests[0].mutation);
+    expect(stored.baseRevision).toBe(view.conflict!.remoteRevision);
+    expect(f.requests).toHaveLength(1);
+    expect(
+      (await f.service.get(cloudScope.ownerSubject, cloudScope, noteId)).kind,
+    ).toBe("missing");
+  }));
+
+it("refuses a not-yet-started commit when cancellation is queued after the final state read", async () =>
+  fixture(async (f) => {
+    const view = await f.model.read(noteId),
+      before = await f.client.get(noteId),
+      commits = f.control.commits;
+    let reads = 0;
+    f.control.afterRead = () => {
+      if (++reads === 2)
+        queueMicrotask(() =>
+          queueMicrotask(() => f.controller.abort("queued cancellation")),
+        );
+    };
+    const result = await f.model.resolve(noteId, view.generation!, {
+      kind: "cloud",
+    });
+    expect(f.controller.signal.aborted).toBe(true);
+    expect(result).toEqual({ kind: "canceled", view: null });
+    expect(f.control.commits).toBe(commits);
+    expect(await f.client.get(noteId)).toEqual(before);
+    expect(f.requests).toHaveLength(0);
+  }));
+
+it("rechecks quiescence before retiring an owner that starts work during validation", async () =>
+  fixture(async (f) => {
+    const upload = await f.owners.open({ ...f.owners.context, noteId });
+    await f.closeOwner(upload);
+    const view = await f.model.read(noteId),
+      validation = f.hold(),
+      uploadRead = f.hold();
+    f.control.read = validation.wait;
+    const decision = f.track(
+      f.model.resolve(noteId, view.generation!, { kind: "cloud" }),
+    );
+    await Promise.race([
+      validation.entered,
+      decision.then(() => {
+        throw Error("Expected held validation");
+      }),
+    ]);
+    f.control.read = uploadRead.wait;
+    const oldTask = f.track(upload.upload());
+    await Promise.race([
+      uploadRead.entered,
+      oldTask.then(() => {
+        throw Error("Expected held owner work");
+      }),
+    ]);
+    const commits = f.control.commits;
+    validation.release();
+    expect((await decision).kind).toBe("busy");
+    expect(f.control.commits).toBe(commits);
+    expect(f.owners.retainedOwners()).toContain(upload);
+    uploadRead.release();
+    expect((await oldTask).kind).toBe("conflict");
+    expect(f.requests).toHaveLength(0);
   }));

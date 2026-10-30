@@ -48,9 +48,13 @@ export type CloudConflictResolutionResult = Readonly<{
   kind: CloudConflictResolutionKind;
   view: CloudConflictResolutionView | null;
 }>;
+export type CloudConflictResolutionLease = Readonly<{
+  retire: () => void;
+  changed: () => void;
+}>;
 export type CloudConflictResolutionGate = <T>(
   noteId: string,
-  action: () => Promise<T>,
+  action: (lease: CloudConflictResolutionLease) => Promise<T>,
 ) => Promise<T>;
 export class CloudConflictResolutionError extends Error {
   constructor(readonly kind: CloudConflictResolutionKind) {
@@ -152,7 +156,7 @@ export class CloudConflictResolutionController {
         .status,
       conflict: checked?.conflict ?? null,
       canMerge:
-        !!checked?.conflict?.remote &&
+        checked?.conflict?.remote?.state === "active" &&
         checked.conflict.local.kind === "upsert" &&
         checked.conflict.local.snapshot.state === "active",
     });
@@ -213,7 +217,7 @@ export class CloudConflictResolutionController {
       if (typeof expectedGeneration !== "number") return fail();
       selection(noteId, expectedGeneration);
       const selected = choice(input);
-      return await this.gate(noteId, async () => {
+      return await this.gate(noteId, async (lease) => {
         this.active();
         const previous = await this.at(noteId, expectedGeneration);
         if (!previous.conflict) return fail("stale");
@@ -229,7 +233,7 @@ export class CloudConflictResolutionController {
           if (
             action.kind !== "upsert" ||
             action.snapshot.state !== "active" ||
-            !conflict.remote
+            conflict.remote?.state !== "active"
           )
             return fail();
           action = {
@@ -241,14 +245,16 @@ export class CloudConflictResolutionController {
             }),
           };
         }
+        lease.retire();
         const next = await this.client.resolve(
           noteId,
           expectedGeneration,
           selected.kind === "cloud" ? "remote" : action,
         );
         this.active();
+        lease.changed();
         if (next.pending || next.inFlight)
-          return this.push(noteId, next.generation);
+          return this.push(noteId, next.generation, lease.changed);
         return this.observed(noteId);
       });
     } catch (error) {
@@ -263,12 +269,13 @@ export class CloudConflictResolutionController {
       this.active();
       if (typeof expectedGeneration !== "number") return fail();
       selection(noteId, expectedGeneration);
-      return await this.gate(noteId, async () => {
+      return await this.gate(noteId, async (lease) => {
         this.active();
         const state = await this.at(noteId, expectedGeneration);
         if (state.conflict || (!state.pending && !state.inFlight))
           return this.observed(noteId);
-        return this.push(noteId, expectedGeneration);
+        lease.retire();
+        return this.push(noteId, expectedGeneration, lease.changed);
       });
     } catch (error) {
       return this.failure(error);
@@ -277,17 +284,21 @@ export class CloudConflictResolutionController {
   private async push(
     noteId: string,
     generation: number,
+    changed: () => void,
   ): Promise<CloudConflictResolutionResult> {
     try {
       let state = await this.at(noteId, generation);
       if (state.conflict) return this.observed(noteId);
       if (!state.pending && !state.inFlight) return this.observed(noteId);
-      if (!state.inFlight)
+      if (!state.inFlight) {
         state = await this.client.prepare(
           noteId,
           generation,
           crypto.randomUUID(),
         );
+        this.active();
+        changed();
+      }
       this.active();
       const expected = state.inFlight!;
       const mutation = await this.client.retry(noteId);
@@ -315,9 +326,10 @@ export class CloudConflictResolutionController {
       if (
         body.receipt.outcome !== (reply.status === 200 ? "applied" : "conflict")
       )
-        return fail();
+        throw Error("Cloud reply status mismatch");
       const result = await applyCloudServerReply(this.client, request, body);
       this.active();
+      changed();
       return this.observed(
         noteId,
         result.kind === "reconcile-required" ? "paused" : undefined,

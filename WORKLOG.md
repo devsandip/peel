@@ -2597,3 +2597,21 @@
 
 **Decisions:**
 - Three coding lanes use disjoint production/UI/harness paths. Codex reviews peers; Claude independently reviews Codex. CI success is separate from source review and actual-main acceptance.
+
+
+## 2026-10-30 - Address independent resolution review
+
+**Did:**
+- Accepted Claude's six findings on frozen PR2072f725c5 and corrected owner retirement timing/readiness, lifecycle merge safety, Pending refresh and malformed status recovery. Added durable cancellation/retry/reconcile regressions.
+- Final focused Node2490/3 (46 controller), shared1093/88, type/full format/whitespace/artifact/build pass. Five omission counterexamples fail then pass after exact restoration. Intermediate new fixture/assertion failures remain documented separately in the feature plan.
+- Both external agents posted Started with their own pre-code commits. Preserved disjoint scopes. Took ownership of Claude's newly discovered Put away race for a separate issue/PR.
+- Updated the existing Project12 overview with built/remaining scope and a rough40% full-v1 engineering estimate (35-45% range), distinct from release acceptance or milestone counts.
+
+**State now:**
+- PR207 remains unmerged pending fresh exact-source all3 gates and Claude re-review.205/206 remain In progress; real Put away is an unmet integration prerequisite. Cloud remains disabled and M2.2 open.
+
+**Next:**
+- Freeze review fixes, obtain Claude's exact-head sign-off and source gates. Fix Put away separately; review/merge peer PRs when Ready, then verify actual-main gates and tracker state after every integration.
+
+**Decisions:**
+- Full local-version choice includes lifecycle; combined text cannot restore an inactive observed head. Precondition refusal must preserve scheduled work. The whole-product estimate lives in the existing GitHub Project overview and carries explicit limits.

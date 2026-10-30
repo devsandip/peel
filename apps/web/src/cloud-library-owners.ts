@@ -84,9 +84,25 @@ export class CloudLibraryOwners {
           throw new CloudConflictResolutionError("busy");
         this.resolving.add(noteId);
         try {
-          if (entry) this.release(entry);
+          let retired = false;
+          const retire = () => {
+            this.signal.throwIfAborted();
+            if (retired) return;
+            const current = this.entries.get(noteId);
+            if (
+              current &&
+              (current !== entry ||
+                !current.viewClosed ||
+                !current.upload.resolutionReady())
+            )
+              throw new CloudConflictResolutionError("busy");
+            if (current) this.release(current);
+            retired = true;
+          };
           this.signal.throwIfAborted();
-          return await action();
+          return await action(
+            Object.freeze({ retire, changed: () => this.publish() }),
+          );
         } finally {
           this.resolving.delete(noteId);
           this.publish();
