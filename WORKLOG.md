@@ -2471,3 +2471,20 @@
 
 **Decisions:**
 - A one-use ticket is never shared or cached across independent calls, and its expiry is authorized by the server. Only explicit server injection enables the issuance route; consuming a credential stays server-only.
+
+
+## 2026-10-30 — Verify HTTP issuance; plan scoped connect admission
+
+**Did:**
+- Fully integrated198/197 atd397477, source40984812953/main40985951871 all3 first run/job attempts; review5707011253/Ready6512637135/proof6512859393. Actual adapter30/5, Cloud746/48, shared954/85/browser79; all21 new cases execute both Node runtimes.
+- Verified actual closure/bothProjectDone/label/guarded primary/unknown paths/no-reply/source-merge-cleanup scans. Only Root source+merge refs removed; all peer refs/active181 checkout preserved. Completed198/196/194 helpers must not be rerun.
+- Created199 Ready and wrote its requirement-linked pre-code wire/authorizer plan. No199 runtime/tests or validation yet; record the exact new factory/offer contract in169 before edits.
+
+**State now:**
+- HTTP issuance is explicit development integration, with no real socket/hosted/default or managed/public acceptance. Prior local first156/static/default-bundle positives and synthetic/unrun limits remain in frozen0643/plan. M2.2 stays open.
+
+**Next:**
+- Commit199 plan; coordinate the wire/factory in169, set199 Inprogress, then implement bounded metadata admission through actual one-use ticket consumption. Finish any newly ready peer PR first.
+
+**Decisions:**
+- A connect policy carries only server-derived scalar admission context and the original connection ID. Matching Gateway metadata is no provenance proof or continuing authorization; actual hosting and registry checks remain separate.
