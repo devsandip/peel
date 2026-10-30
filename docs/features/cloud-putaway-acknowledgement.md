@@ -15,3 +15,11 @@ Extend the existing real owners/workspace browser regression file, using its exp
 Use Root's strict65527 port without reusing servers and coordinate shared heavy checks in169. Relevant focused Node24 owner/upload tests, type/full source format/whitespace/build and exact-source all3 hosted gates are required. Ask Claude for independent frozen-head review. Merge normally with no-reply metadata and range scan; separately verify actual-main gates, closure/Project/status and guarded primary update. Issue208 remains open until206 can remove its expected-failure/reload workaround and use real Put away.
 
 No Cloud enablement, real login, hosted service, native acceptance or M2.2 completion is claimed. Scope is the editor wrapper, existing owners browser regression and this plan.
+
+## Local evidence
+
+Pre-code36d172c preceded runtime/test edits on verified mainffa55a5. Both new actual browser cases fail against unchanged wrapper source because the editor stays open after Put away: settled Saved and actual409 Conflict. With acknowledgement ordered first, both pass and the full relevant owners/upload/workspace set passes25/25 under original workers/timeouts/retries. The actual conflict test commits a newer remote version through the real HTTP handler, then verifies both durable branches survive closure byte-for-byte. Prior held-network closure, newer typing, retention failure, parent-acknowledgement failure and account cancellation cases pass unchanged.
+
+Node24 focused owner/upload/draft suites pass67/3; type/full source/plan format/whitespace/build pass. All8 default bundle hashes match verified main. The first browser invocation did not execute tests because the scratch config resolved a second Playwright installation from the primary checkout; moving only the ignored config into this worktree fixed resolution. That infrastructure failure is distinct from the subsequent two expected pre-fix regression failures. No existing controls/assertions were weakened. Owned browser/server/cache fixtures cleaned up through existing teardown. No visual layout changed.
+
+Fresh frozen-head independent Claude review and exact-source all3 hosted gates remain pending. Issue208 will remain open after its fix merges until issue206 confirms the expected-failure/reload workaround is removed and real Put away passes there.
