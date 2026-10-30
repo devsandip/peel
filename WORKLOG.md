@@ -2541,3 +2541,42 @@
 
 **Decisions:**
 - A lost storage acknowledgement must trigger exact attempted-record cleanup; it cannot authorize retry, overwrite or broad deletion. Session/account/store checks remain point-in-time observations.
+
+
+## 2026-10-30 - Verified connection registry handoff and next Cloud slice proposal
+
+**Did:**
+- Integrated PR202 / issue201 at main39a33bf7cc6067cb194a59c05b80a1530d93962d. Exact source41029717111 and separate actual-main41030677882 passed all three jobs on first attempts. Final proof: https://github.com/devsandip/peel/pull/202#issuecomment-6519240195.
+- Verified actual source/main logs: shared1047/87, Node24Cloud839/50, DynamoDB Local30/5 and browser79, including54 new registry cases in both Node runtimes. Local counterexample and initial failures remain documented separately.
+- Verified actual closure, both Project12 cards Done, label removal, guarded primary update and scanned no-reply Root-only branch cleanup. Preserved unknown user files and all peer refs/checkout.
+- At Sandip's request, checked Antigravity's new PR203 / issue181 at669c2e167dbd8f69b3b97bbb3a63707ce3647149 on verified39a33bf. Exact source run41032444650 and all three jobs passed first attempts. Its six-file conflict preview is Ready for integrator review, not merged or independently reviewed by Root yet.
+
+**State now:**
+- Public main contains the isolated scoped connection registry. Cloud remains disabled; M2.2 is open with managed smoke/independent teardown unproven.
+- PR203 is the only open PR. No next Root feature/issue/branch or new Antigravity assignment has started. The recurring heartbeat remains paused.
+- This handoff append is saved locally and uncommitted in primary WORKLOG.md. Preserve only this receipt-bound append when moving it into the next focused branch; do not overwrite later edits.
+
+**Next:**
+- Review PR203's frozen six-file diff and evidence first. Merge only after focused review, then verify separate actual-main gates and tracker/primary proof.
+- Proposed next slice for Sandip: complete conflict recovery in the existing Cloud development workspace. Root owns a scoped resolution controller, durable state/upload-owner coordination and integration; Antigravity owns preview/workspace wiring, explicit choice/merge UI, accessibility and browser tests behind a frozen command/result interface. This proposal is not yet an assigned implementation contract.
+- Prove two explicit synthetic browser sessions can create a conflict, resolve it deliberately and see the confirmed result after refresh, with reload/account-switch/stale-selection safety and no false Saved. Actual login/hosting/live-delivery gates remain separate.
+
+**Decisions:**
+- No new implementation scope was approved in this planning exchange. Prefer closing a visible Cloud user flow next; freeze ownership/interface and create PR-sized issues/plans before code.
+
+
+## 2026-10-30 - Integrate read-only conflict preview and plan resolution
+
+**Did:**
+- Reviewed PR203 exact669c2e1, independently ran8/8 preview browser cases and inspected desktop/narrow layouts. Source41032444650 and main41058748406 passed all3 first attempts; final proof https://github.com/devsandip/peel/pull/203#issuecomment-6523446267.
+- Verified actual closure/bothProjectDone/labels/guarded primary, exact approved prior WORKLOG append preservation and scanned no-reply Root-only merge-ref cleanup. All peer refs/checkout and unknown user files preserved.
+- Created current M2.2 issues204 (Root resolution controller) and205 (Antigravity workspace conflict inspection). This committed requirement-linked204 plan precedes code.
+
+**State now:**
+- Mainffa55a5 is verified through203; Cloud is still disabled and M2.2 managed acceptance remains open. No204 runtime/tests exist at plan authoring.
+
+**Next:**
+- Coordinate204's exact model/owner gate in169, start its controller and tests. Publish205's verified-base assignment; Antigravity owns read-only UI wiring first, later resolution controls depend on this controller.
+
+**Decisions:**
+- Resolution must reject an open/dirty/busy owner and use generation-bound CAS. Preserve explicit Put away before resolution and retain Pending until actual server confirmation.
