@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { test, expect } from "@playwright/test";
 import { startCloudUploadServer } from "../fixtures/cloud-upload-server";
-import { cloudScope } from "../fixtures/cloud-durable-contract";
+import { cloudScope, cloudDraft } from "../fixtures/cloud-durable-contract";
+import {
+  createCloudClient,
+  saveCloudDraft,
+  startCloudMutation,
+} from "../../packages/cloud-protocol/src/index";
 import type {} from "../fixtures/cloud-library-owners";
 import type { CloudMutationRequest } from "../../packages/cloud-protocol/src/server";
 let server: Awaited<ReturnType<typeof startCloudUploadServer>>;
@@ -230,4 +235,131 @@ test("failed retention remains owned and copyable across account cancellation wi
     "Original account volatile recovery",
   );
   expect(requests).toHaveLength(0);
+});
+
+test("puts away a settled Saved note without a verifying flush racing parent acknowledgement", async ({
+  page,
+}) => {
+  const library = page.getByRole("region", { name: "Cached Cloud library" }),
+    article = page.getByRole("article", { name: "Cloud note editor" });
+  await library
+    .getByRole("button", { name: "Open Account A controller note" })
+    .click();
+  await expect(article.getByRole("status")).toHaveText("Saved in Cloud");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.cloudLibraryOwnersFixture.retained(0)[0]?.retained,
+      ),
+    )
+    .toBe(true);
+  expect(requests).toHaveLength(1);
+  await article.getByRole("button", { name: "Put away note" }).click();
+  await expect(article).toHaveCount(0);
+  await expect(library).toContainText("Saved in Cloud");
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.cloudLibraryOwnersFixture.retained(0).length),
+    )
+    .toBe(0);
+  const state = await page.evaluate(() =>
+    window.cloudLibraryOwnersFixture.read(0, "shared-note"),
+  );
+  expect(state?.current?.snapshot?.bodyMarkdown).toBe(
+    "Account A controller note\nPrivate body 0",
+  );
+  expect(state?.pending).toBeNull();
+  expect(state?.inFlight).toBeNull();
+  expect(requests).toHaveLength(1);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("puts away a settled Conflict owner and preserves both real durable versions", async ({
+  page,
+  playwright,
+}) => {
+  const article = page.getByRole("article", { name: "Cloud note editor" });
+  await page
+    .getByRole("button", { name: "Open Account A controller note" })
+    .click();
+  await expect(article.getByRole("status")).toHaveText("Saved in Cloud");
+  const api = await playwright.request.newContext();
+  try {
+    const context = server.contexts[0],
+      headers = {
+        "x-synthetic-fixture": context.token,
+        "x-peel-collection": context.scope.collectionId,
+        "x-peel-mode-generation": String(context.scope.modeGeneration),
+      },
+      head = await api.get(server.api + "/v1/notes/shared-note", { headers }),
+      remote = (await head.json()).head.snapshot,
+      next = await startCloudMutation(
+        saveCloudDraft(
+          createCloudClient(context.scope.collectionId, "shared-note", remote),
+          {
+            kind: "upsert",
+            snapshot: {
+              ...cloudDraft("Observed remote conflict branch"),
+              noteId: "shared-note",
+            },
+          },
+        ),
+        randomUUID(),
+      ),
+      committed = await api.post(server.api + "/v1/mutations", {
+        headers,
+        data: {
+          version: 1,
+          collectionId: context.scope.collectionId,
+          modeGeneration: context.scope.modeGeneration,
+          mutation: next.inFlight,
+        },
+      });
+    expect(committed.status()).toBe(200);
+  } finally {
+    await api.dispose();
+  }
+  await article
+    .getByRole("textbox", { name: "Note text" })
+    .fill("Retained device conflict branch");
+  await expect(article.getByRole("status")).toHaveText("Conflict");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.cloudLibraryOwnersFixture.retained(0)[0]?.retained,
+      ),
+    )
+    .toBe(true);
+  const before = await page.evaluate(() =>
+    window.cloudLibraryOwnersFixture.read(0, "shared-note"),
+  );
+  expect(before?.conflict?.local).toMatchObject({
+    kind: "upsert",
+    snapshot: { bodyMarkdown: "Retained device conflict branch" },
+  });
+  expect(before?.conflict?.remote?.bodyMarkdown).toBe(
+    "Observed remote conflict branch",
+  );
+  await article.getByRole("button", { name: "Put away note" }).click();
+  await expect(article).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "Cached Cloud library" }),
+  ).toContainText("Conflict");
+  expect(
+    await page.evaluate(() =>
+      window.cloudLibraryOwnersFixture.read(0, "shared-note"),
+    ),
+  ).toEqual(before);
+  expect(
+    await page.evaluate(() => window.cloudLibraryOwnersFixture.retained(0)),
+  ).toEqual([
+    {
+      noteId: "shared-note",
+      body: "Retained device conflict branch",
+      retained: true,
+      status: "Conflict",
+    },
+  ]);
+  expect(requests).toHaveLength(2);
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
