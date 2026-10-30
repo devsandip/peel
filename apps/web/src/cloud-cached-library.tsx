@@ -19,50 +19,186 @@ export type CloudLibraryContext = Readonly<{
 }>;
 export type CloudLibraryNoteSelection = CloudLibraryContext &
   Readonly<{ noteId: string }>;
-type Props = {
+export type CloudCachedLibraryProps = {
   store: CloudLibraryStateStore;
   scope: CloudScope;
   signal: AbortSignal;
   refreshKey: number;
   onOpen?: (selection: CloudLibraryNoteSelection) => void | Promise<void>;
   onCreate?: (context: CloudLibraryContext) => void | Promise<void>;
+  onInspectConflict?: (
+    selection: CloudLibraryNoteSelection,
+  ) => void | Promise<void>;
 };
-function capture(scope: CloudScope) {
+
+const DEFAULT_ACTION_ERROR =
+  "Could not open this cached note. Your drafts remain on this device.";
+const INSPECT_CONFLICT_ERROR =
+  "Could not inspect this Cloud conflict. Preserved versions on this device were not changed.";
+
+function ownDataProperty(
+  target: object,
+  key: string,
+): { ok: true; value: unknown } | { ok: false } {
+  const descriptor = Object.getOwnPropertyDescriptor(target, key);
+  if (!descriptor) return { ok: true, value: undefined };
+  if (!descriptor.enumerable || !("value" in descriptor)) return { ok: false };
+  return { ok: true, value: descriptor.value };
+}
+
+function isAbortSignalLike(input: unknown): input is AbortSignal {
+  if (typeof AbortSignal === "function" && input instanceof AbortSignal)
+    return true;
+  if (!input || typeof input !== "object") return false;
+  const candidate = input as AbortSignal;
+  return (
+    typeof candidate.aborted === "boolean" &&
+    typeof candidate.addEventListener === "function" &&
+    typeof candidate.removeEventListener === "function"
+  );
+}
+
+function capture(input: unknown): Readonly<CloudScope> | null {
   try {
-    return validateCloudScope(scope);
+    if (!input || typeof input !== "object" || Array.isArray(input))
+      return null;
+    const proto = Object.getPrototypeOf(input);
+    if (proto !== Object.prototype && proto !== null) return null;
+    if (Object.getOwnPropertySymbols(input).length > 0) return null;
+    const names = Object.getOwnPropertyNames(input);
+    if (names.length !== 4) return null;
+    for (const name of names) {
+      const descriptor = Object.getOwnPropertyDescriptor(input, name);
+      if (!descriptor || !descriptor.enumerable || !("value" in descriptor))
+        return null;
+    }
+    const raw = input as CloudScope;
+    return Object.freeze(
+      validateCloudScope({
+        version: raw.version,
+        ownerSubject: raw.ownerSubject,
+        collectionId: raw.collectionId,
+        modeGeneration: raw.modeGeneration,
+      }),
+    );
   } catch {
     return null;
   }
 }
+
+function captureLibraryProps(rawProps: unknown): {
+  store: CloudLibraryStateStore | null;
+  scope: Readonly<CloudScope> | null;
+  signal: AbortSignal | null;
+  refreshKey: number;
+  onOpen: CloudCachedLibraryProps["onOpen"];
+  onCreate: CloudCachedLibraryProps["onCreate"];
+  onInspectConflict: CloudCachedLibraryProps["onInspectConflict"];
+} {
+  if (!rawProps || typeof rawProps !== "object" || Array.isArray(rawProps)) {
+    return {
+      store: null,
+      scope: null,
+      signal: null,
+      refreshKey: -1,
+      onOpen: undefined,
+      onCreate: undefined,
+      onInspectConflict: undefined,
+    };
+  }
+  const storeProp = ownDataProperty(rawProps, "store"),
+    scopeProp = ownDataProperty(rawProps, "scope"),
+    signalProp = ownDataProperty(rawProps, "signal"),
+    refreshKeyProp = ownDataProperty(rawProps, "refreshKey"),
+    onOpenProp = ownDataProperty(rawProps, "onOpen"),
+    onCreateProp = ownDataProperty(rawProps, "onCreate"),
+    onInspectProp = ownDataProperty(rawProps, "onInspectConflict");
+  if (
+    !storeProp.ok ||
+    !scopeProp.ok ||
+    !signalProp.ok ||
+    !refreshKeyProp.ok ||
+    !onOpenProp.ok ||
+    !onCreateProp.ok ||
+    !onInspectProp.ok
+  ) {
+    return {
+      store: null,
+      scope: null,
+      signal: null,
+      refreshKey: -1,
+      onOpen: undefined,
+      onCreate: undefined,
+      onInspectConflict: undefined,
+    };
+  }
+  const rawStore = storeProp.value;
+  const store =
+    rawStore &&
+    typeof rawStore === "object" &&
+    typeof (rawStore as CloudLibraryStateStore).listLibrary === "function"
+      ? (rawStore as CloudLibraryStateStore)
+      : null;
+  const signal = isAbortSignalLike(signalProp.value) ? signalProp.value : null;
+  const scope = store && signal ? capture(scopeProp.value) : null;
+  return {
+    store,
+    scope,
+    signal,
+    refreshKey: refreshKeyProp.value as number,
+    onOpen:
+      typeof onOpenProp.value === "function"
+        ? (onOpenProp.value as CloudCachedLibraryProps["onOpen"])
+        : undefined,
+    onCreate:
+      typeof onCreateProp.value === "function"
+        ? (onCreateProp.value as CloudCachedLibraryProps["onCreate"])
+        : undefined,
+    onInspectConflict:
+      typeof onInspectProp.value === "function"
+        ? (onInspectProp.value as CloudCachedLibraryProps["onInspectConflict"])
+        : undefined,
+  };
+}
+
 /** Cached metadata only; neither this panel nor its callbacks authenticate Cloud. */
-export function CloudCachedLibrary(props: Props) {
-  const scope = capture(props.scope),
-    key = scope ? JSON.stringify(scope) : null,
+export function CloudCachedLibrary(props: CloudCachedLibraryProps) {
+  const captured = captureLibraryProps(props),
+    key = captured.scope ? JSON.stringify(captured.scope) : null,
     [selected, setSelected] = useState({
-      store: props.store,
-      signal: props.signal,
-      scope,
+      store: captured.store,
+      signal: captured.signal,
+      scope: captured.scope,
       key,
       serial: 0,
     });
   if (
-    selected.store !== props.store ||
-    selected.signal !== props.signal ||
+    selected.store !== captured.store ||
+    selected.signal !== captured.signal ||
     selected.key !== key
   ) {
     setSelected({
-      store: props.store,
-      signal: props.signal,
-      scope,
+      store: captured.store,
+      signal: captured.signal,
+      scope: captured.scope,
       key,
       serial: selected.serial + 1,
     });
     return null;
   }
-  if (!selected.scope)
+  if (!selected.store || !selected.signal || !selected.scope)
     return <p role="alert">Cached Cloud library unavailable</p>;
   return (
-    <SelectedLibrary key={selected.serial} {...props} scope={selected.scope} />
+    <SelectedLibrary
+      key={selected.serial}
+      store={selected.store}
+      scope={selected.scope}
+      signal={selected.signal}
+      refreshKey={captured.refreshKey}
+      onOpen={captured.onOpen}
+      onCreate={captured.onCreate}
+      onInspectConflict={captured.onInspectConflict}
+    />
   );
 }
 function SelectedLibrary({
@@ -72,7 +208,8 @@ function SelectedLibrary({
   refreshKey,
   onOpen,
   onCreate,
-}: Props) {
+  onInspectConflict,
+}: CloudCachedLibraryProps) {
   const [collection, setCollection] = useState<CloudLibraryCollection>("notes"),
     [position, setPosition] = useState<{
       collection: CloudLibraryCollection;
@@ -155,7 +292,10 @@ function SelectedLibrary({
       signal.aborted ||
       (visible !== null && visible.page === null),
     page = unavailable ? null : visible?.page;
-  const invoke = async (action: (() => void | Promise<void>) | undefined) => {
+  const invoke = async (
+    action: (() => void | Promise<void>) | undefined,
+    errorMessage = DEFAULT_ACTION_ERROR,
+  ) => {
     if (
       !action ||
       !active.current ||
@@ -170,8 +310,7 @@ function SelectedLibrary({
       if (active.current && !signal.aborted && current.current === selection)
         setIssue({
           selection,
-          message:
-            "Could not open this cached note. Your drafts remain on this device.",
+          message: errorMessage,
         });
     }
   };
@@ -251,10 +390,22 @@ function SelectedLibrary({
                   {entry.kind === "recovery" && <p>Local recovery required</p>}
                 </>
               );
+              const canInspectConflict =
+                  entry.status === "Conflict" &&
+                  typeof onInspectConflict === "function",
+                cardTitle = entry.title ?? "Cloud note needs recovery";
               return (
-                <li key={entry.noteId} className="note-card">
-                  {entry.kind === "active" && onOpen ? (
+                <li
+                  key={entry.noteId}
+                  className={
+                    canInspectConflict
+                      ? "note-card note-card-conflict"
+                      : "note-card"
+                  }
+                >
+                  {entry.kind === "active" && typeof onOpen === "function" ? (
                     <button
+                      type="button"
                       className="card-open"
                       aria-label={`Open ${entry.title}`}
                       onClick={() =>
@@ -269,6 +420,31 @@ function SelectedLibrary({
                     </button>
                   ) : (
                     <div className="card-open">{content}</div>
+                  )}
+                  {canInspectConflict && (
+                    <div className="card-conflict-footer">
+                      <button
+                        type="button"
+                        className="card-inspect-conflict"
+                        data-conflict-note-id={entry.noteId}
+                        disabled={!selection || signal.aborted}
+                        aria-label={`Inspect conflict for ${cardTitle}`}
+                        onClick={() =>
+                          void invoke(
+                            () =>
+                              onInspectConflict(
+                                Object.freeze({
+                                  ...context,
+                                  noteId: entry.noteId,
+                                }),
+                              ),
+                            INSPECT_CONFLICT_ERROR,
+                          )
+                        }
+                      >
+                        Inspect conflict
+                      </button>
+                    </div>
                   )}
                 </li>
               );

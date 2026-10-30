@@ -9,6 +9,7 @@ import {
 import "./cloud-workspace.css";
 import { titleOf } from "../../../packages/core/src/index";
 import {
+  validateCloudNoteId,
   validateCloudScope,
   type CloudScope,
 } from "../../../packages/cloud-protocol/src/durable";
@@ -18,6 +19,7 @@ import {
   type CloudLibraryContext,
   type CloudLibraryNoteSelection,
 } from "./cloud-cached-library";
+import { CloudConflictPreview } from "./cloud-conflict-preview";
 import type { CloudDraftSession } from "./cloud-draft-session";
 import type { CloudNoteUpload } from "./cloud-note-upload";
 import { CloudUploadingNoteEditor } from "./cloud-uploading-note-editor";
@@ -133,8 +135,14 @@ type ActiveEditor = {
   closedComplete: boolean;
 };
 
+type ActiveInspection = Readonly<{
+  noteId: string;
+}>;
+
 type ReturnFocusTarget =
-  Readonly<{ kind: "new" }> | Readonly<{ kind: "card"; title: string }>;
+  | Readonly<{ kind: "new" }>
+  | Readonly<{ kind: "card"; title: string }>
+  | Readonly<{ kind: "conflict"; noteId: string }>;
 
 const NARROW_QUERY = "(max-width: 820px)";
 
@@ -145,28 +153,186 @@ function readIsNarrow() {
     : false;
 }
 
-function captureStore(
-  context: CloudLibraryContext | null | undefined,
-): CloudLibraryStateStore | null {
-  const store = context?.store;
+function ownDataProperty(
+  target: object,
+  key: string,
+): { ok: true; value: unknown } | { ok: false } {
+  const descriptor = Object.getOwnPropertyDescriptor(target, key);
+  if (!descriptor) return { ok: true, value: undefined };
+  if (!descriptor.enumerable || !("value" in descriptor)) return { ok: false };
+  return { ok: true, value: descriptor.value };
+}
+
+function isAbortSignalLike(input: unknown): input is AbortSignal {
+  if (typeof AbortSignal === "function" && input instanceof AbortSignal)
+    return true;
+  if (!input || typeof input !== "object") return false;
+  const candidate = input as AbortSignal;
+  return (
+    typeof candidate.aborted === "boolean" &&
+    typeof candidate.addEventListener === "function" &&
+    typeof candidate.removeEventListener === "function"
+  );
+}
+
+function captureScope(input: unknown): Readonly<CloudScope> | null {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+  try {
+    const proto = Object.getPrototypeOf(input);
+    if (proto !== Object.prototype && proto !== null) return null;
+    if (Object.getOwnPropertySymbols(input).length > 0) return null;
+    const names = Object.getOwnPropertyNames(input);
+    if (names.length !== 4) return null;
+    for (const name of names) {
+      const descriptor = Object.getOwnPropertyDescriptor(input, name);
+      if (!descriptor || !descriptor.enumerable || !("value" in descriptor))
+        return null;
+    }
+    const raw = input as CloudScope;
+    return Object.freeze(
+      validateCloudScope({
+        version: raw.version,
+        ownerSubject: raw.ownerSubject,
+        collectionId: raw.collectionId,
+        modeGeneration: raw.modeGeneration,
+      }),
+    );
+  } catch {
+    return null;
+  }
+}
+
+function captureContext(rawContext: unknown): {
+  store: CloudLibraryStateStore;
+  scope: Readonly<CloudScope>;
+} | null {
   if (
-    !store ||
-    typeof store.read !== "function" ||
-    typeof store.commit !== "function" ||
-    typeof store.close !== "function" ||
-    typeof store.listLibrary !== "function"
+    !rawContext ||
+    typeof rawContext !== "object" ||
+    Array.isArray(rawContext)
   ) {
     return null;
   }
-  return store;
-}
-
-function captureScope(scope: CloudScope | null | undefined): CloudScope | null {
-  if (!scope) return null;
   try {
-    return validateCloudScope(scope);
+    const proto = Object.getPrototypeOf(rawContext);
+    if (proto !== Object.prototype && proto !== null) return null;
+    if (Object.getOwnPropertySymbols(rawContext).length > 0) return null;
+    for (const key of Object.getOwnPropertyNames(rawContext)) {
+      if (!ownDataProperty(rawContext, key).ok) return null;
+    }
+    const storeProp = ownDataProperty(rawContext, "store"),
+      scopeProp = ownDataProperty(rawContext, "scope");
+    if (!storeProp.ok || !scopeProp.ok) return null;
+    const store = storeProp.value as Partial<CloudLibraryStateStore> | null;
+    if (
+      !store ||
+      typeof store !== "object" ||
+      typeof store.read !== "function" ||
+      typeof store.commit !== "function" ||
+      typeof store.close !== "function" ||
+      typeof store.listLibrary !== "function"
+    ) {
+      return null;
+    }
+    const scope = captureScope(scopeProp.value);
+    if (!scope) return null;
+    return { store: store as CloudLibraryStateStore, scope };
   } catch {
     return null;
+  }
+}
+
+function captureWorkspaceProps(rawProps: unknown): {
+  store: CloudLibraryStateStore | null;
+  scope: Readonly<CloudScope> | null;
+  signal: AbortSignal | null;
+  refreshKey: number;
+  connection: unknown;
+  onOpen: CloudWorkspaceProps["onOpen"] | null;
+  onCreate: CloudWorkspaceProps["onCreate"] | null;
+  onPutAway: CloudWorkspaceProps["onPutAway"];
+  onRetrySync: CloudWorkspaceProps["onRetrySync"];
+  onSignIn: CloudWorkspaceProps["onSignIn"];
+} {
+  if (!rawProps || typeof rawProps !== "object" || Array.isArray(rawProps)) {
+    return {
+      store: null,
+      scope: null,
+      signal: null,
+      refreshKey: -1,
+      connection: undefined,
+      onOpen: null,
+      onCreate: null,
+      onPutAway: undefined,
+      onRetrySync: undefined,
+      onSignIn: undefined,
+    };
+  }
+  const contextProp = ownDataProperty(rawProps, "context"),
+    signalProp = ownDataProperty(rawProps, "signal"),
+    refreshKeyProp = ownDataProperty(rawProps, "refreshKey"),
+    connectionProp = ownDataProperty(rawProps, "connection"),
+    onOpenProp = ownDataProperty(rawProps, "onOpen"),
+    onCreateProp = ownDataProperty(rawProps, "onCreate"),
+    onPutAwayProp = ownDataProperty(rawProps, "onPutAway"),
+    onRetrySyncProp = ownDataProperty(rawProps, "onRetrySync"),
+    onSignInProp = ownDataProperty(rawProps, "onSignIn");
+  if (
+    !contextProp.ok ||
+    !signalProp.ok ||
+    !refreshKeyProp.ok ||
+    !connectionProp.ok ||
+    !onOpenProp.ok ||
+    !onCreateProp.ok ||
+    !onPutAwayProp.ok ||
+    !onRetrySyncProp.ok ||
+    !onSignInProp.ok
+  ) {
+    return {
+      store: null,
+      scope: null,
+      signal: null,
+      refreshKey: -1,
+      connection: undefined,
+      onOpen: null,
+      onCreate: null,
+      onPutAway: undefined,
+      onRetrySync: undefined,
+      onSignIn: undefined,
+    };
+  }
+  const signal = isAbortSignalLike(signalProp.value) ? signalProp.value : null;
+  const context = signal ? captureContext(contextProp.value) : null;
+  return {
+    store: context?.store ?? null,
+    scope: context?.scope ?? null,
+    signal,
+    refreshKey: refreshKeyProp.value as number,
+    connection: connectionProp.value,
+    onOpen:
+      typeof onOpenProp.value === "function"
+        ? (onOpenProp.value as CloudWorkspaceProps["onOpen"])
+        : null,
+    onCreate:
+      typeof onCreateProp.value === "function"
+        ? (onCreateProp.value as CloudWorkspaceProps["onCreate"])
+        : null,
+    onPutAway:
+      typeof onPutAwayProp.value === "function"
+        ? (onPutAwayProp.value as CloudWorkspaceProps["onPutAway"])
+        : undefined,
+    onRetrySync: onRetrySyncProp.value as CloudWorkspaceProps["onRetrySync"],
+    onSignIn: onSignInProp.value as CloudWorkspaceProps["onSignIn"],
+  };
+}
+
+function isValidNoteId(candidate: unknown): candidate is string {
+  if (typeof candidate !== "string") return false;
+  try {
+    validateCloudNoteId(candidate);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -186,53 +352,62 @@ function isValidUpload(candidate: unknown): candidate is CloudNoteUpload {
 
 /** Explicit scoped composition only; neither this workspace nor its callbacks grant Cloud auth. */
 export function CloudWorkspace(props: CloudWorkspaceProps) {
-  const store = captureStore(props.context),
-    scope = store ? captureScope(props.context.scope) : null,
-    key = scope ? JSON.stringify(scope) : null,
+  const captured = captureWorkspaceProps(props),
+    key = captured.scope ? JSON.stringify(captured.scope) : null,
     [selected, setSelected] = useState({
-      store,
-      signal: props.signal,
-      scope,
+      store: captured.store,
+      signal: captured.signal,
+      scope: captured.scope,
       key,
       serial: 0,
     });
   if (
-    selected.store !== store ||
-    selected.signal !== props.signal ||
+    selected.store !== captured.store ||
+    selected.signal !== captured.signal ||
     selected.key !== key
   ) {
     setSelected({
-      store,
-      signal: props.signal,
-      scope,
+      store: captured.store,
+      signal: captured.signal,
+      scope: captured.scope,
       key,
       serial: selected.serial + 1,
     });
     return null;
   }
-  if (!selected.store || !selected.scope) {
+  if (
+    !selected.store ||
+    !selected.scope ||
+    !selected.signal ||
+    !captured.onOpen ||
+    !captured.onCreate
+  ) {
     return (
-      <div className="cloud-workspace" data-editor-open="false">
+      <div
+        className="cloud-workspace"
+        data-editor-open="false"
+        data-inspection-open="false"
+      >
         <p className="cloud-workspace-unavailable" role="alert">
           Cached Cloud library unavailable
         </p>
       </div>
     );
   }
-  const parsedConnection = parseConnection(props.connection);
+  const parsedConnection = parseConnection(captured.connection);
   return (
     <SelectedWorkspace
       key={selected.serial}
       store={selected.store}
       scope={selected.scope}
-      signal={props.signal}
-      refreshKey={props.refreshKey}
+      signal={selected.signal}
+      refreshKey={captured.refreshKey}
       parsedConnection={parsedConnection}
-      onOpen={props.onOpen}
-      onCreate={props.onCreate}
-      onPutAway={props.onPutAway}
-      onRetrySync={props.onRetrySync}
-      onSignIn={props.onSignIn}
+      onOpen={captured.onOpen}
+      onCreate={captured.onCreate}
+      onPutAway={captured.onPutAway}
+      onRetrySync={captured.onRetrySync}
+      onSignIn={captured.onSignIn}
     />
   );
 }
@@ -262,12 +437,16 @@ function SelectedWorkspace({
     [isNarrow, setIsNarrow] = useState(readIsNarrow),
     [localRefresh, setLocalRefresh] = useState(0),
     [activeEditor, setActiveEditor] = useState<ActiveEditor | null>(null),
+    [activeInspection, setActiveInspection] = useState<ActiveInspection | null>(
+      null,
+    ),
     [workspaceIssue, setWorkspaceIssue] = useState<string | null>(null),
     [returnFocus, setReturnFocus] = useState<ReturnFocusTarget | null>(null);
 
   const validRefreshKey = Number.isSafeInteger(refreshKey) && refreshKey >= 0;
   const usable = !aborted && !signal.aborted && validRefreshKey;
   const visibleEditor = usable ? activeEditor : null;
+  const visibleInspection = usable && !visibleEditor ? activeInspection : null;
   const hasRetryAction =
     parsedConnection.mode === "valid" &&
     parsedConnection.kind === "paused" &&
@@ -309,13 +488,19 @@ function SelectedWorkspace({
     recoveryInFlightEpochRef = useRef<number | null>(null),
     validRefreshKeyRef = useRef(validRefreshKey),
     activeEditorRef = useRef<ActiveEditor | null>(null),
+    activeInspectionRef = useRef<ActiveInspection | null>(null),
+    pendingInspectionFocusRef = useRef<ActiveInspection | null>(null),
     desiredCardTitleRef = useRef<string | null>(null),
+    desiredConflictNoteIdRef = useRef<string | null>(null),
     provisionalFocusRef = useRef(false),
     provisionalButtonRef = useRef<HTMLButtonElement | null>(null),
     libraryPaneRef = useRef<HTMLDivElement>(null),
-    editorPaneRef = useRef<HTMLDivElement>(null);
+    editorPaneRef = useRef<HTMLDivElement>(null),
+    inspectionPaneRef = useRef<HTMLDivElement>(null),
+    inspectionBackButtonRef = useRef<HTMLButtonElement>(null);
 
   activeEditorRef.current = activeEditor;
+  activeInspectionRef.current = activeInspection;
   validRefreshKeyRef.current = validRefreshKey;
 
   useLayoutEffect(() => {
@@ -338,10 +523,14 @@ function SelectedWorkspace({
       recoveryEpochRef.current++;
       recoveryInFlightEpochRef.current = null;
       activeEditorRef.current = null;
+      activeInspectionRef.current = null;
+      pendingInspectionFocusRef.current = null;
       desiredCardTitleRef.current = null;
+      desiredConflictNoteIdRef.current = null;
       provisionalButtonRef.current = null;
       setAborted(true);
       setActiveEditor(null);
+      setActiveInspection(null);
       setWorkspaceIssue(null);
       setRecoveryPendingEpoch(null);
       setRecoveryError(null);
@@ -365,9 +554,13 @@ function SelectedWorkspace({
       recoveryEpochRef.current++;
       recoveryInFlightEpochRef.current = null;
       activeEditorRef.current = null;
+      activeInspectionRef.current = null;
+      pendingInspectionFocusRef.current = null;
       desiredCardTitleRef.current = null;
+      desiredConflictNoteIdRef.current = null;
       provisionalButtonRef.current = null;
       setActiveEditor(null);
+      setActiveInspection(null);
       setWorkspaceIssue(null);
       setRecoveryPendingEpoch(null);
       setRecoveryError(null);
@@ -396,24 +589,50 @@ function SelectedWorkspace({
 
   const focusOpenEditor = () => {
     desiredCardTitleRef.current = null;
+    desiredConflictNoteIdRef.current = null;
     editorPaneRef.current
       ?.querySelector<HTMLElement>('[role="textbox"]')
       ?.focus();
   };
 
+  const focusInspectionBack = () => {
+    desiredCardTitleRef.current = null;
+    desiredConflictNoteIdRef.current = null;
+    provisionalButtonRef.current = null;
+    inspectionBackButtonRef.current?.focus();
+  };
+
+  useLayoutEffect(() => {
+    if (
+      visibleInspection &&
+      pendingInspectionFocusRef.current === visibleInspection
+    ) {
+      pendingInspectionFocusRef.current = null;
+      focusInspectionBack();
+    }
+  }, [visibleInspection]);
+
   useEffect(() => {
     if (
       isNarrow &&
-      visibleEditor &&
       typeof document !== "undefined" &&
       libraryPaneRef.current?.contains(document.activeElement)
     ) {
-      focusOpenEditor();
+      if (visibleEditor) {
+        focusOpenEditor();
+      } else if (visibleInspection) {
+        focusInspectionBack();
+      }
     }
-  }, [isNarrow, visibleEditor]);
+  }, [isNarrow, visibleEditor, visibleInspection]);
 
   useEffect(() => {
-    if (!usable || visibleEditor || typeof document === "undefined") {
+    if (
+      !usable ||
+      visibleEditor ||
+      visibleInspection ||
+      typeof document === "undefined"
+    ) {
       return;
     }
     const libraryEl = libraryPaneRef.current;
@@ -421,13 +640,24 @@ function SelectedWorkspace({
       if (returnFocus) setReturnFocus(null);
       return;
     }
-    const findNewButton = () =>
-      Array.from(libraryEl.querySelectorAll<HTMLButtonElement>("button")).find(
-        (btn) => btn.textContent?.trim() === "New note" && !btn.disabled,
-      ) ?? null;
+    const findFallbackButton = () => {
+      const buttons = Array.from(
+        libraryEl.querySelectorAll<HTMLButtonElement>("button"),
+      );
+      return (
+        buttons.find(
+          (btn) => btn.textContent?.trim() === "New note" && !btn.disabled,
+        ) ??
+        buttons.find(
+          (btn) =>
+            btn.textContent?.trim() === "Refresh cached notes" && !btn.disabled,
+        ) ??
+        null
+      );
+    };
 
-    const focusNewButton = (provisional: boolean) => {
-      const btn = findNewButton();
+    const focusFallbackButton = (provisional: boolean) => {
+      const btn = findFallbackButton();
       if (!btn) return null;
       if (provisional) {
         provisionalFocusRef.current = true;
@@ -446,13 +676,80 @@ function SelectedWorkspace({
 
     if (returnFocus?.kind === "new") {
       desiredCardTitleRef.current = null;
-      focusNewButton(false);
+      desiredConflictNoteIdRef.current = null;
+      focusFallbackButton(false);
       setReturnFocus(null);
       return;
     }
 
-    if (returnFocus?.kind === "card") {
+    if (returnFocus?.kind === "conflict") {
+      desiredCardTitleRef.current = null;
+      desiredConflictNoteIdRef.current = returnFocus.noteId;
+    } else if (returnFocus?.kind === "card") {
+      desiredConflictNoteIdRef.current = null;
       desiredCardTitleRef.current = returnFocus.title;
+    }
+
+    const targetConflictNoteId = desiredConflictNoteIdRef.current;
+    if (targetConflictNoteId) {
+      const tryFocusConflict = () => {
+        const noteId = desiredConflictNoteIdRef.current;
+        if (!noteId) return true;
+        const section = libraryEl.querySelector<HTMLElement>(
+          ".cloud-cached-library",
+        );
+        if (!section || section.getAttribute("aria-busy") === "true") {
+          return false;
+        }
+        const active = document.activeElement;
+        const focusDropped =
+          !active ||
+          active === document.body ||
+          (provisionalButtonRef.current !== null &&
+            active === provisionalButtonRef.current);
+        desiredConflictNoteIdRef.current = null;
+        if (focusDropped) {
+          const matchingButtons = Array.from(
+            section.querySelectorAll<HTMLButtonElement>(
+              ".note-grid button.card-inspect-conflict",
+            ),
+          ).filter(
+            (btn) =>
+              btn.getAttribute("data-conflict-note-id") === noteId &&
+              !btn.disabled,
+          );
+          if (matchingButtons.length === 1) {
+            provisionalButtonRef.current = null;
+            matchingButtons[0].focus();
+          } else {
+            focusFallbackButton(false);
+          }
+        }
+        return true;
+      };
+
+      if (tryFocusConflict()) {
+        if (returnFocus) setReturnFocus(null);
+        return;
+      }
+
+      if (!document.activeElement || document.activeElement === document.body) {
+        focusFallbackButton(true);
+      }
+
+      const observer = new MutationObserver(() => {
+        if (tryFocusConflict()) {
+          observer.disconnect();
+          if (mounted.current && returnFocus) setReturnFocus(null);
+        }
+      });
+      observer.observe(libraryEl, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["aria-busy"],
+      });
+      return () => observer.disconnect();
     }
 
     const targetTitle = desiredCardTitleRef.current;
@@ -461,7 +758,7 @@ function SelectedWorkspace({
     }
 
     if (!document.activeElement || document.activeElement === document.body) {
-      focusNewButton(true);
+      focusFallbackButton(true);
     }
 
     const tryFocusCard = () => {
@@ -491,7 +788,7 @@ function SelectedWorkspace({
           matchingCards[0].focus();
         } else {
           desiredCardTitleRef.current = null;
-          focusNewButton(false);
+          focusFallbackButton(false);
         }
       }
       return true;
@@ -515,7 +812,13 @@ function SelectedWorkspace({
       attributeFilter: ["aria-busy"],
     });
     return () => observer.disconnect();
-  }, [usable, visibleEditor, returnFocus, effectiveRefreshKey]);
+  }, [
+    usable,
+    visibleEditor,
+    visibleInspection,
+    returnFocus,
+    effectiveRefreshKey,
+  ]);
 
   const matchesWorkspaceContext = (candidate: CloudLibraryContext) => {
     if (!candidate || candidate.store !== store) return false;
@@ -547,16 +850,19 @@ function SelectedWorkspace({
       ) {
         return;
       }
-      void entry.upload.upload();
-      if (!entry.notifiedParent && onPutAway) {
-        await onPutAway(
-          Object.freeze({
-            context: entry.context,
-            upload: entry.upload,
-            session: entry.upload.session,
-          }),
-        );
-        entry.notifiedParent = true;
+      try {
+        if (!entry.notifiedParent && onPutAway) {
+          await onPutAway(
+            Object.freeze({
+              context: entry.context,
+              upload: entry.upload,
+              session: entry.upload.session,
+            }),
+          );
+          entry.notifiedParent = true;
+        }
+      } finally {
+        void entry.upload.upload();
       }
       if (
         !mounted.current ||
@@ -643,6 +949,10 @@ function SelectedWorkspace({
       if (!(await closeActiveBeforeSwitch())) return;
     }
     const requestId = ++latestRequest.current;
+    activeInspectionRef.current = null;
+    pendingInspectionFocusRef.current = null;
+    desiredConflictNoteIdRef.current = null;
+    setActiveInspection(null);
     setWorkspaceIssue(null);
     setReturnFocus(null);
     try {
@@ -665,7 +975,11 @@ function SelectedWorkspace({
         closedComplete: false,
       };
       activeEditorRef.current = next;
+      activeInspectionRef.current = null;
+      pendingInspectionFocusRef.current = null;
       desiredCardTitleRef.current = null;
+      desiredConflictNoteIdRef.current = null;
+      setActiveInspection(null);
       setActiveEditor(next);
     } catch {
       if (
@@ -694,6 +1008,10 @@ function SelectedWorkspace({
       return;
     }
     const requestId = ++latestRequest.current;
+    activeInspectionRef.current = null;
+    pendingInspectionFocusRef.current = null;
+    desiredConflictNoteIdRef.current = null;
+    setActiveInspection(null);
     setWorkspaceIssue(null);
     setReturnFocus(null);
     try {
@@ -716,7 +1034,11 @@ function SelectedWorkspace({
         closedComplete: false,
       };
       activeEditorRef.current = next;
+      activeInspectionRef.current = null;
+      pendingInspectionFocusRef.current = null;
       desiredCardTitleRef.current = null;
+      desiredConflictNoteIdRef.current = null;
+      setActiveInspection(null);
       setActiveEditor(next);
     } catch {
       if (
@@ -729,6 +1051,60 @@ function SelectedWorkspace({
         );
       }
     }
+  };
+
+  const handleInspectConflict = async (
+    selection: CloudLibraryNoteSelection,
+  ) => {
+    if (
+      !mounted.current ||
+      signal.aborted ||
+      !validRefreshKeyRef.current ||
+      transitioning.current ||
+      !matchesWorkspaceContext(selection) ||
+      !isValidNoteId(selection.noteId)
+    ) {
+      return;
+    }
+    if (activeEditorRef.current && !(await closeActiveBeforeSwitch())) {
+      return;
+    }
+    if (!mounted.current || signal.aborted || !validRefreshKeyRef.current) {
+      return;
+    }
+    latestRequest.current++;
+    desiredCardTitleRef.current = null;
+    desiredConflictNoteIdRef.current = null;
+    provisionalButtonRef.current = null;
+    setWorkspaceIssue(null);
+    setReturnFocus(null);
+    const existing = activeInspectionRef.current;
+    if (existing && existing.noteId === selection.noteId) {
+      focusInspectionBack();
+      return;
+    }
+    const nextInspection: ActiveInspection = Object.freeze({
+      noteId: selection.noteId,
+    });
+    activeInspectionRef.current = nextInspection;
+    pendingInspectionFocusRef.current = nextInspection;
+    setActiveInspection(nextInspection);
+  };
+
+  const handleCloseInspection = () => {
+    if (!mounted.current || signal.aborted || !validRefreshKeyRef.current) {
+      return;
+    }
+    const current = activeInspectionRef.current;
+    if (!current) return;
+    latestRequest.current++;
+    activeInspectionRef.current = null;
+    pendingInspectionFocusRef.current = null;
+    desiredCardTitleRef.current = null;
+    desiredConflictNoteIdRef.current = current.noteId;
+    setWorkspaceIssue(null);
+    setReturnFocus({ kind: "conflict", noteId: current.noteId });
+    setActiveInspection(null);
   };
 
   const handleEditorPutAway = async (
@@ -750,6 +1126,7 @@ function SelectedWorkspace({
   const handleLibraryFocusCapture = (event: FocusEvent<HTMLDivElement>) => {
     if (provisionalFocusRef.current) return;
     provisionalButtonRef.current = null;
+    desiredConflictNoteIdRef.current = null;
     const target = event.target;
     if (
       target instanceof HTMLButtonElement &&
@@ -843,7 +1220,8 @@ function SelectedWorkspace({
     }
   };
 
-  const libraryInert = isNarrow && visibleEditor !== null;
+  const libraryInert =
+    isNarrow && (visibleEditor !== null || visibleInspection !== null);
   const activeRecoveryPending =
     usable && recoveryPendingEpoch === currentRecoveryEpoch;
   const activeRecoveryError =
@@ -855,6 +1233,7 @@ function SelectedWorkspace({
     <div
       className="cloud-workspace"
       data-editor-open={visibleEditor ? "true" : "false"}
+      data-inspection-open={visibleInspection ? "true" : "false"}
     >
       <div
         ref={libraryPaneRef}
@@ -921,6 +1300,7 @@ function SelectedWorkspace({
           refreshKey={effectiveRefreshKey}
           onOpen={handleOpen}
           onCreate={handleCreate}
+          onInspectConflict={handleInspectConflict}
         />
       </div>
       {visibleEditor && (
@@ -929,12 +1309,41 @@ function SelectedWorkspace({
           className="cloud-workspace-editor"
           onFocusCapture={() => {
             desiredCardTitleRef.current = null;
+            desiredConflictNoteIdRef.current = null;
             provisionalButtonRef.current = null;
           }}
         >
           <CloudUploadingNoteEditor
             upload={visibleEditor.upload}
             onPutAway={(session) => handleEditorPutAway(visibleEditor, session)}
+          />
+        </div>
+      )}
+      {visibleInspection && (
+        <div
+          ref={inspectionPaneRef}
+          className="cloud-workspace-inspection"
+          onFocusCapture={() => {
+            desiredCardTitleRef.current = null;
+            desiredConflictNoteIdRef.current = null;
+            provisionalButtonRef.current = null;
+          }}
+        >
+          <div className="cloud-workspace-inspection-bar">
+            <button
+              ref={inspectionBackButtonRef}
+              type="button"
+              className="cloud-workspace-inspection-back"
+              onClick={handleCloseInspection}
+            >
+              Back to notes
+            </button>
+          </div>
+          <CloudConflictPreview
+            context={workspaceContext}
+            noteId={visibleInspection.noteId}
+            signal={signal}
+            refreshKey={effectiveRefreshKey}
           />
         </div>
       )}
