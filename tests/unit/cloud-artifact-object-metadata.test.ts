@@ -66,15 +66,18 @@ function page(
 const PRIVATE =
   /private|ETag|owner-id|foreign-object|Message|synthetic-secret|StorageClass/;
 // Fake only timers the collector uses, so the SDK's real async file reads of the
-// isolated HOME can finish; then wait until a stall is actually reached.
+// isolated HOME can finish; then wait on a barrier for the stall itself.
 const fakeTimers = () =>
   vi.useFakeTimers({
     toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval"],
   });
-async function reach(condition: () => boolean) {
-  for (let turn = 0; turn < 1000 && !condition(); turn++)
-    await new Promise<void>((resolve) => setImmediate(resolve));
-  expect(condition()).toBe(true);
+/** Resolves when a stall is actually entered, however long real file reads take. */
+function barrier() {
+  let reached!: () => void;
+  const arrived = new Promise<void>((resolve) => {
+    reached = resolve;
+  });
+  return { reached, arrived };
 }
 function frozen(value: unknown) {
   if (value && typeof value === "object") {
@@ -99,13 +102,16 @@ beforeEach(() => {
   vi.spyOn(globalThis, "fetch").mockImplementation(sockets as never);
 });
 afterEach(() => {
-  expect(sockets).not.toHaveBeenCalled();
-  // The SDK found nothing to read or write in the isolated empty HOME.
-  expect(readdirSync(home)).toEqual([]);
-  vi.restoreAllMocks();
-  vi.useRealTimers();
-  vi.unstubAllEnvs();
-  rmSync(home, { recursive: true, force: true });
+  try {
+    expect(sockets).not.toHaveBeenCalled();
+    // The SDK found nothing to read or write in the isolated empty HOME.
+    expect(readdirSync(home)).toEqual([]);
+  } finally {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    vi.unstubAllEnvs();
+    rmSync(home, { recursive: true, force: true });
+  }
 });
 
 it("sends exactly one original owner-bound ListObjectVersions page while current factories are unavailable", async () => {
@@ -293,6 +299,72 @@ it("never reports an incomplete, grouped or contradictory page as empty", async 
   }
 });
 
+it("rejects an HTTP 200 body that is not exactly one documented ListVersionsResult document", async () => {
+  const fields = `<Name>${name}</Name><MaxKeys>2</MaxKeys><IsTruncated>false</IsTruncated>`,
+    ns = 'xmlns="http://s3.amazonaws.com/doc/2006-03-01/"';
+  for (const body of [
+    // Root's countercase: SDK-readable fields under an unrelated root.
+    `<UnrelatedResult>${fields}</UnrelatedResult>`,
+    `<ListBucketResult ${ns}>${fields}</ListBucketResult>`,
+    `<ListVersionsResult xmlns="https://private.example/">${fields}</ListVersionsResult>`,
+    `<ListVersionsResult ${ns} private="x">${fields}</ListVersionsResult>`,
+    `<!DOCTYPE ListVersionsResult><ListVersionsResult>${fields}</ListVersionsResult>`,
+    `<Other><ListVersionsResult>${fields}</ListVersionsResult></Other>`,
+    `<ListVersionsResult>${fields}</ListVersionsResult><Other/>`,
+    `<ListVersionsResult>${fields}`,
+    `<ListVersionsResult>${fields}</ListVersionsResult><ListVersionsResult>${fields}</ListVersionsResult>`,
+    `<ListVersionsResult><ListVersionsResult>${fields}</ListVersionsResult></ListVersionsResult>`,
+    `<ListVersionsResult><!-- </ListVersionsResult> -->${fields}</ListVersionsResult>`,
+    `<ListVersionsResult><!DOCTYPE Other>${fields}</ListVersionsResult>`,
+  ]) {
+    const f = fixture();
+    f.transport.handle.mockResolvedValue(response(200, xml(body)));
+    const result = await collectRetainedCloudArtifactObject(retained(), f);
+    expect(result).toEqual(failure("metadata-unavailable"));
+    expect(f.transport.handle).toHaveBeenCalledTimes(1);
+    expect(f.transport.destroy).toHaveBeenCalledTimes(1);
+  }
+  const invalid = fixture();
+  invalid.transport.handle.mockResolvedValue(
+    response(200, new Uint8Array([0x3c, 0xff, 0xfe, 0x3e])),
+  );
+  expect(await collectRetainedCloudArtifactObject(retained(), invalid)).toEqual(
+    failure("metadata-unavailable"),
+  );
+});
+
+it("keeps documented namespaces, quotes, declaration, BOM and whitespace readable", async () => {
+  const documented = new TextDecoder().decode(
+    page([{}]).response.body as Uint8Array,
+  );
+  for (const body of [
+    documented,
+    documented.replace('/2006-03-01/"', '/2006-03-01"'),
+    documented.replace(
+      'xmlns="http://s3.amazonaws.com/doc/2006-03-01/"',
+      "xmlns='http://s3.amazonaws.com/doc/2006-03-01/'",
+    ),
+    documented.replace(' xmlns="http://s3.amazonaws.com/doc/2006-03-01/"', ""),
+    "\uFEFF" + documented,
+    '\uFEFF<?xml version="1.0" encoding="UTF-8"?>\n' +
+      documented.replace("><", ">\n  <") +
+      "\n",
+  ]) {
+    const f = fixture();
+    f.transport.handle.mockResolvedValue(response(200, xml(body)));
+    expect(
+      await collectRetainedCloudArtifactObject(retained(), f),
+      body.slice(0, 100),
+    ).toMatchObject({
+      kind: "observed",
+      shape: "expected-null-version-object",
+      page: { complete: true },
+    });
+    expect(f.transport.handle).toHaveBeenCalledTimes(1);
+    expect(f.transport.destroy).toHaveBeenCalledTimes(1);
+  }
+});
+
 it("keeps not-found, denied, redirect, malformed and oversized responses unknown and private", async () => {
   for (const wire of [
     errorResponse("NoSuchBucket"),
@@ -446,8 +518,10 @@ it.each(["first-identity", "last-identity", "transport"] as const)(
     let release!: () => void,
       internal!: AbortSignal,
       identities = 0;
+    const { reached, arrived } = barrier();
     const stall = async (signal: AbortSignal) => {
       internal = signal;
+      reached();
       await new Promise<void>((resolve) => {
         release = resolve;
       });
@@ -471,7 +545,8 @@ it.each(["first-identity", "last-identity", "transport"] as const)(
       retained(),
       dependencies,
     );
-    await reach(() => typeof release === "function");
+    await arrived;
+    expect(release).toBeTypeOf("function");
     dependencies.signal = new AbortController().signal;
     controller.abort("private reason");
     expect(await pending).toEqual(failure("aborted"));
@@ -498,9 +573,15 @@ it("bounds stalled transport, credentials and streams at fifteen seconds and clo
   fakeTimers();
   for (const stage of ["transport", "credentials", "stream"] as const) {
     const f = fixture(),
-      stream = new Readable({ read() {} });
+      { reached, arrived } = barrier(),
+      stream = new Readable({
+        read() {
+          reached();
+        },
+      });
     let release: (() => void) | undefined;
     const stall = async () => {
+      reached();
       await new Promise<void>((resolve) => {
         release = resolve;
       });
@@ -525,11 +606,7 @@ it("bounds stalled transport, credentials and streams at fifteen seconds and clo
       retained(),
       dependencies,
     );
-    await reach(() =>
-      stage === "stream"
-        ? f.transport.handle.mock.calls.length === 1
-        : release !== undefined,
-    );
+    await arrived;
     await vi.advanceTimersByTimeAsync(15000);
     expect(await pending).toEqual(failure("deadline"));
     expect(f.transport.handle).toHaveBeenCalledTimes(

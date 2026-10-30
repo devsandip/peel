@@ -181,6 +181,28 @@ async function boundedBody(
     stream.destroy?.();
   }
 }
+/**
+ * Bounded root-element check on an already size-limited body, not an XML
+ * parser: an optional XML declaration, one ListVersionsResult root in
+ * the documented S3 namespace (or with no attributes), and nothing after its
+ * closing tag. The SDK still deserializes the full document.
+ */
+const ENVELOPE =
+  /^(?:<\?xml\s[^<>?]{0,200}\?>)?\s*<ListVersionsResult(?:\s+xmlns\s*=\s*(["'])http:\/\/s3\.amazonaws\.com\/doc\/2006-03-01\/?\1)?\s*>([\s\S]*)<\/ListVersionsResult>\s*$/;
+function listVersionsEnvelope(body: Uint8Array) {
+  let text: string;
+  try {
+    // The decoder removes a leading BOM while rejecting invalid UTF-8.
+    text = new TextDecoder("utf-8", { fatal: true }).decode(body);
+  } catch {
+    return false;
+  }
+  const match = ENVELOPE.exec(text);
+  if (!match) return false;
+  // Do not let the greedy interior absorb a second/nested root, declarations
+  // or comments that could disguise a closing root. This is not schema proof.
+  return !/<\/?ListVersionsResult(?=[\s>])|<!|<\?/.test(match[2]);
+}
 const echo = (value: unknown) => value === undefined || value === "";
 const entryText = (value: unknown) =>
   typeof value === "string" && value.length > 0 && value.length <= 1024;
@@ -331,6 +353,7 @@ async function collect(captureScope: () => Scope, dependencies: Dependencies) {
             socketTimeout: 10000,
           });
       let requests = 0,
+        envelope = false,
         observed: ReturnType<typeof classify>,
         client: S3Client | undefined,
         closed = false,
@@ -378,12 +401,20 @@ async function collect(captureScope: () => Scope, dependencies: Dependencies) {
               Buffer.byteLength(JSON.stringify(result.response.headers)) > 16384
             )
               return fail("metadata-unavailable");
-            return {
-              response: {
-                ...result.response,
-                body: await boundedBody(result.response.body, operation.signal),
-              },
-            };
+            let body = await boundedBody(
+              result.response.body,
+              operation.signal,
+            );
+            // Only a documented ListVersionsResult document may become a page.
+            if (result.response.statusCode === 200) {
+              if (!listVersionsEnvelope(body))
+                return fail("metadata-unavailable");
+              // The pinned SDK parser does not consume a UTF-8 BOM itself.
+              if (body[0] === 0xef && body[1] === 0xbb && body[2] === 0xbf)
+                body = body.subarray(3);
+              envelope = true;
+            }
+            return { response: { ...result.response, body } };
           },
           destroy() {
             transport.destroy();
@@ -436,6 +467,7 @@ async function collect(captureScope: () => Scope, dependencies: Dependencies) {
             cancelledOperation,
           ]);
           operation.signal.throwIfAborted();
+          if (!envelope) return fail("metadata-unavailable");
           observed = classify(captured, page);
         } catch (error) {
           if (error instanceof ObjectFailure) throw error;
