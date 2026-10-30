@@ -98,6 +98,14 @@ Planned before editing:
 - Replace the inspection fixme with the keyboard and focus scenario and its screenshots.
 - Wait for the preview to finish loading (`aria-busy="false"` and a visible copy control) before keyboard navigation, without raising timeouts or retries or focusing the expected target programmatically.
 
+Cleanup rework for the [Codex PR 210 review](https://github.com/devsandip/peel/pull/210) at `5411558`, planned before editing:
+
+- Register every browser context the moment it is created, before navigation or readiness, so a failed setup cannot leave an untracked context.
+- In afterEach, run the browser-store checks and fixture teardown first, then always attempt to close every registered context and the owned server, each separately. The first original error is rethrown. Cleanup errors surface only when nothing failed earlier, and none is swallowed.
+- Success-path invariants stay, after the closes: owned databases only, no storage-mode key, no caller-store closure, no remaining databases, the listener refusing connections, the temporary folder removed, and no note text or credential in diagnostics.
+- Deletion stays limited to the fixture's own temporary folder and its explicitly prefixed databases. The server fixture already cleans up its own partial startup failure.
+- Ignored probes inject a setup failure after context creation and a teardown failure, and a separate receipt confirms no context remains, the listener refuses connections and the folder is gone. The same probe runs against the previous implementation for comparison.
+
 Decisions:
 
 - A note purged in Cloud is asserted as the untitled recovery card under Needs attention, which is existing library behavior. A note trashed in Cloud while the device copy is active is listed the same way.
