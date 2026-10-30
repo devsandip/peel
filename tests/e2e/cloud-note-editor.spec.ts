@@ -228,20 +228,22 @@ test("confirmed status never marks later typing Saved and literal source stays s
   await page.evaluate(() => window.cloudEditorFixture.acknowledge());
   await expect(page.getByRole("status")).toHaveText("Saved in Cloud");
   const body = "<script>window.pwned=true</script>\nNew pending text";
+  const retainedBody = () =>
+    page.evaluate(
+      async () =>
+        (await window.cloudEditorFixture.read(0))?.pending?.snapshot
+          ?.bodyMarkdown,
+    );
+  await page.evaluate(() => window.cloudEditorFixture.hold());
   await editor.fill(body);
+  await page.waitForFunction(() => window.cloudEditorFixture.held() > 0);
   await expect(page.getByRole("status")).toHaveText("Pending upload");
   expect(
     await page.evaluate(() => Reflect.get(window, "pwned")),
   ).toBeUndefined();
-  await expect
-    .poll(() =>
-      page.evaluate(
-        async () =>
-          (await window.cloudEditorFixture.read(0))!.pending!.snapshot!
-            .bodyMarkdown,
-      ),
-    )
-    .toBe(body);
+  expect(await retainedBody()).toBeUndefined();
+  await page.evaluate(() => window.cloudEditorFixture.release());
+  await expect.poll(retainedBody).toBe(body);
 });
 
 test("owner dismissal failure exposes generic recovery and retries after retention", async ({
