@@ -125,6 +125,18 @@ export class CloudNoteUpload {
     this.reopening = task;
     return task;
   }
+  /** A resolution may retire only a closed, durable owner without active work. */
+  resolutionReady() {
+    const current = this.session.snapshot();
+    return (
+      !this.signal.aborted &&
+      !this.task &&
+      !this.reopening &&
+      current.closed &&
+      current.retained &&
+      !current.error
+    );
+  }
   snapshot() {
     return this.view;
   }
