@@ -6,7 +6,10 @@ import {
   collectCloudAuditObservation,
   type CloudAuditCommand,
 } from "../../infra/cloud/audit-observations.ts";
-import { parseCloudAuditRegions } from "../../infra/cloud/audit-regions.ts";
+import {
+  cloudAuditCommercialRegions,
+  parseCloudAuditRegions,
+} from "../../infra/cloud/audit-regions.ts";
 import { collectCloudIdentityObservation } from "../../infra/cloud/identity-observations.ts";
 
 const now = Date.parse("2026-10-28T00:00:00.000Z"),
@@ -73,6 +76,12 @@ function fixture(expiry = now + 3 * 60 * 60000) {
   );
   return { regions, identity, values, read, clock: () => now };
 }
+function commandCount(
+  read: ReturnType<typeof fixture>["read"],
+  kind: CloudAuditCommand["kind"],
+) {
+  return read.mock.calls.filter(([c]) => c.kind === kind).length;
+}
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
@@ -127,6 +136,20 @@ describe("Cloud hook/audit observations", () => {
     expect(JSON.stringify(result)).not.toContain("configuredRoleName");
     expect(result.resourceWrites).toBe(0);
     expect(result.safety).not.toHaveProperty("targetNames");
+    expect(Object.keys(result).sort()).toEqual([
+      "checkedAt",
+      "coverage",
+      "credentials",
+      "expectedIdentity",
+      "identity",
+      "kind",
+      "registry",
+      "resourceWrites",
+      "safety",
+      "summary",
+    ]);
+    expect(cloudAuditCommercialRegions).toEqual(registry().regions);
+    expect(Object.isFrozen(cloudAuditCommercialRegions)).toBe(true);
   });
   it("accepts only proven standalone or management coverage, never a member's empty local lists", async () => {
     const f = fixture();
@@ -229,9 +252,13 @@ describe("Cloud hook/audit observations", () => {
           failKind === "caller-identity"
             ? "identity-recheck-unavailable"
             : `${failKind}-unavailable`,
+        stage: failKind,
+        region: failKind === "lake" ? "af-south-1" : "us-east-1",
         identityVerified: true,
         resourceWrites: 0,
       });
+      expect(Object.isFrozen(result)).toBe(true);
+      expect(JSON.stringify(result)).not.toContain("AccessDenied");
       expect(observedSignal?.aborted).toBe(true);
       const lakeReads = f.read.mock.calls.filter(
         ([c]) => c.kind === "lake",
@@ -253,6 +280,8 @@ describe("Cloud hook/audit observations", () => {
     expect(unavailable).toEqual({
       kind: "unavailable",
       code: "registry-not-ready",
+      stage: "registry",
+      region: null,
       identityVerified: false,
       resourceWrites: 0,
     });
@@ -262,6 +291,8 @@ describe("Cloud hook/audit observations", () => {
     expect(await collectCloudAuditObservation(input(), g)).toEqual({
       kind: "unavailable",
       code: "identity-not-ready",
+      stage: "identity",
+      region: "us-east-1",
       identityVerified: false,
       resourceWrites: 0,
     });
@@ -284,6 +315,8 @@ describe("Cloud hook/audit observations", () => {
       expect(await collectCloudAuditObservation(input(), f)).toEqual({
         kind: "unavailable",
         code: "malformed-response",
+        stage: "hooks",
+        region: "us-east-1",
         identityVerified: true,
         resourceWrites: 0,
       });
@@ -298,6 +331,8 @@ describe("Cloud hook/audit observations", () => {
       expect(await collectCloudAuditObservation(input(), f)).toEqual({
         kind: "unavailable",
         code: "identity-mismatch",
+        stage: "caller-identity",
+        region: "us-east-1",
         identityVerified: true,
         resourceWrites: 0,
       });
@@ -398,6 +433,8 @@ describe("Cloud hook/audit observations", () => {
       expect(await collectCloudAuditObservation(bad, f)).toMatchObject({
         kind: "unavailable",
         code: "invalid-input",
+        stage: null,
+        region: null,
       });
     expect(accessed).toBe(false);
     vi.stubEnv("AWS_ENDPOINT_URL", "https://fixture.invalid");
@@ -408,7 +445,12 @@ describe("Cloud hook/audit observations", () => {
         identity: g.identity,
         clock: g.clock,
       }),
-    ).toMatchObject({ kind: "unavailable", code: "unsupported-environment" });
+    ).toMatchObject({
+      kind: "unavailable",
+      code: "unsupported-environment",
+      stage: null,
+      region: null,
+    });
   });
   it("aborts the shared deadline and rejects reversed/overrun clocks", async () => {
     vi.useFakeTimers();
@@ -423,6 +465,8 @@ describe("Cloud hook/audit observations", () => {
     expect(await pending).toMatchObject({
       kind: "unavailable",
       code: "deadline",
+      stage: "lake",
+      region: null,
     });
     expect(signal?.aborted).toBe(true);
     vi.useRealTimers();
@@ -433,6 +477,8 @@ describe("Cloud hook/audit observations", () => {
       expect(await collectCloudAuditObservation(input(), g)).toMatchObject({
         kind: "unavailable",
         code: "clock-invalid",
+        stage: null,
+        region: null,
       });
     }
   });
@@ -471,5 +517,309 @@ describe("Cloud hook/audit observations", () => {
     expect(() =>
       cloudAuditCommandArgs("--other", { kind: "hooks" }, regions),
     ).toThrow("Cloud audit observation unavailable");
+  });
+  it("attributes first-batch and later-batch concurrent Lake failures without out-of-order overwrites", async () => {
+    type Deferred = {
+      resolve: (value: string) => void;
+      reject: (reason: unknown) => void;
+    };
+    const first = fixture(),
+      firstPending = new Map<string, Deferred>();
+    let markFirstReady = () => {};
+    const firstReady = new Promise<void>((resolve) => {
+      markFirstReady = resolve;
+    });
+    first.read.mockImplementation((c) => {
+      if (c.kind !== "lake") return Promise.resolve(first.values[c.kind]);
+      return new Promise<string>((resolve, reject) => {
+        firstPending.set(c.region, { resolve, reject });
+        if (firstPending.size === 4) markFirstReady();
+      });
+    });
+    const firstRun = collectCloudAuditObservation(input(), first);
+    await firstReady;
+    const p0 = firstPending.get("af-south-1")!,
+      p1 = firstPending.get("ap-east-1")!,
+      p2 = firstPending.get("ap-northeast-1")!,
+      p3 = firstPending.get("ap-northeast-2")!;
+    p3.resolve(first.values.lake);
+    p0.resolve(first.values.lake);
+    await Promise.resolve();
+    p1.reject(new Error("private OptInRequired " + arn));
+    p2.reject(new Error("later concurrent failure " + account));
+    const firstOutcome = await firstRun;
+    expect(firstOutcome).toEqual({
+      kind: "unavailable",
+      code: "lake-unavailable",
+      stage: "lake",
+      region: "ap-east-1",
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    expect(Object.isFrozen(firstOutcome)).toBe(true);
+    expect(commandCount(first.read, "lake")).toBe(4);
+    const later = fixture(),
+      laterRegions = registry().regions.slice(16, 20),
+      laterBatch = new Set(laterRegions),
+      laterTarget = laterRegions[2],
+      laterPending = new Map<string, Deferred>();
+    let markLaterReady = () => {};
+    const laterReady = new Promise<void>((resolve) => {
+      markLaterReady = resolve;
+    });
+    later.read.mockImplementation((c) => {
+      if (c.kind !== "lake" || !laterBatch.has(c.region)) {
+        return Promise.resolve(later.values[c.kind]);
+      }
+      return new Promise<string>((resolve, reject) => {
+        laterPending.set(c.region, { resolve, reject });
+        if (laterPending.size === 4) markLaterReady();
+      });
+    });
+    const laterRun = collectCloudAuditObservation(input(), later);
+    await laterReady;
+    const l0 = laterPending.get(laterRegions[0])!,
+      l1 = laterPending.get(laterRegions[1])!,
+      l2 = laterPending.get(laterRegions[2])!,
+      l3 = laterPending.get(laterRegions[3])!;
+    l3.resolve(later.values.lake);
+    l0.resolve(later.values.lake);
+    await Promise.resolve();
+    l2.reject(new Error("private AccessDeniedException " + role));
+    l1.reject(new Error("trailing batch failure"));
+    const laterOutcome = await laterRun;
+    expect(laterOutcome).toEqual({
+      kind: "unavailable",
+      code: "lake-unavailable",
+      stage: "lake",
+      region: laterTarget,
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    expect(commandCount(later.read, "lake")).toBe(20);
+    expect(commandCount(later.read, "caller-identity")).toBe(0);
+    const serialized = JSON.stringify([firstOutcome, laterOutcome]);
+    for (const secret of [
+      account,
+      role,
+      arn,
+      "OptInRequired",
+      "AccessDenied",
+    ]) {
+      expect(serialized).not.toContain(secret);
+    }
+  });
+  it("attaches stage and region context to malformed responses, count failures and thrown prerequisites", async () => {
+    for (const raw of ["{", JSON.stringify({ Extra: account })]) {
+      const f = fixture();
+      f.values.organization = raw;
+      expect(await collectCloudAuditObservation(input(), f)).toEqual({
+        kind: "unavailable",
+        code: "malformed-response",
+        stage: "organization",
+        region: "us-east-1",
+        identityVerified: true,
+        resourceWrites: 0,
+      });
+    }
+    const badTrails = fixture();
+    badTrails.values.trails = JSON.stringify({ Count: 0, NextToken: null });
+    expect(await collectCloudAuditObservation(input(), badTrails)).toEqual({
+      kind: "unavailable",
+      code: "malformed-response",
+      stage: "trails",
+      region: "us-east-1",
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    const badLake = fixture();
+    badLake.read.mockImplementation(async (c) => {
+      if (c.kind === "lake" && c.region === "il-central-1") {
+        await Promise.resolve();
+        return JSON.stringify({ Count: 2, NextToken: null });
+      }
+      return badLake.values[c.kind];
+    });
+    expect(await collectCloudAuditObservation(input(), badLake)).toEqual({
+      kind: "unavailable",
+      code: "malformed-response",
+      stage: "lake",
+      region: "il-central-1",
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    const badCaller = fixture();
+    badCaller.values["caller-identity"] = "[]";
+    expect(await collectCloudAuditObservation(input(), badCaller)).toEqual({
+      kind: "unavailable",
+      code: "malformed-response",
+      stage: "caller-identity",
+      region: "us-east-1",
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    const registryError = await collectCloudAuditObservation(input(), {
+      ...fixture(),
+      regions: async () => {
+        throw new Error("private docs network error");
+      },
+    });
+    expect(registryError).toEqual({
+      kind: "unavailable",
+      code: "read-unavailable",
+      stage: "registry",
+      region: null,
+      identityVerified: false,
+      resourceWrites: 0,
+    });
+    const identityError = await collectCloudAuditObservation(input(), {
+      ...fixture(),
+      identity: async () => {
+        throw new Error("private SSO cache error " + arn);
+      },
+    });
+    expect(identityError).toEqual({
+      kind: "unavailable",
+      code: "read-unavailable",
+      stage: "identity",
+      region: "us-east-1",
+      identityVerified: false,
+      resourceWrites: 0,
+    });
+    const badClock = fixture();
+    badClock.clock = () => -1;
+    expect(await collectCloudAuditObservation(input(), badClock)).toEqual({
+      kind: "unavailable",
+      code: "clock-invalid",
+      stage: null,
+      region: null,
+      identityVerified: false,
+      resourceWrites: 0,
+    });
+  });
+  it("leaves region null on global deadlines and shared aborts across concurrent operations", async () => {
+    vi.useFakeTimers();
+    const f = fixture();
+    f.read.mockImplementation((c, s) => {
+      if (c.kind !== "lake") return Promise.resolve(f.values[c.kind]);
+      return new Promise<string>((_, reject) => {
+        s.addEventListener(
+          "abort",
+          () => reject(new Error("aborted " + c.region)),
+          { once: true },
+        );
+      });
+    });
+    const timedOutLake = collectCloudAuditObservation(input(), f);
+    await vi.advanceTimersByTimeAsync(90000);
+    expect(await timedOutLake).toEqual({
+      kind: "unavailable",
+      code: "deadline",
+      stage: "lake",
+      region: null,
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    const stalledRegistry = collectCloudAuditObservation(input(), {
+      ...fixture(),
+      regions: () => new Promise(() => {}),
+    });
+    await vi.advanceTimersByTimeAsync(90000);
+    expect(await stalledRegistry).toEqual({
+      kind: "unavailable",
+      code: "deadline",
+      stage: "registry",
+      region: null,
+      identityVerified: false,
+      resourceWrites: 0,
+    });
+    vi.useRealTimers();
+    const shared = new AbortController(),
+      aborted = fixture();
+    let started = 0,
+      markStarted = () => {};
+    const allStarted = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    aborted.read.mockImplementation((c) => {
+      if (c.kind !== "lake") return Promise.resolve(aborted.values[c.kind]);
+      return new Promise<string>((_, reject) => {
+        shared.signal.addEventListener(
+          "abort",
+          () => reject(new DOMException("Aborted " + c.region, "AbortError")),
+          { once: true },
+        );
+        started++;
+        if (started === 4) markStarted();
+      });
+    });
+    const abortedRun = collectCloudAuditObservation(input(), aborted);
+    await allStarted;
+    shared.abort();
+    expect(await abortedRun).toEqual({
+      kind: "unavailable",
+      code: "read-unavailable",
+      stage: "lake",
+      region: null,
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+  });
+  it("whitelists diagnostic regions against reviewed commercial names and redacts spoofed inputs", async () => {
+    for (const spoofed of [
+      "us-gov-east-1",
+      "cn-north-1",
+      "private-region-" + account,
+      arn,
+      "__proto__",
+    ]) {
+      for (const mode of ["throw", "malformed"] as const) {
+        const f = fixture(),
+          base = registry();
+        const customRegions = async () =>
+          Object.freeze({
+            kind: "observed" as const,
+            registry: Object.freeze({
+              ...base,
+              regions: Object.freeze(["af-south-1", spoofed]),
+            }),
+            resourceWrites: 0 as const,
+          });
+        f.read.mockImplementation(async (c) => {
+          if (c.kind === "lake" && c.region === spoofed) {
+            if (mode === "throw") {
+              throw new Error("private failure " + spoofed + " " + arn);
+            }
+            return "{}";
+          }
+          return f.values[c.kind];
+        });
+        const outcome = await collectCloudAuditObservation(input(), {
+          ...f,
+          regions: customRegions,
+        });
+        expect(outcome).toEqual({
+          kind: "unavailable",
+          code: mode === "throw" ? "lake-unavailable" : "malformed-response",
+          stage: "lake",
+          region: null,
+          identityVerified: true,
+          resourceWrites: 0,
+        });
+        expect(Object.isFrozen(outcome)).toBe(true);
+        expect(Object.keys(outcome).sort()).toEqual([
+          "code",
+          "identityVerified",
+          "kind",
+          "region",
+          "resourceWrites",
+          "stage",
+        ]);
+        const text = JSON.stringify(outcome);
+        expect(text).not.toContain(spoofed);
+        expect(text).not.toContain(account);
+        expect(text).not.toContain(arn);
+      }
+    }
   });
 });

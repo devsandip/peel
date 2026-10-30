@@ -32,6 +32,7 @@ const commercial = [
   "me-central-1",
   "sa-east-1",
 ].sort();
+export const cloudAuditCommercialRegions = Object.freeze([...commercial]);
 const govCloud = ["us-gov-east-1", "us-gov-west-1"],
   complete = [...commercial, ...govCloud].sort(),
   limit = 256 * 1024,
