@@ -46,10 +46,11 @@ A skipped or fixme scenario is unmet acceptance, not a pass. Final Ready require
 
 `tests/fixtures/cloud-conflict-roundtrip-server.mjs` starts one owned listener on a fresh `127.0.0.1` ephemeral port, with temporary service storage. It seeds isolated synthetic accounts and issues one session per named browser session. Switches apply per session:
 
-- `offline`: refuse before the service sees the request.
+- `offline`: drop the connection before the service sees the request. This is a synthetic network loss, because browser offline emulation would also break the Vite dev connection.
 - `hold`: commit in the service, then hold the response until released.
 - `lose`: commit in the service, then destroy the connection so the reply never arrives.
-- `unauthorized`: reject before the service sees the request.
+
+An expired session uses real boundary revocation, so the 401 comes from the real session check.
 
 Observations record session, path, status, operation ID, content hash and replay flag. They never record bodies, cookies or tokens.
 
@@ -90,4 +91,23 @@ Require issue 205:
 
 ## Progress
 
-Plan committed. No harness code yet. M2.2 stays open.
+**Checkpoint, not final Ready.** Infrastructure and scenarios are written. M2.2 stays open.
+
+Blocked on:
+
+1. PR 207 merging. It has [changes requested](https://github.com/devsandip/peel/pull/207#issuecomment-6524069769) at `2f725c5`.
+2. Issue 205 merging, for the real inspection control. Its scenario is `test.fixme`.
+3. A [Put away defect on main](https://github.com/devsandip/peel/issues/169#issuecomment-6524313455): with real owners and no upload in flight, Put away never completes, so a conflicted note with an open editor stays `busy` until reload. The spec records this as an expected failure.
+
+Decisions:
+
+- Scenarios leave an editor by reloading the page until that defect is fixed. Reload is a real durable recovery path, but it does not exercise Put away or browser owner retirement. Final Ready must move these callers to real Put away and remove the expected failure.
+- A note purged in Cloud is asserted as the untitled recovery card under Needs attention, which is existing library behavior.
+- Merging over a note trashed in Cloud has no scenario yet, because the expected behavior is an open question in the PR 207 review.
+
+Evidence so far, all local and all synthetic:
+
+- On this branch's base, 7 pass, including the expected failure. The other 10 are skipped or fixme, and that is unmet acceptance.
+- Against a throwaway local copy of frozen PR 207 at `2f725c5`, 16 of 17 pass with the real controller over 2 repeats (32 runs), including the expected failure, with no flakes. Only the inspection scenario stays fixme. This is not acceptance credit, because that commit may change and has not merged.
+- Deliberately breaking production code in that copy failed the expected scenario each time: new-note guard, abort check, 401 mapping and open-editor guard. Removing in-flight from the Pending projection failed all 9 controller scenarios.
+- Not done: visual review of final UI, a full local e2e sweep, and any real login, hosted, live or paid behavior.
