@@ -22,8 +22,8 @@ These are prerequisites only. Passing this harness does not close any of these a
 Real, imported and never reimplemented:
 
 - `CloudMutationService`, `SQLiteCloudServerStore`, `createCloudMutationHandler`, `CloudPullService` and the web-session boundary, behind a loopback HTTP listener.
-- `CloudBrowserWorkspaceSession`, its authenticated web senders, `CloudLibraryOwners`, `CloudLibraryDownload`, `CloudWorkspace`, the note editor, `CloudConflictPreview` and `IndexedDBCloudStateStore`.
-- `CloudConflictResolutionController` through `owners.conflicts()`, once PR 207 merges.
+- `CloudBrowserWorkspaceSession`, its authenticated web senders, `CloudLibraryOwners`, `CloudLibraryDownload`, `CloudWorkspace` with its Inspect conflict action and embedded `CloudConflictPreview`, the note editor and `IndexedDBCloudStateStore`.
+- `CloudConflictResolutionController` through `owners.conflicts()`.
 
 Synthetic, and never evidence of the real thing:
 
@@ -32,15 +32,9 @@ Synthetic, and never evidence of the real thing:
 - The same-origin proxy and origin mapping to a fixed synthetic HTTPS origin.
 - Fixed fixture note text and SQLite service storage. This is not DynamoDB, a hosted deployment, live delivery or paid entitlement.
 
-## Dependency gates
+## Dependencies
 
-The fixture detects `owners.conflicts` at runtime and declares only the small structural interface it calls. It does not copy or stub the controller, and it contains no hand-coded resolution transition or Saved label.
-
-- Infrastructure and two-session conflict creation use components already on main, so they run now.
-- Controller scenarios skip with a named reason until `owners.conflicts` exists, then run automatically after rebase.
-- Workspace inspection scenarios stay `test.fixme` until issue 205 merges, because its visible controls cannot be known before then.
-
-A skipped or fixme scenario is unmet acceptance, not a pass. Final Ready requires a rebase onto integrator-verified main containing issues 204 and 205, with zero skipped or fixme scenarios in this spec.
+All three dependencies are on verified main: the controller (PR 207), Put away acknowledgement (PR 209) and workspace inspection (PR 211). The spec has no skip, fixme, expected failure or dependency-existence check. Every scenario is a required pass. The static check that the default app does not import this harness or the controller stays, because it guards a boundary rather than gating on a dependency.
 
 ## Fixture design
 
@@ -54,7 +48,7 @@ An expired session uses real boundary revocation, so the 401 comes from the real
 
 Observations record session, path, status, operation ID, content hash and replay flag. They never record bodies, cookies or tokens.
 
-`tests/fixtures/cloud-conflict-roundtrip.tsx` renders the real workspace and preview in a fresh browser context with its own explicitly named `peel-m0-cloud-conflict-roundtrip-` database. Its test API only calls real components.
+`tests/fixtures/cloud-conflict-roundtrip.tsx` renders only the real workspace in a fresh browser context with its own explicitly named `peel-m0-cloud-conflict-roundtrip-` database. Its test API only calls real components.
 
 `tests/e2e/cloud-conflict-roundtrip.spec.ts` creates two fresh contexts per test. Conflicts come from real editing in both sessions. Existing durable transitions may seed a scenario only where the assignment allows it.
 
@@ -80,7 +74,9 @@ Require the real controller:
 
 Require issue 205:
 
-13. The real workspace inspection control opens the preserved conflict from the library.
+13. The real Inspect conflict control opens the preserved conflict from the library by keyboard. Focus moves to Back to notes, Tab reaches both copy controls once the preview has loaded, and Back to notes returns focus to the originating control. Desktop 1280x800 and mobile 390x844 screenshots are captured for visual review.
+
+Every scenario that shows a conflict reaches the preview through the visible library control, including the purged and trashed recovery cards under Needs attention.
 
 ## Constraints
 
@@ -92,23 +88,20 @@ Require issue 205:
 
 ## Progress
 
-**Checkpoint, not final Ready.** M2.2 stays open.
+**Final local checkpoint.** M2.2 stays open.
 
-Base: local branch `codex/claude-cli-conflict-roundtrip` in an isolated CLI checkout. Verified main `b9209af38cb58cea18d2f262eff0b2bce677d17e`, which contains PR 207 and PR 209, is merged normally. The remote PR 210 branch is unchanged until final publication.
+Base: verified main `31a52c378f6749abcf536dcf86bfdcfbeaa65b94` (PR 207, PR 209 and PR 211, [main proof](https://github.com/devsandip/peel/pull/211#issuecomment-6526176970)), merged normally into the isolated CLI branch, which is then pushed to the PR 210 branch.
 
-Requirement link for scenario 12: SPEC FR-07 and FR-13, and the PR 207 SPEC sentence that combined text requires both versions active. It came from finding 2 of the [first PR 207 review](https://github.com/devsandip/peel/pull/207#issuecomment-6524069769).
+Planned before editing:
 
-Changes in this checkpoint, planned before editing:
-
-- Remove the controller-existence skip and the source check for the Put away wrapper. Both dependencies are on this base.
-- Every editor exit uses real Put away through the real owners and workspace. The former Put away defect case is an ordinary required pass. Reloads stay only where a scenario tests recovery after reload.
-- The fixture imports the merged controller types and calls `owners.conflicts()` directly, instead of declaring a private copy of the interface.
-
-Dependency still unmet: issue 205 (PR 211), the real inspection control. Its scenario stays `test.fixme` until it is on verified main. No inspection UI or transition is invented in its place.
+- Remove the fixture's own preview rendering and inspect shortcut. Every scenario opens the preview through the real Inspect conflict control.
+- Replace the inspection fixme with the keyboard and focus scenario and its screenshots.
+- Wait for the preview to finish loading (`aria-busy="false"` and a visible copy control) before keyboard navigation, without raising timeouts or retries or focusing the expected target programmatically.
 
 Decisions:
 
 - A note purged in Cloud is asserted as the untitled recovery card under Needs attention, which is existing library behavior. A note trashed in Cloud while the device copy is active is listed the same way.
 - The trashed remote is written by a third client through the real service, because the development workspace has no Trash control.
+- The one reload left in the spec is the intentional lost-reply restart case.
 
-Earlier evidence against unmerged heads, or with reload workarounds, is superseded and carries no acceptance credit.
+Earlier evidence against unmerged heads, or with reload workarounds, is superseded and carries no acceptance credit. Synthetic identity, cookie, proxy and SQLite service remain fixtures, never real login, hosted, live or paid proof.
