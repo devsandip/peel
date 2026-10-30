@@ -12,6 +12,11 @@
   align-items: start;
 }
 
+.cloud-workspace[data-inspection-open="true"] {
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
+  align-items: start;
+}
+
 .cloud-workspace-library {
   min-inline-size: 0;
 }
@@ -169,6 +174,52 @@
   flex: 1 1 100%;
 }
 
+.cloud-workspace-inspection {
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100dvh;
+  min-inline-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border-inline-start: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.cloud-workspace-inspection-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  padding: 14px 32px;
+  background: var(--sidebar);
+  border-block-end: 1px solid var(--border);
+  display: flex;
+  align-items: safe center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-inline-size: 0;
+}
+
+.cloud-workspace-inspection-back {
+  flex: 0 0 auto;
+  min-inline-size: 24px;
+  min-block-size: 36px;
+  padding: 7px 14px;
+  border: 1px solid #76796e;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+.cloud-workspace-inspection-back:focus-visible {
+  outline: 2px solid #6b530d;
+  outline-offset: 3px;
+}
+
 @media (pointer: coarse) {
   .cloud-workspace-connection-action {
     min-block-size: 36px;
@@ -183,15 +234,22 @@
   .cloud-workspace-editor .note-close span {
     font-size: 18px;
   }
+
+  .cloud-workspace-inspection-back {
+    min-block-size: 40px;
+    padding: 9px 15px;
+  }
 }
 
 @media (max-width: 820px) {
   .cloud-workspace,
-  .cloud-workspace[data-editor-open="true"] {
+  .cloud-workspace[data-editor-open="true"],
+  .cloud-workspace[data-inspection-open="true"] {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .cloud-workspace[data-editor-open="true"] .cloud-workspace-library {
+  .cloud-workspace[data-editor-open="true"] .cloud-workspace-library,
+  .cloud-workspace[data-inspection-open="true"] .cloud-workspace-library {
     max-block-size: 100dvh;
     overflow: clip;
   }
@@ -261,6 +319,26 @@
   .cloud-workspace-editor .cm-scroller {
     padding: 20px 18px 36px;
   }
+
+  .cloud-workspace-inspection {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    block-size: 100dvh;
+    border: 0;
+    background: var(--surface);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .cloud-workspace-inspection-bar {
+    padding: 12px 16px;
+  }
+
+  .cloud-workspace-inspection-back {
+    min-block-size: 40px;
+    padding: 9px 15px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -281,5 +359,15 @@
   .cloud-workspace-editor .note-window {
     border-color: #655d3d;
     box-shadow: 0 14px 36px #00000045;
+  }
+
+  .cloud-workspace-inspection-back {
+    border-color: #8f9387;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .cloud-workspace-inspection-back:focus-visible {
+    outline-color: #efd06b;
   }
 }
