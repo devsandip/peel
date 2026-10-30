@@ -1,10 +1,9 @@
 import "@vitejs/plugin-react/preamble";
 import "../../apps/web/src/styles.css";
-import { StrictMode, useState, useSyncExternalStore } from "react";
+import { StrictMode, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import { deleteDB } from "idb";
 import { CloudBrowserWorkspaceSession } from "../../apps/web/src/cloud-browser-workspace-session";
-import { CloudConflictPreview } from "../../apps/web/src/cloud-conflict-preview";
 import {
   CloudConflictResolutionError,
   type CloudConflictResolutionChoice,
@@ -31,8 +30,7 @@ const stores = new Map<string, IndexedDBCloudStateStore>(),
   controllers: AbortController[] = [],
   closeCounts: number[] = [],
   tasks = new Set<Promise<unknown>>();
-let selected = -1,
-  bumpPreview: (noteId: string) => void = () => {};
+let selected = -1;
 const track = <T,>(task: Promise<T>) => {
   tasks.add(task);
   void task.catch(() => {});
@@ -73,36 +71,21 @@ function create(token: string) {
 }
 function Parent({ model }: { model: CloudBrowserWorkspaceSession }) {
   const snapshot = useSyncExternalStore(model.subscribe, model.snapshot),
-    prepared = model.current(),
-    [preview, setPreview] = useState<{ noteId: string; tick: number } | null>(
-      null,
-    );
-  bumpPreview = (noteId) =>
-    setPreview((value) => ({ noteId, tick: (value?.tick ?? 0) + 1 }));
+    prepared = model.current();
   return (
     <>
       <p role="status" aria-label="Workspace preparation">
         {snapshot.kind}
       </p>
       {prepared && (
-        <>
-          <CloudWorkspace
-            context={prepared.context}
-            signal={model.signal}
-            refreshKey={snapshot.refreshKey}
-            onOpen={prepared.owners.open}
-            onCreate={prepared.owners.create}
-            onPutAway={prepared.owners.putAway}
-          />
-          {preview && (
-            <CloudConflictPreview
-              context={prepared.context}
-              noteId={preview.noteId}
-              signal={model.signal}
-              refreshKey={snapshot.refreshKey + preview.tick}
-            />
-          )}
-        </>
+        <CloudWorkspace
+          context={prepared.context}
+          signal={model.signal}
+          refreshKey={snapshot.refreshKey}
+          onOpen={prepared.owners.open}
+          onCreate={prepared.owners.create}
+          onPutAway={prepared.owners.putAway}
+        />
       )}
     </>
   );
@@ -137,9 +120,6 @@ const api = {
   async download(index = selected) {
     const result = await track(prepared(index).download.download());
     return { kind: result.kind, pages: result.pages };
-  },
-  inspect(noteId: string) {
-    bumpPreview(noteId);
   },
   /** Read-only durable state, for asserting the exact retained operation. */
   state(noteId: string, index = selected) {

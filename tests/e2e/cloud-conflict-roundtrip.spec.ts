@@ -68,8 +68,6 @@ type Session = {
   csrfToken: string;
 };
 
-const INSPECTION_BLOCKED =
-  "Blocked on issue 205: the real inspection control has not merged. Unmet acceptance, not a pass.";
 const noteId = "roundtrip-note",
   START = "Shared starting text",
   DEVICE_A = "Session A confirmed text",
@@ -209,6 +207,16 @@ async function putAway(session: Session) {
   await article(session).getByRole("button", { name: "Put away note" }).click();
   await expect(article(session)).toHaveCount(0);
 }
+const RECOVERY = "Cloud note needs recovery";
+const preview = (session: Session) =>
+  session.page.getByRole("region", { name: "Cloud conflict preview" });
+/** The real Inspect conflict control in the visible collection, then the loaded preview. */
+async function inspectConflict(session: Session, title: string) {
+  await library(session)
+    .getByRole("button", { name: `Inspect conflict for ${title}` })
+    .click();
+  await expect(preview(session)).toHaveAttribute("aria-busy", "false");
+}
 const mutations = (label?: string) =>
   server.observations.filter(
     (entry) =>
@@ -263,7 +271,13 @@ async function realConflict(
     await expect(recovery).toContainText("Cloud note needs recovery");
     await expect(recovery).toContainText("Local recovery required");
     await expect(recovery).toContainText("Conflict");
-    await expect(recovery.getByRole("button")).toHaveCount(0);
+    // Inspection is offered, but the card never opens in the editor.
+    await expect(recovery.getByRole("button")).toHaveCount(1);
+    await expect(
+      recovery.getByRole("button", {
+        name: `Inspect conflict for ${RECOVERY}`,
+      }),
+    ).toBeVisible();
   } else await expect(card(b, DEVICE_B)).toContainText("Conflict");
   await expect
     .poll(() =>
@@ -419,14 +433,11 @@ test.describe("infrastructure on merged components", () => {
     const state = await durable(b);
     expect(state!.conflict!.local.snapshot!.bodyMarkdown).toBe(DEVICE_B);
     expect(state!.conflict!.remote!.bodyMarkdown).toBe(DEVICE_A);
-    await b.page.evaluate(
-      (id) => window.cloudConflictRoundtripFixture.inspect(id),
-      noteId,
-    );
-    const device = b.page.getByRole("article", {
+    await inspectConflict(b, DEVICE_B);
+    const device = preview(b).getByRole("article", {
         name: "Draft on this device",
       }),
-      observed = b.page.getByRole("article", {
+      observed = preview(b).getByRole("article", {
         name: "Observed Cloud version",
       });
     await expect(device).toContainText(DEVICE_B);
@@ -768,15 +779,12 @@ test.describe("real controller recovery", () => {
     expect(view.canMerge).toBe(false);
     // The draft stays readable until an explicit decision.
     expect(view.conflict!.local.snapshot!.bodyMarkdown).toBe(DEVICE_B);
-    await b.page.evaluate(
-      (id) => window.cloudConflictRoundtripFixture.inspect(id),
-      noteId,
-    );
+    await inspectConflict(b, RECOVERY);
     await expect(
-      b.page.getByRole("article", { name: "Draft on this device" }),
+      preview(b).getByRole("article", { name: "Draft on this device" }),
     ).toContainText(DEVICE_B);
     await expect(
-      b.page.getByRole("article", { name: "Observed Cloud version" }),
+      preview(b).getByRole("article", { name: "Observed Cloud version" }),
     ).toContainText("Permanently purged in Cloud");
     const before = mutations("b").length,
       revision = (await server.head(0, noteId)).revision;
@@ -842,14 +850,11 @@ test.describe("real controller recovery", () => {
     expect(view.conflict!.local.snapshot!.bodyMarkdown).toBe(DEVICE_B);
     expect(before!.conflict!.remote!.state).toBe("trashed");
     expect(before!.conflict!.local.snapshot!.state).toBe("active");
-    await b.page.evaluate(
-      (id) => window.cloudConflictRoundtripFixture.inspect(id),
-      noteId,
-    );
+    await inspectConflict(b, RECOVERY);
     await expect(
-      b.page.getByRole("article", { name: "Draft on this device" }),
+      preview(b).getByRole("article", { name: "Draft on this device" }),
     ).toContainText(DEVICE_B);
-    const observed = b.page.getByRole("article", {
+    const observed = preview(b).getByRole("article", {
       name: "Observed Cloud version",
     });
     await expect(observed).toContainText(START);
@@ -922,6 +927,72 @@ test.describe("real controller recovery", () => {
 });
 
 test.describe("real workspace inspection", () => {
-  test.fixme(true, INSPECTION_BLOCKED);
-  test("the real inspection control opens the preserved conflict from the library", () => {});
+  test("Inspect conflict opens the real preview by keyboard and Back to notes restores focus", async ({
+    browser,
+    baseURL,
+  }, testInfo) => {
+    const { b } = await realConflict(browser, baseURL!);
+    await b.page.setViewportSize({ width: 1280, height: 800 });
+    const inspect = library(b).getByRole("button", {
+        name: `Inspect conflict for ${DEVICE_B}`,
+      }),
+      back = b.page.getByRole("button", { name: "Back to notes" }),
+      copyDraft = preview(b).getByRole("button", { name: "Copy draft text" }),
+      copyObserved = preview(b).getByRole("button", {
+        name: "Copy observed Cloud text",
+      });
+    await expect(inspect).toHaveText("Inspect conflict");
+    await inspect.focus();
+    await b.page.keyboard.press("Enter");
+    await expect(back).toBeFocused();
+    // Wait for the loaded preview before moving focus, and leave focus where the app put it.
+    await expect(preview(b)).toHaveAttribute("aria-busy", "false");
+    await expect(copyDraft).toBeVisible();
+    await expect(back).toBeFocused();
+    await expect(
+      preview(b).getByRole("article", { name: "Draft on this device" }),
+    ).toContainText(DEVICE_B);
+    await expect(
+      preview(b).getByRole("article", { name: "Observed Cloud version" }),
+    ).toContainText(DEVICE_A);
+    // Read-only: no resolution or save action in the inspection pane.
+    await expect(
+      preview(b).getByRole("button", { name: /Resolve|Save|Restore|Retry/ }),
+    ).toHaveCount(0);
+    await b.page.keyboard.press("Tab");
+    await expect(copyDraft).toBeFocused();
+    await b.page.keyboard.press("Tab");
+    await expect(copyObserved).toBeFocused();
+    expect(
+      await b.page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(1280);
+    await b.page.screenshot({
+      path: testInfo.outputPath("roundtrip-inspection-desktop.png"),
+    });
+    await back.focus();
+    await b.page.keyboard.press("Enter");
+    await expect(preview(b)).toHaveCount(0);
+    await expect(inspect).toBeFocused();
+    // Mobile sheet at 390x844, reached the same way.
+    await b.page.setViewportSize({ width: 390, height: 844 });
+    await b.page.keyboard.press("Enter");
+    await expect(back).toBeFocused();
+    await expect(preview(b)).toHaveAttribute("aria-busy", "false");
+    await expect(copyDraft).toBeVisible();
+    await expect(back).toBeFocused();
+    expect(
+      await b.page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(390);
+    await b.page.screenshot({
+      path: testInfo.outputPath("roundtrip-inspection-mobile.png"),
+    });
+    await b.page.keyboard.press("Enter");
+    await expect(preview(b)).toHaveCount(0);
+    await expect(inspect).toBeFocused();
+    // Inspection wrote nothing: the conflict and both branches are unchanged.
+    const state = await durable(b);
+    expect(state!.conflict!.local.snapshot!.bodyMarkdown).toBe(DEVICE_B);
+    expect(state!.conflict!.remote!.bodyMarkdown).toBe(DEVICE_A);
+    expect((await read(b)).status).toBe("Conflict");
+  });
 });
