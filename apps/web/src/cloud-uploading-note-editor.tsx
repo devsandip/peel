@@ -67,10 +67,11 @@ function SelectedUploadEditor({
         onRetained={() => {
           upload.schedule();
         }}
-        onPutAway={(session) => {
-          // Retention has finished; the window never waits for Cloud response.
+        onPutAway={async (session) => {
+          // A new flush would temporarily invalidate the retained acknowledgement.
+          await onPutAway(session);
+          // The parent owns the closed view; Cloud response never blocks dismissal.
           void upload.upload();
-          return onPutAway(session);
         }}
       />
     </>
