@@ -92,20 +92,23 @@ Require issue 205:
 
 ## Progress
 
-**Preparation checkpoint, not final Ready.** M2.2 stays open.
+**Checkpoint, not final Ready.** M2.2 stays open.
 
-Base: local branch `codex/claude-cli-conflict-roundtrip` in an isolated CLI checkout, with verified main `feb7d5902ef68892be94eb22110d53a972081634` merged normally (PR 207, [main proof](https://github.com/devsandip/peel/pull/207#issuecomment-6525002476)). The remote PR 210 branch is unchanged during this preparation.
+Base: local branch `codex/claude-cli-conflict-roundtrip` in an isolated CLI checkout. Verified main `b9209af38cb58cea18d2f262eff0b2bce677d17e`, which contains PR 207 and PR 209, is merged normally. The remote PR 210 branch is unchanged until final publication.
 
 Requirement link for scenario 12: SPEC FR-07 and FR-13, and the PR 207 SPEC sentence that combined text requires both versions active. It came from finding 2 of the [first PR 207 review](https://github.com/devsandip/peel/pull/207#issuecomment-6524069769).
 
-Dependencies still unmet:
+Changes in this checkpoint, planned before editing:
 
-1. PR 209 (Put away, issue 208) merged at `b9209af`, but its actual-main proof is pending, and this branch does not contain it. Until it is verified and merged here, scenarios leave editors by reload and the Put away case stays an expected failure. The spec detects the fixed wrapper ordering, so after the merge those callers switch to real Put away and the expected failure must then pass. That detection is a temporary switch, removed at final Ready.
-2. Issue 205 (PR 211), for the real inspection control. Its scenario stays `test.fixme`.
+- Remove the controller-existence skip and the source check for the Put away wrapper. Both dependencies are on this base.
+- Every editor exit uses real Put away through the real owners and workspace. The former Put away defect case is an ordinary required pass. Reloads stay only where a scenario tests recovery after reload.
+- The fixture imports the merged controller types and calls `owners.conflicts()` directly, instead of declaring a private copy of the interface.
+
+Dependency still unmet: issue 205 (PR 211), the real inspection control. Its scenario stays `test.fixme` until it is on verified main. No inspection UI or transition is invented in its place.
 
 Decisions:
 
 - A note purged in Cloud is asserted as the untitled recovery card under Needs attention, which is existing library behavior. A note trashed in Cloud while the device copy is active is listed the same way.
 - The trashed remote is written by a third client through the real service, because the development workspace has no Trash control.
 
-Earlier evidence against unmerged PR 207 heads is superseded by runs on this verified base and carries no acceptance credit.
+Earlier evidence against unmerged heads, or with reload workarounds, is superseded and carries no acceptance credit.
