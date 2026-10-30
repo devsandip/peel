@@ -2524,3 +2524,20 @@
 
 **Decisions:**
 - Sandip's stop suspends autonomous implementation and the recurring heartbeat; it does not cancel issue201 or alter Antigravity's ownership. No milestone completion or enabled Cloud outcome is claimed.
+
+
+## 2026-10-30 - Resume scoped Cloud connection retention
+
+**Did:**
+- Resumed at Sandip's request, verified main94d2c91/no open PR/current169/181 ownership, and moved only the receipt-bound pause append into pre-code59195a3. All unknown primary paths/peer refs remain preserved.
+- Implemented201 after requirement-linked plan59195a3/contract1696518784081. Added isolated server registry and explicit SQLite metadata transactions, current session/library checks, separate admission/lease deadlines and exact cleanup including uncertain insert acknowledgement. No old interface/default/peer change.
+- Validation and counterexample evidence are in docs/features/cloud-connection-registry.md. Exact source/all3 hosted review and separate actual-main integration proof remain pending at authoring.
+
+**State now:**
+- Development server prerequisites only. No socket, hosted store/fan-out, real login, enabled Cloud or M2.2 exit acceptance. Continuation heartbeat remains paused.
+
+**Next:**
+- Complete201 focused exact-source review/all3 gates, scanned no-reply merge, separate actual-main/closure/Project/guarded primary proof. Check peer181 Ready before later work.
+
+**Decisions:**
+- A lost storage acknowledgement must trigger exact attempted-record cleanup; it cannot authorize retry, overwrite or broad deletion. Session/account/store checks remain point-in-time observations.
