@@ -2488,3 +2488,20 @@
 
 **Decisions:**
 - A connect policy carries only server-derived scalar admission context and the original connection ID. Matching Gateway metadata is no provenance proof or continuing authorization; actual hosting and registry checks remain separate.
+
+
+## 2026-10-30 — Admit only scoped original-session connect attempts
+
+**Did:**
+- Implemented199 after pre-code7f6b871/contract1696513221983. Pure offers and server-only captured factory bind fixed resource/metadata/header syntax before actual ticket consumption, return frozen credential-free scalar policies, preserve original signals and deny invalid/late inputs. No entrypoint/IaC/app/shared interface change.
+- Verified initial88 then final93 focused Node24/3 suites (39 new after five extra resource/privacy boundaries), shared993/86, type/full format/whitespace/deterministic artifact/build/all8 default bundle hashes.49-file Node24 list includes new unit; actual in-process HTTP/session/account/ticket/SQLite +synthetic Gateway evidence distinguishes configuration checks from provider trust.
+- Controlled removed pre-consumption reflection guard passed1/failed3: final filtering denied after burning real tickets. Exact bytes restored; targeted4 pass/35 skipped and broad checks pass. Ordinary validation never failed and old assertions/controls remain unchanged.
+
+**State now:**
+- Admission adapter only, with no real socket/upgrade/entrypoint/hosting/continuing authorization/default or public acceptance. Local browser/acquisition unrun/no retry; peer181 paths/props and all caller stores preserved. M2.2 remains open.
+
+**Next:**
+- Finish199 exact-source review/all3 hosted gates/observed evidence, normal scanned no-reply merge and separate actual-main/closure/Project/guarded primary/Root-only cleanup. Check169/181/Ready first, preserve user/peer paths.
+
+**Decisions:**
+- Invalid reflected credentials must refuse before consumption, not merely be hidden from output. Matching Gateway metadata is not invocation provenance; later registration and fan-out still need current policy and original connection binding.
