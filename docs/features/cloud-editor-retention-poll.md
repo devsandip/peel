@@ -11,3 +11,7 @@ Only this feature plan and `tests/e2e/cloud-note-editor.spec.ts` change. Use the
 ## Validation
 
 Run the actual held-retention scenario with the prior unsafe projection as a negative control, retaining its expected failure; restore the intended source and pass the focused editor/draft browser suites on owned strict65527 without server reuse or test-control changes. Run TypeScript, formatting and whitespace checks. Review and exact-source all3 hosted checks precede normal merge; actual-main checks and issue/Project closure follow separately. No AWS/profile/default notes/OS clipboard/native or stopped probe, no app Cloud activation. Fixtures are synthetic and their existing teardown remains.
+
+## Local evidence
+
+With the actual retention commit held, the previous unsafe projection fails with `Cannot read properties of null` at `snapshot`. The restored optional projection returns undefined while the commit is held, then the same poll proves the exact typed body after release. All 13 editor/draft-session browser cases pass on strict65527 with original controls, followed by TypeScript, formatting and whitespace. No production or fixture file changed. Exact-source hosted and separate actual-main gates remain required.
