@@ -76,10 +76,11 @@ Require the real controller:
 9. Old-session abort and account switch withhold the late result and leave the later account untouched.
 10. Remote permanent purge refuses device and combined choices, keeps the text readable until an explicit decision, and never recreates the old ID.
 11. Results and errors contain no body or credential text, and no storage mode is activated implicitly.
+12. Combined text is refused when the observed Cloud version is in Trash. Both durable branches survive the refusal byte for byte, nothing is sent, the server keeps the trashed revision, and the library shows recovery with Conflict rather than Saved. An explicit observed Cloud choice then keeps the note in Trash without a send.
 
 Require issue 205:
 
-12. The real workspace inspection control opens the preserved conflict from the library.
+13. The real workspace inspection control opens the preserved conflict from the library.
 
 ## Constraints
 
@@ -91,23 +92,20 @@ Require issue 205:
 
 ## Progress
 
-**Checkpoint, not final Ready.** Infrastructure and scenarios are written. M2.2 stays open.
+**Preparation checkpoint, not final Ready.** M2.2 stays open.
 
-Blocked on:
+Base: local branch `codex/claude-cli-conflict-roundtrip` in an isolated CLI checkout, with verified main `feb7d5902ef68892be94eb22110d53a972081634` merged normally (PR 207, [main proof](https://github.com/devsandip/peel/pull/207#issuecomment-6525002476)). The remote PR 210 branch is unchanged during this preparation.
 
-1. PR 207 merging. It has [changes requested](https://github.com/devsandip/peel/pull/207#issuecomment-6524069769) at `2f725c5`.
-2. Issue 205 merging, for the real inspection control. Its scenario is `test.fixme`.
-3. A [Put away defect on main](https://github.com/devsandip/peel/issues/169#issuecomment-6524313455): with real owners and no upload in flight, Put away never completes, so a conflicted note with an open editor stays `busy` until reload. The spec records this as an expected failure.
+Requirement link for scenario 12: SPEC FR-07 and FR-13, and the PR 207 SPEC sentence that combined text requires both versions active. It came from finding 2 of the [first PR 207 review](https://github.com/devsandip/peel/pull/207#issuecomment-6524069769).
+
+Dependencies still unmet:
+
+1. PR 209 (Put away, issue 208) merged at `b9209af`, but its actual-main proof is pending, and this branch does not contain it. Until it is verified and merged here, scenarios leave editors by reload and the Put away case stays an expected failure. The spec detects the fixed wrapper ordering, so after the merge those callers switch to real Put away and the expected failure must then pass. That detection is a temporary switch, removed at final Ready.
+2. Issue 205 (PR 211), for the real inspection control. Its scenario stays `test.fixme`.
 
 Decisions:
 
-- Scenarios leave an editor by reloading the page until that defect is fixed. Reload is a real durable recovery path, but it does not exercise Put away or browser owner retirement. Final Ready must move these callers to real Put away and remove the expected failure.
-- A note purged in Cloud is asserted as the untitled recovery card under Needs attention, which is existing library behavior.
-- Merging over a note trashed in Cloud has no scenario yet, because the expected behavior is an open question in the PR 207 review.
+- A note purged in Cloud is asserted as the untitled recovery card under Needs attention, which is existing library behavior. A note trashed in Cloud while the device copy is active is listed the same way.
+- The trashed remote is written by a third client through the real service, because the development workspace has no Trash control.
 
-Evidence so far, all local and all synthetic:
-
-- On this branch's base, 7 pass, including the expected failure. The other 10 are skipped or fixme, and that is unmet acceptance.
-- Against a throwaway local copy of frozen PR 207 at `2f725c5`, 16 of 17 pass with the real controller over 2 repeats (32 runs), including the expected failure, with no flakes. Only the inspection scenario stays fixme. This is not acceptance credit, because that commit may change and has not merged.
-- Deliberately breaking production code in that copy failed the expected scenario each time: new-note guard, abort check, 401 mapping and open-editor guard. Removing in-flight from the Pending projection failed all 9 controller scenarios.
-- Not done: visual review of final UI, a full local e2e sweep, and any real login, hosted, live or paid behavior.
+Earlier evidence against unmerged PR 207 heads is superseded by runs on this verified base and carries no acceptance credit.
