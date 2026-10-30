@@ -75,6 +75,8 @@ const noteId = "roundtrip-note",
 
 let server: RoundtripServer;
 let sessions: Session[] = [];
+/** Every manually created context, registered before navigation or readiness. */
+let contexts: BrowserContext[] = [];
 let sensitive: string[] = [];
 const diagnostics: string[] = [];
 const fatal: string[] = [];
@@ -82,11 +84,13 @@ const fatal: string[] = [];
 test.beforeEach(async ({ baseURL }) => {
   server = await startCloudConflictRoundtripServer(new URL(baseURL!).origin);
   sessions = [];
+  contexts = [];
   sensitive = [];
   diagnostics.length = 0;
   fatal.length = 0;
 });
-test.afterEach(async () => {
+/** Owned browser stores: checked, then destroyed by the fixture's own prefix. */
+async function verifyAndDestroyStores() {
   server.release();
   for (const session of sessions) {
     if (session.page.isClosed()) continue;
@@ -112,9 +116,27 @@ test.afterEach(async () => {
       [],
     );
   }
-  for (const session of sessions) await session.context.close();
+}
+/** Attempts every owned close, even after an earlier one fails. */
+async function closeOwned() {
+  const errors: unknown[] = [];
+  for (const context of contexts.splice(0))
+    await context.close().catch((error: unknown) => errors.push(error));
+  await server.close().catch((error: unknown) => errors.push(error));
+  return errors;
+}
+test.afterEach(async () => {
+  let failure: unknown = null;
+  try {
+    await verifyAndDestroyStores();
+  } catch (error) {
+    failure = error;
+  }
+  const cleanup = await closeOwned();
+  // The original failure wins; a cleanup error surfaces only on its own.
+  if (failure) throw failure;
+  if (cleanup.length) throw cleanup[0];
   const { folder, api } = server;
-  await server.close();
   expect(server.resourcesRemoved()).toBe(true);
   expect(existsSync(folder)).toBe(false);
   await expect(fetch(`${api}/v1/library-context`)).rejects.toThrow();
@@ -133,8 +155,9 @@ async function openSession(
   const issued = await server.openSession(label, accountIndex);
   sensitive.push(issued.csrfToken, issued.cookie.split("=")[1]);
   // A fresh context per session: nothing is shared with another browser session.
-  const context = await browser.newContext({ baseURL }),
-    page = await context.newPage(),
+  const context = await browser.newContext({ baseURL });
+  contexts.push(context);
+  const page = await context.newPage(),
     db = `peel-m0-cloud-conflict-roundtrip-${randomUUID()}`,
     proxyLabel = { current: label };
   page.on("pageerror", () => fatal.push("Unexpected browser exception"));
