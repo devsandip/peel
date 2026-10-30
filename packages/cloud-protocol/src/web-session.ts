@@ -163,6 +163,10 @@ export function createCloudWebSessionBoundary(
     (await session(request)).subject;
   return {
     resolveCaller,
+    /** Server-only current session metadata; never serialize this to a client. */
+    async resolveSession(request: Request): Promise<Readonly<CloudWebSession>> {
+      return Object.freeze(structuredClone(await session(request)));
+    },
     async issue(request: Request): Promise<Response> {
       if (request.method !== "POST") return fail("method-not-allowed", 405);
       checkOrigin(request, true);

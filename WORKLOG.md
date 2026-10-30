@@ -2420,3 +2420,20 @@
 
 **Decisions:**
 - Connection-time tickets are only a point-in-time prerequisite; continuing revocation and fan-out authorization require later independent checks. Strict original-session/scope/time checks and one-use durable claims precede any actual transport.
+
+
+## 2026-10-30 — Bind one-use connection tickets to current authority
+
+**Did:**
+- Implemented195 after pre-code615fe4e/interface1696511635573. Server-only tickets bind digest/session/current scope/deadline, with post-storage rechecks and original cancellation; additive resolveSession leaves old methods unchanged. Explicit isolated SQLite claims enforce atomic single use/persisted time/bounded metadata without note access.
+- Verified66 focused Node24/3 suites (33 new), shared933/84, type/full format/whitespace/deterministic artifact/build/all8 unchanged default bundle hashes.47-file Node24 list includes the new unit. Actual session/account/SQLite evidence covers replay/reopened concurrent claims, revocation/policy/cancellation, expiry/clock rollback, private corruption/transaction failure and bounds.
+- Controlled final-session-guard removal passed1/failed2 late logout/rotation cases; exact bytes restored and targeted3 pass. Preserved initial34pass/29 new setup failures (invalid initial account wall, owned cleanup ran) and unit-inclusive type failure (new spy spread). Fixed only new fixture setup/typed callback; old validation/assertions/controls unchanged.
+
+**State now:**
+- A point-in-time server prerequisite only: no real WebSocket/listener/route/registry/fan-out/hosted ticket store or enabled Cloud. Local browser and adapter acquisition unrun/no retry; peer181 files/props preserved. M2.2 and app/public acceptance remain open.
+
+**Next:**
+- Finish195 exact-source review/all3 hosted gates/observed evidence, normal scanned no-reply merge and separate actual-main/closure/Project/guarded primary/Root-only cleanup. Check169/181/new Ready first and preserve all user/peer data.
+
+**Decisions:**
+- Current session/account reads are separate point-in-time observations. Future connection registration and fan-out must independently enforce continuing policy/revocation; ticket consumption cannot supply that lifecycle.
