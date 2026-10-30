@@ -2454,3 +2454,20 @@
 
 **Decisions:**
 - Independent reader invocations must obtain distinct one-use credentials. Preserve old transport method inference, and never expose server consumption/grants as a browser HTTP route.
+
+
+## 2026-10-30 — Bridge ticket issuance over captured HTTP
+
+**Did:**
+- Implemented197 after pre-codeb4504e8/interfaces1696512252301. Optional handler ticket injection recognizes only bodyless POST with its own actual cookie/CSRF/library authority; default plain path stays404, no consume/grant route. Existing JSON inference is preserved with a validated explicit method, and each reader call obtains a fresh original-lifetime credential without caching/coalescing.
+- First focused Node24 run156/7 (21 new), shared954/85, type/full format/whitespace/deterministic artifact/build/all8 unchanged default bundle hashes pass. Actual in-process session/account/ticket/SQLite evidence covers issuance/consumption, independent requests, binding/auth/route/private errors, client-clock independence and original/late-body cancellation.48-file Node24 list includes the unit.
+- Kept old assertions/controls, peer181 files/props, shared HTTP fixture/app routes/store schemas unchanged. Server ticket import is type-only to preserve browser bundling.
+
+**State now:**
+- Explicit development HTTP integration only; no actual network/TLS/Secure-cookie/Cognito/live/default/public acceptance. Local browser/acquisition unrun/no retry; M2.2 managed teardown remains open. No initial failure in this slice.
+
+**Next:**
+- Finish197 exact-source review/all3 hosted gates/observed evidence, normal scanned no-reply merge and separate actual-main/closure/Project/guarded primary/Root-only cleanup. Check169/181/new Ready first; preserve user/peer paths and old controls.
+
+**Decisions:**
+- A one-use ticket is never shared or cached across independent calls, and its expiry is authorized by the server. Only explicit server injection enables the issuance route; consuming a credential stays server-only.

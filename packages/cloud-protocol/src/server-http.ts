@@ -4,6 +4,7 @@ import {
   type CloudMutationRequest,
 } from "./server";
 import type { CloudPullService, PullScope } from "./pull";
+import type { CloudConnectionTickets } from "./connection-tickets";
 
 export const MAX_CLOUD_REQUEST_BYTES = 2 * 1024 * 1024;
 /** Production callers must verify Cognito/native credentials or the web session here. */
@@ -64,6 +65,7 @@ export function createCloudMutationHandler(
   service: CloudMutationService,
   resolveCaller: CloudCallerResolver,
   pull?: CloudPullService,
+  tickets?: CloudConnectionTickets,
 ) {
   return async (request: Request): Promise<Response> => {
     try {
@@ -75,22 +77,27 @@ export function createCloudMutationHandler(
         return json({ error: "unsupported-query" }, 400);
       const noteMatch = /^\/v1\/notes\/([^/]+)$/.exec(url.pathname);
       const contextPath = url.pathname === "/v1/library-context";
+      const ticketPath = !!tickets && url.pathname === "/v1/connection-ticket";
       if (
         url.pathname !== "/v1/mutations" &&
         !noteMatch &&
         !pullPath &&
-        !contextPath
+        !contextPath &&
+        !ticketPath
       )
         return json({ error: "not-found" }, 404);
       if (
         (url.pathname === "/v1/mutations" && request.method !== "POST") ||
         (noteMatch && request.method !== "GET") ||
         (contextPath && request.method !== "GET") ||
+        (ticketPath && request.method !== "POST") ||
         (pullPath &&
           request.method !==
             (url.pathname === "/v1/sync/bootstrap" ? "POST" : "GET"))
       )
         return json({ error: "method-not-allowed" }, 405);
+      // This explicitly configured route owns its cookie/CSRF authority; no auth fallback.
+      if (ticketPath) return json(await tickets!.issue(request));
       // Resolve authority before consuming an untrusted payload. There is no paid request flag.
       const subject = await resolveCaller(request);
       if (contextPath) {
