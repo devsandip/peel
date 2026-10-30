@@ -295,6 +295,22 @@ export async function startCloudConflictRoundtripServer(browserOrigin) {
           noteId,
         },
       }),
+    /** A third client moves the note to Trash through the real service. */
+    trashNote(index, noteId, bodyMarkdown) {
+      const deleted = Date.now();
+      return write(index, noteId, {
+        kind: "upsert",
+        snapshot: {
+          ...cloudDraft(bodyMarkdown),
+          collectionId: account(index).collectionId,
+          noteId,
+          state: "trashed",
+          updatedAt: new Date(deleted).toISOString(),
+          deletedAt: new Date(deleted).toISOString(),
+          purgeAfter: new Date(deleted + 30 * 86400000).toISOString(),
+        },
+      });
+    },
     purgeNote: (index, noteId) =>
       write(index, noteId, { kind: "purge", snapshot: null }),
     head: (index, noteId) =>
