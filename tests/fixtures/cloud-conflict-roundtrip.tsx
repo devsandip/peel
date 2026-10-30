@@ -5,6 +5,10 @@ import { createRoot } from "react-dom/client";
 import { deleteDB } from "idb";
 import { CloudBrowserWorkspaceSession } from "../../apps/web/src/cloud-browser-workspace-session";
 import { CloudConflictPreview } from "../../apps/web/src/cloud-conflict-preview";
+import {
+  CloudConflictResolutionError,
+  type CloudConflictResolutionChoice,
+} from "../../apps/web/src/cloud-conflict-resolution";
 import { CloudWorkspace } from "../../apps/web/src/cloud-workspace";
 import {
   DurableCloudClient,
@@ -15,31 +19,6 @@ import { cloudScopeHash } from "../../packages/cloud-protocol/src/pull";
 
 // Never imported by apps/web/src/main.tsx. Synthetic session and explicit
 // test-owned M0 IndexedDB names only. Every action below calls a real component.
-
-/** The issue 204 contract this fixture calls. A declaration, not an implementation. */
-type ConflictChoice =
-  { kind: "local" | "cloud" } | { kind: "merge"; bodyMarkdown: string };
-type ConflictView = {
-  noteId: string;
-  generation: number | null;
-  status: string;
-  conflict: {
-    local: { kind: string; snapshot: { bodyMarkdown: string } | null };
-    remote: { bodyMarkdown: string } | null;
-    remoteRevision: number;
-  } | null;
-  canMerge: boolean;
-};
-type ConflictResult = { kind: string; view: ConflictView | null };
-type ConflictModel = {
-  read(noteId: string): Promise<ConflictView>;
-  resolve(
-    noteId: string,
-    expectedGeneration: number,
-    choice: ConflictChoice,
-  ): Promise<ConflictResult>;
-  retry(noteId: string, expectedGeneration: number): Promise<ConflictResult>;
-};
 
 const config = Reflect.get(window, "syntheticConflictRoundtripConfig") as {
     csrfToken: string;
@@ -140,19 +119,8 @@ const prepared = (index: number) => {
   if (!value) throw Error("Fixture session is not prepared");
   return value;
 };
-/** Null until issue 204 merges. Scenarios that need it skip by name until then. */
-const controller = (index: number): ConflictModel | null => {
-  const factory = Reflect.get(prepared(index).owners, "conflicts") as
-    (() => ConflictModel) | undefined;
-  return typeof factory === "function"
-    ? factory.call(prepared(index).owners)
-    : null;
-};
-const required = (index: number) => {
-  const model = controller(index);
-  if (!model) throw Error("Issue 204 controller is not merged");
-  return model;
-};
+/** The real merged controller from the real owners of that session. */
+const controller = (index: number) => prepared(index).owners.conflicts();
 const api = {
   select(token: string) {
     if (selected >= 0) controllers[selected].abort();
@@ -191,37 +159,34 @@ const api = {
       return error instanceof Error ? error.message : "unknown";
     }
   },
-  hasController: (index = selected) => !!controller(index),
   /** Wait on the real owner's own readiness rather than a fixture guess. */
   ownerQuiet(noteId: string, index = selected) {
     const owner = prepared(index)
       .owners.retainedOwners()
       .find((upload) => upload.session.snapshot().noteId === noteId);
-    if (!owner) return true;
-    const ready = Reflect.get(owner, "resolutionReady") as
-      (() => boolean) | undefined;
-    return typeof ready === "function" ? ready.call(owner) : false;
+    return !owner || owner.resolutionReady();
   },
   conflictRead: (noteId: string, index = selected) =>
-    track(required(index).read(noteId)),
+    track(controller(index).read(noteId)),
   /** A controller rejection, reduced to the fields a caller could display. */
   async conflictReadError(noteId: string, index = selected) {
     try {
-      await required(index).read(noteId);
+      await controller(index).read(noteId);
       return null;
     } catch (error) {
-      const { name, message } = error as Error;
-      return { name, message, kind: Reflect.get(error as object, "kind") };
+      if (!(error instanceof CloudConflictResolutionError)) throw error;
+      const { name, message, kind } = error;
+      return { name, message, kind };
     }
   },
   conflictResolve: (
     noteId: string,
     generation: number,
-    choice: ConflictChoice,
+    choice: CloudConflictResolutionChoice,
     index = selected,
-  ) => track(required(index).resolve(noteId, generation, choice)),
+  ) => track(controller(index).resolve(noteId, generation, choice)),
   conflictRetry: (noteId: string, generation: number, index = selected) =>
-    track(required(index).retry(noteId, generation)),
+    track(controller(index).retry(noteId, generation)),
   databases: async () =>
     (await indexedDB.databases()).map((database) => database.name),
   storageKeys: () => Object.keys(localStorage),

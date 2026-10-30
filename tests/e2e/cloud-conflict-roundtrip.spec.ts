@@ -11,6 +11,7 @@ import {
 // @ts-expect-error Owned untyped .mjs fixture; RoundtripServer states what this spec uses.
 import { startCloudConflictRoundtripServer } from "../fixtures/cloud-conflict-roundtrip-server.mjs";
 import type {} from "../fixtures/cloud-conflict-roundtrip";
+import type { CloudConflictResolutionChoice } from "../../apps/web/src/cloud-conflict-resolution";
 
 type Head = {
   kind: string;
@@ -67,24 +68,8 @@ type Session = {
   csrfToken: string;
 };
 
-const controllerMerged = existsSync(
-    resolve("apps/web/src/cloud-conflict-resolution.ts"),
-  ),
-  CONTROLLER_BLOCKED =
-    "Blocked on issue 204: the real controller has not merged. Unmet acceptance, not a pass.",
-  INSPECTION_BLOCKED =
-    "Blocked on issue 205: the real inspection control has not merged. Unmet acceptance, not a pass.";
-/**
- * Temporary switch, removed at final Ready: true once the merged PR 209 wrapper
- * acknowledges Put away before starting its upload flush (issue 208).
- */
-const putAwayFixed =
-  /await onPutAway\(session\);\s*\/\/[^\n]*\n\s*void upload\.upload\(\)/.test(
-    readFileSync(
-      resolve("apps/web/src/cloud-uploading-note-editor.tsx"),
-      "utf8",
-    ),
-  );
+const INSPECTION_BLOCKED =
+  "Blocked on issue 205: the real inspection control has not merged. Unmet acceptance, not a pass.";
 const noteId = "roundtrip-note",
   START = "Shared starting text",
   DEVICE_A = "Session A confirmed text",
@@ -224,23 +209,6 @@ async function putAway(session: Session) {
   await article(session).getByRole("button", { name: "Put away note" }).click();
   await expect(article(session)).toHaveCount(0);
 }
-/**
- * Real Put away once issue 208's fix is on this base. Before that, Put away
- * cannot complete with real owners when no upload is in flight, so the editor
- * is left by reload: a real durable recovery path that does not prove Put away.
- */
-async function leaveEditor(session: Session) {
-  if (putAwayFixed) {
-    await putAway(session);
-    return;
-  }
-  await session.page.reload();
-  await session.page.waitForFunction(
-    () => !!window.cloudConflictRoundtripFixture,
-  );
-  await prepare(session);
-  await expect(library(session)).toBeVisible();
-}
 const mutations = (label?: string) =>
   server.observations.filter(
     (entry) =>
@@ -270,7 +238,7 @@ async function realConflict(
     await openEditor(a, START);
     await type(a, DEVICE_A);
     await expect(editorStatus(a)).toHaveText("Saved in Cloud");
-    await leaveEditor(a);
+    await putAway(a);
   },
   recovery = false,
 ) {
@@ -284,7 +252,7 @@ async function realConflict(
   server.setSwitch("b", { offline: false });
   await article(b).getByRole("button", { name: "Retry upload" }).click();
   await expect(editorStatus(b)).toHaveText("Conflict");
-  await leaveEditor(b);
+  await putAway(b);
   if (recovery) {
     // A purged or trashed remote is listed as untitled recovery, never as an openable note.
     await expect(card(b, DEVICE_B)).toHaveCount(0);
@@ -325,8 +293,7 @@ const durable = (session: Session, index?: number) =>
       ),
     [noteId, index] as const,
   );
-type Choice =
-  { kind: "local" | "cloud" } | { kind: "merge"; bodyMarkdown: string };
+type Choice = CloudConflictResolutionChoice;
 const resolveChoice = (
   session: Session,
   generation: number,
@@ -513,26 +480,33 @@ test.describe("infrastructure on merged components", () => {
     expect(sent[1].replayed).toBe(true);
   });
 
-  // Expected failure until issue 208's fix is on this base, then a required pass.
-  test("Put away closes a note with real owners when no upload is in flight", async ({
+  // Formerly the issue 208 defect: a settled note with no upload in flight.
+  test("Put away closes a settled note with real owners when no upload is in flight", async ({
     browser,
     baseURL,
   }) => {
-    test.fail(
-      !putAwayFixed,
-      "Known defect, issue 208: owners.putAway refuses during a clean flush",
-    );
     const { b } = await twoSessions(browser, baseURL!);
     await openEditor(b, START);
     await type(b, DEVICE_B);
     await expect(editorStatus(b)).toHaveText("Saved in Cloud");
+    const sent = mutations("b").length;
     await putAway(b);
+    await expect(b.page.getByRole("alert")).toHaveCount(0);
+    await expect(card(b, DEVICE_B)).toContainText("Saved in Cloud");
+    // The confirmed owner is retired, and closing sends nothing further.
+    await expect
+      .poll(() =>
+        b.page.evaluate(() =>
+          window.cloudConflictRoundtripFixture.retainedNotes(),
+        ),
+      )
+      .toEqual([]);
+    expect(mutations("b")).toHaveLength(sent);
+    expect(await headBody(0)).toBe(DEVICE_B);
   });
 });
 
 test.describe("real controller recovery", () => {
-  test.skip(!controllerMerged, CONTROLLER_BLOCKED);
-
   test("device choice stays Pending through a held reply and reaches the second session after explicit refresh", async ({
     browser,
     baseURL,
@@ -638,7 +612,7 @@ test.describe("real controller recovery", () => {
         async () => (await durable(b))!.conflict!.local.snapshot!.bodyMarkdown,
       )
       .toBe(NEWER);
-    await leaveEditor(b);
+    await putAway(b);
     const refused = await resolveChoice(b, stale.generation!, {
       kind: "cloud",
     });
