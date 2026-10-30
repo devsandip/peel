@@ -2,7 +2,7 @@ import { CLOUD_PAGE_WIRE_BYTES } from "../../../packages/cloud-protocol/src/pull
 import { MAX_CLOUD_REQUEST_BYTES } from "../../../packages/cloud-protocol/src/server-http";
 
 export const CLOUD_WEB_DEADLINE_MS = 10_000;
-type EncodedRequest = { path: string; body?: string };
+type EncodedRequest = { path: string; body?: string; method?: "GET" | "POST" };
 function fields(value: object, keys: string[], unavailable: () => Error) {
   if (
     !value ||
@@ -75,8 +75,12 @@ export function createCloudWebJSONSender<T>(
           : prepared;
       controller.signal.throwIfAborted();
       const target = new URL(encoded.path, origin),
-        body = encoded.body;
+        body = encoded.body,
+        method = encoded.method ?? (body === undefined ? "GET" : "POST");
       if (
+        (encoded.method !== undefined &&
+          !["GET", "POST"].includes(encoded.method)) ||
+        (method === "GET" && body !== undefined) ||
         !encoded.path.startsWith("/") ||
         encoded.path.startsWith("//") ||
         target.origin !== config.origin ||
@@ -90,7 +94,7 @@ export function createCloudWebJSONSender<T>(
         throw unavailable();
       const received = Promise.resolve(
         fetcher(target.href, {
-          method: body === undefined ? "GET" : "POST",
+          method,
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",

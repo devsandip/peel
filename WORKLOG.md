@@ -2437,3 +2437,37 @@
 
 **Decisions:**
 - Current session/account reads are separate point-in-time observations. Future connection registration and fan-out must independently enforce continuing policy/revocation; ticket consumption cannot supply that lifecycle.
+
+
+## 2026-10-30 — Verify one-use tickets; plan their HTTP boundary
+
+**Did:**
+- Fully integrated196/195 at5d93820, source40980046680/main40981148841 all3 first run/job attempts; review5706710381/Ready6512009781/proof6512178099. Actual adapter30/5, Cloud725/47, shared933/84, browser79; all33 new cases execute in both Node runtimes.
+- Verified actual closure/bothProjectDone/labels/guarded primary/unknown paths/no-reply/source-merge-cleanup scans. Only Root source+merge refs removed; peer refs/active181 checkout preserved. Completed196/194 helpers must not be rerun.
+- Created197 Ready and wrote its requirement-linked pre-code HTTP/reader plan. No197 runtime/tests or validation yet; exact additive interfaces must be recorded in169 before editing.
+
+**State now:**
+- Tickets are isolated point-in-time server prerequisites, with no real socket/route/hosted store/default Cloud activation. Initial fixture/type failures, controlled revocation counterexample and unrun local evidence remain distinct in the plan/frozen0558. M2.2 remains open.
+
+**Next:**
+- Commit197 plan; coordinate optional handler ticket argument and explicit JSON method in169, set197 Inprogress, then implement the bodyless same-origin HTTP bridge and captured fresh-ticket reader. Complete any newly ready peer PR first.
+
+**Decisions:**
+- Independent reader invocations must obtain distinct one-use credentials. Preserve old transport method inference, and never expose server consumption/grants as a browser HTTP route.
+
+
+## 2026-10-30 — Bridge ticket issuance over captured HTTP
+
+**Did:**
+- Implemented197 after pre-codeb4504e8/interfaces1696512252301. Optional handler ticket injection recognizes only bodyless POST with its own actual cookie/CSRF/library authority; default plain path stays404, no consume/grant route. Existing JSON inference is preserved with a validated explicit method, and each reader call obtains a fresh original-lifetime credential without caching/coalescing.
+- First focused Node24 run156/7 (21 new), shared954/85, type/full format/whitespace/deterministic artifact/build/all8 unchanged default bundle hashes pass. Actual in-process session/account/ticket/SQLite evidence covers issuance/consumption, independent requests, binding/auth/route/private errors, client-clock independence and original/late-body cancellation.48-file Node24 list includes the unit.
+- Kept old assertions/controls, peer181 files/props, shared HTTP fixture/app routes/store schemas unchanged. Server ticket import is type-only to preserve browser bundling.
+
+**State now:**
+- Explicit development HTTP integration only; no actual network/TLS/Secure-cookie/Cognito/live/default/public acceptance. Local browser/acquisition unrun/no retry; M2.2 managed teardown remains open. No initial failure in this slice.
+
+**Next:**
+- Finish197 exact-source review/all3 hosted gates/observed evidence, normal scanned no-reply merge and separate actual-main/closure/Project/guarded primary/Root-only cleanup. Check169/181/new Ready first; preserve user/peer paths and old controls.
+
+**Decisions:**
+- A one-use ticket is never shared or cached across independent calls, and its expiry is authorized by the server. Only explicit server injection enables the issuance route; consuming a credential stays server-only.
