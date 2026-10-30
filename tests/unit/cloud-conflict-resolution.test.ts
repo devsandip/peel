@@ -1147,3 +1147,73 @@ it("rechecks quiescence before retiring an owner that starts work during validat
     expect((await oldTask).kind).toBe("conflict");
     expect(f.requests).toHaveLength(0);
   }));
+
+it("retires a closed durable owner and cancels its timer while an explicit retry send is held", async () =>
+  fixture(async (f) => {
+    const initial = await f.model.read(noteId);
+    f.control.status = 503;
+    const paused = await f.model.resolve(noteId, initial.generation!, {
+      kind: "local",
+    });
+    expect(paused.kind).toBe("paused");
+    expect(paused.view!.status).toBe("Pending upload");
+    const retained = (await f.client.get(noteId))!;
+    expect(retained.inFlight).toEqual(f.requests[0].mutation);
+    f.control.status = 200;
+    const upload = await f.owners.open({ ...f.owners.context, noteId });
+    await f.closeOwner(upload);
+    expect(f.owners.retainedOwners()).toContain(upload);
+    expect(upload.resolutionReady()).toBe(true);
+    vi.useFakeTimers();
+    try {
+      const oldAttempt = vi.spyOn(upload, "upload"),
+        h = f.hold();
+      f.control.afterSend = h.wait;
+      f.control.allowOwnerSignal = true;
+      upload.schedule();
+      const view = await f.model.read(noteId);
+      expect(view.generation).toBe(paused.view!.generation);
+      const task = f.track(f.model.retry(noteId, view.generation!));
+      await Promise.race([
+        h.entered,
+        task.then(() => {
+          throw Error("Expected held retry send");
+        }),
+      ]);
+      expect(f.signals[0]).toBe(f.controller.signal);
+      expect(f.signals[1]).toBe(f.controller.signal);
+      expect((await f.model.read(noteId)).status).toBe("Pending upload");
+      await vi.advanceTimersByTimeAsync(250);
+      expect(oldAttempt).not.toHaveBeenCalled();
+      expect(f.requests).toHaveLength(2);
+      expect(f.requests[1]).toEqual(f.requests[0]);
+      expect(f.requests[1].mutation).toEqual(retained.inFlight);
+      expect(upload.resolutionReady()).toBe(false);
+      expect(f.owners.retainedOwners()).not.toContain(upload);
+      h.release();
+      const result = await task;
+      expect(result.kind).toBe("complete");
+      expect(result.view!.status).toBe("Saved in Cloud");
+      expect(result.view!.conflict).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+    const stored = (await f.client.get(noteId))!;
+    expect(stored.inFlight).toBeNull();
+    expect(stored.pending).toBeNull();
+    expect(stored.conflict).toBeNull();
+    expect(stored.baseRevision).toBe(2);
+    expect(stored.current!.snapshot!.bodyMarkdown).toBe("Device branch");
+    const head = await f.service.get(
+      cloudScope.ownerSubject,
+      cloudScope,
+      noteId,
+    );
+    expect(head.kind).toBe("note");
+    if (head.kind === "note") {
+      expect(head.revision).toBe(2);
+      expect(head.snapshot.bodyMarkdown).toBe("Device branch");
+    }
+    expect(f.requests).toHaveLength(2);
+    expect(f.control.closes).toBe(0);
+  }));
