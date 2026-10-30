@@ -720,16 +720,19 @@ test("supports keyboard focus entry, Back to notes focus restoration, 1280x800 s
   await page.keyboard.press("Enter");
 
   const backBtn = page.getByRole("button", { name: "Back to notes" });
+  const copyDraft = preview.getByRole("button", { name: "Copy draft text" });
+  const copyRemote = preview.getByRole("button", {
+    name: "Copy observed Cloud text",
+  });
+  await expect(backBtn).toBeFocused();
+  await expect(preview).toHaveAttribute("aria-busy", "false");
+  await expect(copyDraft).toBeVisible();
   await expect(backBtn).toBeFocused();
 
   await page.keyboard.press("Tab");
-  await expect(
-    preview.getByRole("button", { name: "Copy draft text" }),
-  ).toBeFocused();
+  await expect(copyDraft).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(
-    preview.getByRole("button", { name: "Copy observed Cloud text" }),
-  ).toBeFocused();
+  await expect(copyRemote).toBeFocused();
 
   // Desktop 1280x800 split-pane and side-by-side comparison geometry.
   const libraryPaneBox = await page
@@ -772,6 +775,31 @@ test("supports keyboard focus entry, Back to notes focus restoration, 1280x800 s
     path: testInfo.outputPath("workspace-conflict-inspection-desktop.png"),
   });
 
+  await backBtn.focus();
+  await page.keyboard.press("Enter");
+  await expect(preview).toHaveCount(0);
+  await expect(inspectActiveBtn).toBeFocused();
+
+  // Held preview read proves Back to notes focuses immediately and retains focus until Copy draft text mounts.
+  await page.evaluate(() =>
+    window.cloudWorkspaceConflictInspectionFixture.holdReads(0),
+  );
+  await page.keyboard.press("Enter");
+  await page.waitForFunction(
+    () =>
+      window.cloudWorkspaceConflictInspectionFixture.heldReads().length === 1,
+  );
+  await expect(backBtn).toBeFocused();
+  await expect(preview).toHaveAttribute("aria-busy", "true");
+  await expect(copyDraft).toHaveCount(0);
+  await page.evaluate(() =>
+    window.cloudWorkspaceConflictInspectionFixture.releaseReads(false),
+  );
+  await expect(preview).toHaveAttribute("aria-busy", "false");
+  await expect(copyDraft).toBeVisible();
+  await expect(backBtn).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(copyDraft).toBeFocused();
   await backBtn.focus();
   await page.keyboard.press("Enter");
   await expect(preview).toHaveCount(0);
@@ -856,6 +884,7 @@ test("supports keyboard focus entry, Back to notes focus restoration, 1280x800 s
     "",
   );
   await expect(connectionText).toHaveAttribute("aria-live", "off");
+  await expect(preview).toHaveAttribute("aria-busy", "false");
 
   const mobileSheetBox = await page
       .locator(".cloud-workspace-inspection")
