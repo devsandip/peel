@@ -1,4 +1,8 @@
 import {
+  CloudConflictResolutionController,
+  CloudConflictResolutionError,
+} from "./cloud-conflict-resolution";
+import {
   assertCloudScope,
   validateCloudNoteId,
   validateCloudScope,
@@ -30,6 +34,8 @@ export class CloudLibraryOwners {
   private pendingAborts = new Set<AbortController>();
   private acknowledged = new WeakMap<CloudDraftSession, CloudNoteUpload>();
   private intent = 0;
+  private resolving = new Set<string>();
+  private resolution: CloudConflictResolutionController | null = null;
   private view: Readonly<{ refreshKey: number }> = Object.freeze({
     refreshKey: 0,
   });
@@ -60,6 +66,33 @@ export class CloudLibraryOwners {
       this.listeners.delete(listener);
     };
   };
+  /** Lazy original-context model; never authenticates or opens storage. */
+  conflicts = () =>
+    (this.resolution ??= new CloudConflictResolutionController(
+      this.context,
+      this.send,
+      this.signal,
+      async (noteId, action) => {
+        this.validate(this.context);
+        validateCloudNoteId(noteId);
+        const entry = this.entries.get(noteId);
+        if (
+          this.resolving.has(noteId) ||
+          this.opening.has(noteId) ||
+          (entry && (!entry.viewClosed || !entry.upload.resolutionReady()))
+        )
+          throw new CloudConflictResolutionError("busy");
+        this.resolving.add(noteId);
+        try {
+          if (entry) this.release(entry);
+          this.signal.throwIfAborted();
+          return await action();
+        } finally {
+          this.resolving.delete(noteId);
+          this.publish();
+        }
+      },
+    ));
   retainedOwners() {
     return Object.freeze(
       [...this.entries.values()].map((entry) => entry.upload),
@@ -90,7 +123,7 @@ export class CloudLibraryOwners {
     capture: boolean,
   ) {
     const noteId = upload.session.snapshot().noteId;
-    if (this.entries.has(noteId)) {
+    if (this.entries.has(noteId) || this.resolving.has(noteId)) {
       abort.abort();
       throw unavailable();
     }
@@ -180,6 +213,7 @@ export class CloudLibraryOwners {
       this.validate(selection);
       noteId = selection.noteId;
       validateCloudNoteId(noteId);
+      if (this.resolving.has(noteId)) throw unavailable();
     } catch {
       return Promise.reject(unavailable());
     }

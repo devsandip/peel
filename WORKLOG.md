@@ -2580,3 +2580,20 @@
 
 **Decisions:**
 - Resolution must reject an open/dirty/busy owner and use generation-bound CAS. Preserve explicit Put away before resolution and retain Pending until actual server confirmation.
+
+
+## 2026-10-30 - Implement resolution and coordinate three coding agents
+
+**Did:**
+- Implemented Root204 after pre-code0454c32/contract1696523465012, adding a scoped read/resolve/retry controller, note-owner exclusion and quiescent owner retirement. No peer UI/harness or default entrypoint change.
+- Final79 focused Node24/3 (35 new), shared1082/88, type/full format/whitespace/artifact/build/all8 default hashes pass. Initial73pass/1 new deadlocked fixture, corrected ordering/owned metadata-only cleanup, and controlled guard-omission counterexample remain separate in the plan.
+- At Sandip's request, added Claude Code206 for the independent two-session harness and Root controller review. Antigravity205 keeps workspace inspection/UI, Root204 keeps domain/owner/upload code and sole main integration. Exact file scopes/interface/dependency/windows and frozen-review rules are recorded in1696523585352.
+
+**State now:**
+- PR203 is fully merged/verified atffa55a5. Controller is locally implemented; exact-source hosted gates and Claude's independent review are pending at this checkpoint.204/205/206 remain open; no external agent was launched by these assignments.
+
+**Next:**
+- Freeze/open204 PR, verify its exact-source all3 gates, then have Claude review that exact commit before integration. Process concrete findings on each owner's own branch; changed heads need fresh evidence.
+
+**Decisions:**
+- Three coding lanes use disjoint production/UI/harness paths. Codex reviews peers; Claude independently reviews Codex. CI success is separate from source review and actual-main acceptance.

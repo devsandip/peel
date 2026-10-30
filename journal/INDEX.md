@@ -1,14 +1,14 @@
 # Synkies project journal
 
-Last refreshed: 2026-10-30 14:24 IST.
+Last refreshed: 2026-10-30 18:42 IST.
 
-Latest entry: [Original connections retain their scope](entries/2026-10-30-1424-original-connections-retain-their-scope.md).
+Latest entry: [Three agents close conflict recovery](entries/2026-10-30-1842-three-agents-close-conflict-recovery.md).
 
 Synkies is a fast sticky-note app with independent Mac notes, a searchable library, free independent Local storage and optional paid cloud-authoritative storage. It was called Peel until 28 October 2026.
 
 ## Where we are now
 
-PR200 is fully verified at94d2c91. I resumed issue201 after the pause and implemented the isolated connection registry; final hosted review/integration evidence is pending. The [latest entry](entries/2026-10-30-1424-original-connections-retain-their-scope.md) and [feature plan](../docs/features/cloud-connection-registry.md) distinguish local proof from enabled app behavior.
+PR202 and PR203 are fully verified through mainffa55a5. I implemented Root204’s scoped conflict controller locally; exact-source CI and Claude’s independent review are pending. Antigravity205 owns workspace inspection/UI, Claude206 owns the two-session harness and controller review. The [latest entry](entries/2026-10-30-1842-three-agents-close-conflict-recovery.md) and [controller plan](../docs/features/cloud-conflict-resolution.md) distinguish current evidence from enabled app behavior.
 
 I have Local Mac/browser development clients and tested Cloud foundations. I do not yet have a complete desktop/Cloud beta, enabled Cloud login/live delivery, real billing or an iPhone app. The [PRD](../docs/PRD.md) and [SPEC](../docs/SPEC.md) define active scope; mockups, fixtures and infrastructure PRs are not public app acceptance.
 
@@ -19,6 +19,8 @@ The scoped cached editor/library, resumable downloads and bounded web upload/dow
 I am building [M2.2](https://github.com/devsandip/peel/milestone/2), tracked in [Project12](https://github.com/users/devsandip/projects/12). Actual managed smoke/independent teardown remains unproven; audit51, managed31 and native72 stay stopped or blocked. Retired/canceled work is not shipped scope. No expired AWS allowance or stopped probe is revived, and no production/billing/public-beta acceptance is inferred from these foundations.
 
 ## Recent entries
+
+- [2026-10-30 18:42 IST: Three agents close conflict recovery](entries/2026-10-30-1842-three-agents-close-conflict-recovery.md)
 
 - [2026-10-30 14:24 IST: Original connections retain their scope](entries/2026-10-30-1424-original-connections-retain-their-scope.md)
 
