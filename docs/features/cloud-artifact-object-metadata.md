@@ -47,3 +47,12 @@ All runs used pinned Node 24.22.1 and default workers, timeouts and retries, ser
 - The build passes. All 8 default `apps/web/dist` files are byte-identical to a build of base `6209613`.
 - `.github/workflows/checks.yml` already fails Prettier at base. Only its two coverage lists changed, and its formatting is left as is.
 - Not run: any AWS, profile, credential or provider access, and any browser suite, since no web code changed. Exact-source all3 gates, independent review, normal integration and actual-main proof remain required. Issues 30, 31 and 51 and M2.2 stay open.
+
+## Envelope rework for the Root review of `dc4bb3f`
+
+Planned before code. The [Root review](https://github.com/devsandip/peel/pull/217) showed that the pinned SDK deserializer accepts fields from an unrelated XML root. An HTTP 200 `<UnrelatedResult>` carrying a matching `Name`, `MaxKeys` 2 and `IsTruncated` false was classified as complete and empty. Typed SDK fields cannot establish the response envelope.
+
+- Before the SDK sees an HTTP 200 body, the guarded transport checks the already bounded body (at most 64 KiB) for the documented envelope. That is an optional UTF-8 BOM, an optional bounded XML declaration, then exactly one `ListVersionsResult` root element, either with exactly the documented `http://s3.amazonaws.com/doc/2006-03-01/` namespace or with no attributes, ending with its closing tag and only whitespace after it.
+- A different root, another or foreign namespace, extra root attributes, a DOCTYPE, trailing content or an unclosed root is `metadata-unavailable`. Classification also requires that the envelope check passed.
+- This is a bounded prefix and suffix check on the root element only, not an XML parser. The SDK still performs the full deserialization. Error responses keep their existing handling. No object contents are read, and no dependency is added.
+- The tests replace the `reach()` turn budget with an explicit reached barrier, so slow real file reads cannot spend a fixed budget. Timing assertions and deadlines are unchanged. Root did not reproduce a failure from that budget, and this change does not claim one.
