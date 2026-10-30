@@ -2403,3 +2403,20 @@
 
 **Decisions:**
 - Settlement must cover hints/abort queued by completion observers, then reset the active task before resolving its public promise. A cached collection cursor never acknowledges a pending note; target metadata stays in memory and caller-owned stores stay open.
+
+
+## 2026-10-30 — Verify bounded hint catch-up; plan connection tickets
+
+**Did:**
+- Fully integrated194/193 at e0d9868, source40975921499/main40977159526 all3 first run/job attempts; review5706450690/Ready6511461687/proof6511585700. Observed actual adapter30/5, Cloud692/46, shared900/83 and browser79; all18 new cases execute in both Node runtimes.
+- Verified actual closure/both ProjectDone/label removal/guarded primary/unknown paths/no-reply author AND committer/scanned Root-only cleanup. All peer refs/active181 checkout remain preserved; completed cleanup helper must not be rerun. Initial local timeout and separate settlement counterexamples/unrun evidence remain explicit.
+- Created195 in the current milestone/Project and wrote the requirement-linked connection-ticket plan before runtime/tests. Server-only session resolver coordination is required before its edit.
+
+**State now:**
+- Hint catch-up is one explicit bounded pass, with no live listener/default Cloud or public acceptance. M2.2 remains open. No195 runtime/tests or evidence yet; peer181 six files/props remain unchanged.
+
+**Next:**
+- Commit the195 plan, record additive resolveSession interface in169, set195 Inprogress, then implement short-lived digest-stored single-use tickets with actual isolated SQLite transaction/lifetime evidence. Preserve old controls and complete any newly ready peer PR first.
+
+**Decisions:**
+- Connection-time tickets are only a point-in-time prerequisite; continuing revocation and fan-out authorization require later independent checks. Strict original-session/scope/time checks and one-use durable claims precede any actual transport.
