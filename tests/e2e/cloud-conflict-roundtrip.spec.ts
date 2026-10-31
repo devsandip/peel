@@ -1059,7 +1059,7 @@ test.describe("workspace conflict actions", () => {
       expect(await original!.evaluate((element) => element.isConnected)).toBe(
         true,
       );
-      await expect(textbox).toHaveValue(DEVICE_B);
+      await expect(textbox).toHaveText(DEVICE_B);
       await expect(textbox).toBeFocused();
       expect((await durable(b))?.inFlight?.opId).toBe(retained?.inFlight?.opId);
       expect(mutations("b")).toHaveLength(count);
@@ -1120,6 +1120,17 @@ test.describe("workspace conflict actions", () => {
     expect(await headBody(0)).toBe(combined);
     const pending = await durable(b);
     expect(pending?.inFlight).not.toBeNull();
+    await panel
+      .getByRole("button", { name: "Copy combined text", exact: true })
+      .click();
+    expect(
+      await b.page.evaluate(() =>
+        window.cloudConflictRoundtripFixture.copiedCalls(),
+      ),
+    ).toEqual([combined]);
+    await expect(
+      panel.getByRole("status", { name: "Resolution status", exact: true }),
+    ).toHaveText("Pending upload — Saving to Cloud...");
     await b.page.setViewportSize({ width: 1280, height: 800 });
     await b.page.screenshot({
       path: testInfo.outputPath("workspace-resolution-pending-desktop.png"),
@@ -1264,6 +1275,12 @@ test.describe("workspace conflict actions", () => {
     await panel
       .getByRole("button", { name: "Use observed Cloud version", exact: true })
       .click();
+    await panel
+      .getByRole("region", { name: "Confirm chosen version", exact: true })
+      .scrollIntoViewIfNeeded();
+    await b.page.screenshot({
+      path: testInfo.outputPath("workspace-resolution-mobile-confirmation.png"),
+    });
     await panel
       .getByRole("button", { name: "Confirm resolution", exact: true })
       .click();

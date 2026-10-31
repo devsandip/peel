@@ -28,6 +28,16 @@ const includeConflictActions =
   new URL(location.href).searchParams.get("actions") === "1";
 if (!prefix || !/^peel-m0-cloud-conflict-roundtrip-[a-z0-9-]+$/.test(prefix))
   throw Error("Explicit owned conflict roundtrip fixture required");
+// This synthetic page never reads or writes the operating system clipboard.
+const clipboardCalls: string[] = [];
+Object.defineProperty(navigator, "clipboard", {
+  configurable: true,
+  value: Object.freeze({
+    async writeText(text: string) {
+      clipboardCalls.push(text);
+    },
+  }),
+});
 const stores = new Map<string, IndexedDBCloudStateStore>(),
   models: CloudBrowserWorkspaceSession[] = [],
   controllers: AbortController[] = [],
@@ -110,6 +120,7 @@ const prepared = (index: number) => {
 /** The real merged controller from the real owners of that session. */
 const controller = (index: number) => prepared(index).owners.conflicts();
 const api = {
+  copiedCalls: () => [...clipboardCalls],
   /** An explicit parent prop change, without replacing the account or editor. */
   setConflictActions(enabled: boolean) {
     conflictActionsEnabled = enabled;
@@ -183,6 +194,7 @@ const api = {
   closeCounts: () => [...closeCounts],
   /** Removes only databases carrying this fixture's explicit owned prefix. */
   async destroy() {
+    clipboardCalls.length = 0;
     for (const owned of controllers) owned.abort();
     root.unmount();
     await Promise.allSettled([...tasks]);
