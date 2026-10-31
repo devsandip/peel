@@ -2,6 +2,7 @@ import "@vitejs/plugin-react/preamble";
 import "../../apps/web/src/styles.css";
 import { StrictMode, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
+import { flushSync } from "react-dom";
 import { deleteDB } from "idb";
 import { CloudBrowserWorkspaceSession } from "../../apps/web/src/cloud-browser-workspace-session";
 import {
@@ -23,6 +24,8 @@ const config = Reflect.get(window, "syntheticConflictRoundtripConfig") as {
     csrfToken: string;
   },
   prefix = new URL(location.href).searchParams.get("db");
+const includeConflictActions =
+  new URL(location.href).searchParams.get("actions") === "1";
 if (!prefix || !/^peel-m0-cloud-conflict-roundtrip-[a-z0-9-]+$/.test(prefix))
   throw Error("Explicit owned conflict roundtrip fixture required");
 const stores = new Map<string, IndexedDBCloudStateStore>(),
@@ -31,6 +34,7 @@ const stores = new Map<string, IndexedDBCloudStateStore>(),
   closeCounts: number[] = [],
   tasks = new Set<Promise<unknown>>();
 let selected = -1;
+let conflictActionsEnabled = includeConflictActions;
 const track = <T,>(task: Promise<T>) => {
   tasks.add(task);
   void task.catch(() => {});
@@ -85,6 +89,7 @@ function Parent({ model }: { model: CloudBrowserWorkspaceSession }) {
           onOpen={prepared.owners.open}
           onCreate={prepared.owners.create}
           onPutAway={prepared.owners.putAway}
+          conflictOwners={conflictActionsEnabled ? prepared.owners : undefined}
         />
       )}
     </>
@@ -105,6 +110,11 @@ const prepared = (index: number) => {
 /** The real merged controller from the real owners of that session. */
 const controller = (index: number) => prepared(index).owners.conflicts();
 const api = {
+  /** An explicit parent prop change, without replacing the account or editor. */
+  setConflictActions(enabled: boolean) {
+    conflictActionsEnabled = enabled;
+    flushSync(render);
+  },
   select(token: string) {
     if (selected >= 0) controllers[selected].abort();
     selected = create(token);

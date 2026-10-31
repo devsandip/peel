@@ -151,6 +151,7 @@ async function openSession(
   baseURL: string,
   label: string,
   accountIndex: number,
+  actions = false,
 ): Promise<Session> {
   const issued = await server.openSession(label, accountIndex);
   sensitive.push(issued.csrfToken, issued.cookie.split("=")[1]);
@@ -191,7 +192,7 @@ async function openSession(
     }
   });
   await page.goto(
-    `/@fs${resolve("tests/fixtures/cloud-conflict-roundtrip.html")}?db=${db}`,
+    `/@fs${resolve("tests/fixtures/cloud-conflict-roundtrip.html")}?db=${db}${actions ? "&actions=1" : ""}`,
   );
   await page.waitForFunction(() => !!window.cloudConflictRoundtripFixture);
   const session = {
@@ -249,11 +250,11 @@ const headBody = async (index: number, id = noteId) =>
   (await server.head(index, id)).snapshot?.bodyMarkdown;
 
 /** Two contexts of one account, both holding the same downloaded note. */
-async function twoSessions(browser: Browser, baseURL: string) {
+async function twoSessions(browser: Browser, baseURL: string, actions = false) {
   sensitive.push(START, DEVICE_A, DEVICE_B);
   await server.seedNote(0, noteId, START);
-  const a = await openSession(browser, baseURL, "a", 0),
-    b = await openSession(browser, baseURL, "b", 0);
+  const a = await openSession(browser, baseURL, "a", 0, actions),
+    b = await openSession(browser, baseURL, "b", 0, actions);
   for (const session of [a, b]) {
     await prepare(session);
     await download(session);
@@ -272,8 +273,9 @@ async function realConflict(
     await putAway(a);
   },
   recovery = false,
+  actions = false,
 ) {
-  const { a, b } = await twoSessions(browser, baseURL);
+  const { a, b } = await twoSessions(browser, baseURL, actions);
   server.setSwitch("b", { offline: true });
   await openEditor(b, START);
   await type(b, DEVICE_B);
@@ -1017,5 +1019,254 @@ test.describe("real workspace inspection", () => {
     expect(state!.conflict!.local.snapshot!.bodyMarkdown).toBe(DEVICE_B);
     expect(state!.conflict!.remote!.bodyMarkdown).toBe(DEVICE_A);
     expect((await read(b)).status).toBe("Conflict");
+  });
+});
+
+test.describe("workspace conflict actions", () => {
+  test("changing the optional actions binding preserves an active editor and its retained upload", async ({
+    browser,
+    baseURL,
+  }) => {
+    const { b } = await twoSessions(browser, baseURL!, true);
+    await openEditor(b, START);
+    server.setSwitch("b", { hold: true });
+    await type(b, DEVICE_B);
+    await expect.poll(() => server.held("b")).toBe(1);
+    await expect(editorStatus(b)).toHaveText("Pending upload");
+    const textbox = article(b).getByRole("textbox", { name: "Note text" });
+    const original = await textbox.elementHandle();
+    expect(original).not.toBeNull();
+    const retained = await durable(b),
+      count = mutations("b").length;
+    expect(retained?.inFlight).not.toBeNull();
+    await textbox.focus();
+    for (const enabled of [false, true]) {
+      await b.page.evaluate(
+        (value) =>
+          window.cloudConflictRoundtripFixture.setConflictActions(value),
+        enabled,
+      );
+      expect(await original!.evaluate((element) => element.isConnected)).toBe(
+        true,
+      );
+      await expect(textbox).toHaveValue(DEVICE_B);
+      await expect(textbox).toBeFocused();
+      expect((await durable(b))?.inFlight?.opId).toBe(retained?.inFlight?.opId);
+      expect(mutations("b")).toHaveLength(count);
+    }
+    await putAway(b);
+    await expect(card(b, DEVICE_B)).toContainText("Pending upload");
+    expect(await headBody(0)).toBe(DEVICE_B);
+    server.release("b");
+    await expect(card(b, DEVICE_B)).toContainText("Saved in Cloud");
+    expect(mutations("b")).toHaveLength(count);
+    await original!.dispose();
+  });
+
+  const actionsPanel = (session: Session) =>
+    session.page.getByRole("region", {
+      name: "Cloud conflict resolution",
+      exact: true,
+    });
+  const inspectActions = async (session: Session) => {
+    await library(session)
+      .getByRole("button", { name: `Inspect conflict for ${DEVICE_B}` })
+      .click();
+    await expect(actionsPanel(session)).toHaveAttribute("aria-busy", "false");
+    await expect(
+      session.page.getByRole("button", { name: "Back to notes" }),
+    ).toBeFocused();
+  };
+
+  test("combines real concurrent drafts through the workspace and stays Pending while its ACK is held", async ({
+    browser,
+    baseURL,
+  }, testInfo) => {
+    const { b } = await realConflict(browser, baseURL!, undefined, false, true);
+    await inspectActions(b);
+    const panel = actionsPanel(b),
+      combined =
+        "Session A confirmed text\nSession B preserved draft\nCombined in workspace ##review";
+    sensitive.push(combined);
+    await panel
+      .getByRole("button", { name: "Combine text", exact: true })
+      .click();
+    await panel
+      .getByLabel("Combined note text", { exact: true })
+      .fill(combined);
+    const before = mutations("b").length;
+    server.setSwitch("b", { hold: true });
+    await panel
+      .getByRole("button", { name: "Confirm resolution", exact: true })
+      .click();
+    await expect.poll(() => server.held("b")).toBe(1);
+    await expect(
+      panel.getByRole("status", { name: "Resolution status", exact: true }),
+    ).toHaveText("Pending upload — Saving to Cloud...");
+    await expect(panel).not.toContainText("Saved in Cloud");
+    expect(mutations("b")).toHaveLength(before + 1);
+    // This server holds the reply after committing. The device still lacks
+    // the matching acknowledgement and must remain Pending.
+    expect(await headBody(0)).toBe(combined);
+    const pending = await durable(b);
+    expect(pending?.inFlight).not.toBeNull();
+    await b.page.setViewportSize({ width: 1280, height: 800 });
+    await b.page.screenshot({
+      path: testInfo.outputPath("workspace-resolution-pending-desktop.png"),
+    });
+    server.release("b");
+    await expect(
+      panel.getByRole("status", { name: "Resolution status", exact: true }),
+    ).toHaveText("Saved in Cloud");
+    expect(await headBody(0)).toBe(combined);
+    const saved = await durable(b);
+    expect(saved?.conflict).toBeNull();
+    expect(saved?.pending).toBeNull();
+    expect(saved?.inFlight).toBeNull();
+    expect(saved?.base?.bodyMarkdown).toBe(combined);
+  });
+
+  test("adopts the observed Cloud version through the workspace without sending a mutation", async ({
+    browser,
+    baseURL,
+  }) => {
+    const { b } = await realConflict(browser, baseURL!, undefined, false, true);
+    await inspectActions(b);
+    const panel = actionsPanel(b),
+      before = mutations("b").length;
+    await panel
+      .getByRole("button", { name: "Use observed Cloud version", exact: true })
+      .click();
+    await panel
+      .getByRole("button", { name: "Confirm resolution", exact: true })
+      .click();
+    await expect(
+      panel.getByRole("status", { name: "Resolution notice", exact: true }),
+    ).toContainText("without a new Cloud request");
+    expect(mutations("b")).toHaveLength(before);
+    const state = await durable(b);
+    expect(state?.conflict).toBeNull();
+    expect(state?.base?.bodyMarkdown).toBe(DEVICE_A);
+    expect(await headBody(0)).toBe(DEVICE_A);
+    await expect(panel).not.toContainText("Latest");
+    await expect(panel).not.toContainText("Live");
+  });
+
+  test("retries a lost workspace resolution reply through the same durable operation", async ({
+    browser,
+    baseURL,
+  }) => {
+    const { b } = await realConflict(browser, baseURL!, undefined, false, true);
+    await inspectActions(b);
+    const panel = actionsPanel(b);
+    server.setSwitch("b", { lose: 1 });
+    await panel
+      .getByRole("button", { name: "Keep device version", exact: true })
+      .click();
+    await panel
+      .getByRole("button", { name: "Confirm resolution", exact: true })
+      .click();
+    const retryButton = panel.getByRole("button", {
+      name: "Retry upload",
+      exact: true,
+    });
+    await expect(retryButton).toBeEnabled();
+    await expect(
+      panel.getByRole("status", { name: "Resolution status", exact: true }),
+    ).toHaveText("Pending upload");
+    const retained = await durable(b);
+    expect(retained?.inFlight).not.toBeNull();
+    const sent = mutations("b").at(-1);
+    expect(sent?.opId).toBeTruthy();
+    expect(await headBody(0)).toBe(DEVICE_B);
+    await retryButton.click();
+    await expect(
+      panel.getByRole("status", { name: "Resolution status", exact: true }),
+    ).toHaveText("Saved in Cloud");
+    expect(mutations("b").at(-1)?.opId).toBe(sent?.opId);
+    expect(mutations("b").at(-1)?.replayed).toBe(true);
+    const saved = await durable(b);
+    expect(saved?.inFlight).toBeNull();
+    expect(saved?.base?.bodyMarkdown).toBe(DEVICE_B);
+  });
+
+  test("hides the old account when its workspace resolution reply arrives after replacement", async ({
+    browser,
+    baseURL,
+  }) => {
+    const { b } = await realConflict(browser, baseURL!, undefined, false, true);
+    await inspectActions(b);
+    const panel = actionsPanel(b);
+    server.setSwitch("b", { hold: true });
+    await panel
+      .getByRole("button", { name: "Keep device version", exact: true })
+      .click();
+    await panel
+      .getByRole("button", { name: "Confirm resolution", exact: true })
+      .click();
+    await expect.poll(() => server.held("b")).toBe(1);
+    const replacementText = "Replacement account isolated note";
+    sensitive.push(replacementText);
+    await server.seedNote(1, noteId, replacementText);
+    const issued = await server.openSession("workspace-replacement", 1);
+    sensitive.push(issued.csrfToken, issued.cookie.split("=")[1]);
+    b.proxyLabel.current = "workspace-replacement";
+    await b.page.evaluate(
+      (token) => window.cloudConflictRoundtripFixture.select(token),
+      issued.csrfToken,
+    );
+    await prepare(b);
+    await download(b);
+    await expect(card(b, replacementText)).toContainText("Saved in Cloud");
+    await expect(panel).toHaveCount(0);
+    await expect(b.page.locator("body")).not.toContainText(DEVICE_B);
+    await expect(b.page.locator("body")).not.toContainText(DEVICE_A);
+    server.release("b");
+    await b.page.evaluate(() => new Promise(requestAnimationFrame));
+    await expect(card(b, replacementText)).toBeVisible();
+    await expect(b.page.locator("body")).not.toContainText(DEVICE_B);
+    await expect(b.page.locator("body")).not.toContainText(
+      "Resolution confirmed",
+    );
+    expect((await durable(b))?.base?.bodyMarkdown).toBe(replacementText);
+    expect(await headBody(1)).toBe(replacementText);
+  });
+
+  test("keeps narrow-screen containment and restores focus after a real conflict decision", async ({
+    browser,
+    baseURL,
+  }, testInfo) => {
+    const { b } = await realConflict(browser, baseURL!, undefined, false, true);
+    await b.page.setViewportSize({ width: 390, height: 844 });
+    await inspectActions(b);
+    const panel = actionsPanel(b),
+      back = b.page.getByRole("button", { name: "Back to notes", exact: true });
+    await expect(b.page.locator(".cloud-workspace-library")).toHaveAttribute(
+      "inert",
+      "",
+    );
+    expect(
+      await b.page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(390);
+    await b.page.screenshot({
+      path: testInfo.outputPath("workspace-resolution-mobile.png"),
+    });
+    await panel
+      .getByRole("button", { name: "Use observed Cloud version", exact: true })
+      .click();
+    await panel
+      .getByRole("button", { name: "Confirm resolution", exact: true })
+      .click();
+    await expect(
+      panel.getByRole("status", { name: "Resolution notice", exact: true }),
+    ).toContainText("without a new Cloud request");
+    await back.click();
+    await expect(panel).toHaveCount(0);
+    await expect(
+      b.page.locator(".cloud-workspace-library"),
+    ).not.toHaveAttribute("inert", "");
+    await expect(
+      library(b).getByRole("button", { name: "New note", exact: true }),
+    ).toBeFocused();
   });
 });
