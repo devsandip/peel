@@ -22,6 +22,7 @@ import {
   DurableCloudClient,
   type CloudScope,
 } from "../../packages/cloud-protocol/src/durable";
+import type { CloudLibraryCollection } from "../../packages/cloud-protocol/src/library-local";
 import {
   createCloudClient,
   saveCloudDraft,
@@ -57,6 +58,24 @@ type MalformedPreset =
   | "context-getter"
   | "scope-getter"
   | "owners-getter";
+
+type NewNoteCallbackMode =
+  | "omitted"
+  | "undefined-data"
+  | "enabled"
+  | "malformed-null"
+  | "malformed-string"
+  | "non-enumerable"
+  | "callback-getter";
+
+type OptionalNewNoteCallback =
+  CloudConflictResolutionPanelProps["onNewNoteRetained"];
+
+type RetainedCallbackCall = Readonly<{
+  slot: number;
+  sessionIndex: number;
+  newNoteId: string;
+}>;
 
 const prefix = new URL(location.href).searchParams.get("db");
 if (!prefix || !/^peel-m0-cloud-resolution-panel-[a-z0-9-]+$/.test(prefix)) {
@@ -97,6 +116,9 @@ const underlyingStores = new Map<string, IndexedDBCloudStateStore>(),
   closeCounts: number[] = [],
   conflictsCounts: number[] = [],
   subscribeCounts: number[] = [],
+  newNoteRecoveryCounts: number[] = [],
+  retainedCallbackLog: RetainedCallbackCall[] = [],
+  newNoteHandlerCache = new Map<string, (newNoteId: string) => Promise<void>>(),
   instrumentedOwners = new WeakSet<CloudLibraryOwners>(),
   openUploads = new Map<string, CloudNoteUpload>(),
   tasks = new Set<Promise<unknown>>();
@@ -108,6 +130,10 @@ let selectedSession = -1,
     active: false,
   },
   malformedPreset: MalformedPreset = null,
+  newNoteCallbackMode: NewNoteCallbackMode = "omitted",
+  newNoteHandlerSlot = 0,
+  holdNewNoteCallbacks = false,
+  failNextNewNoteCallbacks = 0,
   panelMounted = true,
   getterCount = 0,
   holdReadsForIndex: number | null = null,
@@ -120,6 +146,37 @@ const heldReadsQueue: Array<{
   reject: (reason?: unknown) => void;
 }> = [];
 
+const heldNewNoteCallbacksQueue: Array<{
+  resolve: () => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+function getNewNoteHandler(
+  sessionIndex: number,
+  slot: number,
+): (newNoteId: string) => Promise<void> {
+  const cacheKey = `${sessionIndex}:${slot}`;
+  let handler = newNoteHandlerCache.get(cacheKey);
+  if (!handler) {
+    handler = async (newNoteId: string) => {
+      retainedCallbackLog.push(
+        Object.freeze({ slot, sessionIndex, newNoteId }),
+      );
+      if (holdNewNoteCallbacks) {
+        await new Promise<void>((resolve, reject) => {
+          heldNewNoteCallbacksQueue.push({ resolve, reject });
+        });
+      }
+      if (failNextNewNoteCallbacks > 0) {
+        failNextNewNoteCallbacks -= 1;
+        throw Error("synthetic-private-open-retained-failure");
+      }
+    };
+    newNoteHandlerCache.set(cacheKey, handler);
+  }
+  return handler;
+}
+
 const track = <T,>(task: Promise<T>): Promise<T> => {
   tasks.add(task);
   void task.catch(() => {});
@@ -131,7 +188,8 @@ function instrumentOwners(index: number) {
   if (!value || instrumentedOwners.has(value.owners)) return;
   instrumentedOwners.add(value.owners);
   const originalConflicts = value.owners.conflicts,
-    originalSubscribe = value.owners.subscribe;
+    originalSubscribe = value.owners.subscribe,
+    originalNewNoteRecovery = value.owners.newNoteRecovery;
   value.owners.conflicts = () => {
     conflictsCounts[index] += 1;
     return originalConflicts();
@@ -139,6 +197,10 @@ function instrumentOwners(index: number) {
   value.owners.subscribe = (listener: () => void) => {
     subscribeCounts[index] += 1;
     return originalSubscribe(listener);
+  };
+  value.owners.newNoteRecovery = () => {
+    newNoteRecoveryCounts[index] += 1;
+    return originalNewNoteRecovery();
   };
 }
 
@@ -152,6 +214,7 @@ function createSessionModel(token: string): number {
   closeCounts[index] = 0;
   conflictsCounts[index] = 0;
   subscribeCounts[index] = 0;
+  newNoteRecoveryCounts[index] = 0;
 
   models.push(
     new CloudBrowserWorkspaceSession(
@@ -215,13 +278,43 @@ function buildPanelProps(): CloudConflictResolutionPanelProps {
     activeContext = mutableContextOverride ?? base.context;
 
   if (malformedPreset === null) {
-    return {
+    const normalProps: CloudConflictResolutionPanelProps = {
       context: activeContext,
       owners: base.owners,
       signal: models[selectedSession].signal,
       noteId: selectedNoteId,
       refreshKey: effectiveRefreshKey,
     };
+    if (newNoteCallbackMode === "undefined-data") {
+      normalProps.onNewNoteRetained = undefined;
+    } else if (newNoteCallbackMode === "enabled") {
+      normalProps.onNewNoteRetained = getNewNoteHandler(
+        selectedSession,
+        newNoteHandlerSlot,
+      );
+    } else if (newNoteCallbackMode === "malformed-null") {
+      normalProps.onNewNoteRetained =
+        null as unknown as OptionalNewNoteCallback;
+    } else if (newNoteCallbackMode === "malformed-string") {
+      normalProps.onNewNoteRetained =
+        "not-a-function" as unknown as OptionalNewNoteCallback;
+    } else if (newNoteCallbackMode === "non-enumerable") {
+      Object.defineProperty(normalProps, "onNewNoteRetained", {
+        enumerable: false,
+        value: getNewNoteHandler(selectedSession, newNoteHandlerSlot),
+      });
+    } else if (newNoteCallbackMode === "callback-getter") {
+      const boundSession = selectedSession,
+        boundSlot = newNoteHandlerSlot;
+      Object.defineProperty(normalProps, "onNewNoteRetained", {
+        enumerable: true,
+        get() {
+          getterCount += 1;
+          return getNewNoteHandler(boundSession, boundSlot);
+        },
+      });
+    }
+    return normalProps;
   }
 
   switch (malformedPreset) {
@@ -776,6 +869,48 @@ const api = {
     const { context } = prepared(index);
     return new DurableCloudClient(context.store, context.scope).get(noteId);
   },
+  async listLibraryNotes(
+    collection: CloudLibraryCollection = "notes",
+    index = selectedSession,
+  ) {
+    const { context } = prepared(index),
+      page = await context.store.listLibrary(context.scope, {
+        collection,
+        limit: 32,
+        cursor: null,
+      });
+    return page.entries;
+  },
+  setNewNoteCallbackMode(mode: NewNoteCallbackMode) {
+    newNoteCallbackMode = mode;
+    renderFixture();
+  },
+  rotateNewNoteCallback() {
+    newNoteHandlerSlot += 1;
+    renderFixture();
+    return newNoteHandlerSlot;
+  },
+  holdNewNoteHandoff(hold: boolean) {
+    holdNewNoteCallbacks = hold;
+  },
+  heldNewNoteHandoffCount: () => heldNewNoteCallbacksQueue.length,
+  releaseNewNoteHandoffs(shouldFail: boolean) {
+    holdNewNoteCallbacks = false;
+    for (const waiter of heldNewNoteCallbacksQueue.splice(0)) {
+      if (shouldFail) {
+        waiter.reject(Error("synthetic-private-held-open-retained-failure"));
+      } else {
+        waiter.resolve();
+      }
+    }
+  },
+  failNewNoteHandoffs(count: number) {
+    failNextNewNoteCallbacks = count;
+  },
+  retainedCallbackCalls: () => [...retainedCallbackLog],
+  clearRetainedCallbackCalls() {
+    retainedCallbackLog.length = 0;
+  },
   holdReads(index: number | null) {
     holdReadsForIndex = index;
   },
@@ -830,6 +965,8 @@ const api = {
   closeCounts: () => [...closeCounts],
   conflictsCount: (index = selectedSession) => conflictsCounts[index] ?? 0,
   subscribeCount: (index = selectedSession) => subscribeCounts[index] ?? 0,
+  newNoteRecoveryCount: (index = selectedSession) =>
+    newNoteRecoveryCounts[index] ?? 0,
   getterCalls: () => getterCount,
   databases: async () =>
     (await indexedDB.databases()).map((database) => database.name),
@@ -837,8 +974,11 @@ const api = {
   async destroy() {
     failReadsForIndex = null;
     failCommitsForIndex = null;
+    failNextNewNoteCallbacks = 0;
     api.releaseReads(false);
     api.releaseAllClipboard(false);
+    api.releaseNewNoteHandoffs(false);
+    newNoteHandlerCache.clear();
     openUploads.clear();
     for (const controller of controllers) controller.abort();
     root.unmount();
