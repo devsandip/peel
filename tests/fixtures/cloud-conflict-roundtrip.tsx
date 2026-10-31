@@ -43,6 +43,20 @@ const stores = new Map<string, IndexedDBCloudStateStore>(),
   controllers: AbortController[] = [],
   closeCounts: number[] = [],
   tasks = new Set<Promise<unknown>>();
+type RecoveredReadControl = {
+  sourceNoteId: string;
+  fail: number;
+  hold: boolean;
+  reads: number;
+};
+const recoveredReadControls = new Map<number, RecoveredReadControl>(),
+  heldRecoveredReads: Array<{ index: number; resolve: () => void }> = [];
+let trapGenericOpen = false,
+  genericOpenCalls = 0;
+const unrelatedOpen = async () => {
+  genericOpenCalls++;
+  throw Error("Synthetic unrelated onOpen must not handle recovery");
+};
 let selected = -1;
 let conflictActionsEnabled = includeConflictActions;
 const track = <T,>(task: Promise<T>) => {
@@ -68,7 +82,29 @@ function create(token: string) {
         }
         const original = store;
         return {
-          read: (...args) => original.read(...args),
+          read: (scope: CloudScope, noteId: string) => {
+            const control = recoveredReadControls.get(index);
+            if (!control || noteId === control.sourceNoteId)
+              return original.read(scope, noteId);
+            return track(
+              (async () => {
+                const state = await original.read(scope, noteId);
+                // Preparation reads an absent destination. Only a later genuine
+                // owner opening an already-retained new row receives this fault.
+                if (state === null) return null;
+                control.reads++;
+                if (control.fail > 0) {
+                  control.fail--;
+                  throw Error("Synthetic retained-note read failure");
+                }
+                if (control.hold)
+                  await new Promise<void>((resolve) =>
+                    heldRecoveredReads.push({ index, resolve }),
+                  );
+                return state;
+              })(),
+            );
+          },
           commit: (...args) => original.commit(...args),
           readPull: (...args) => original.readPull(...args),
           commitPull: (...args) => original.commitPull(...args),
@@ -96,7 +132,7 @@ function Parent({ model }: { model: CloudBrowserWorkspaceSession }) {
           context={prepared.context}
           signal={model.signal}
           refreshKey={snapshot.refreshKey}
-          onOpen={prepared.owners.open}
+          onOpen={trapGenericOpen ? unrelatedOpen : prepared.owners.open}
           onCreate={prepared.owners.create}
           onPutAway={prepared.owners.putAway}
           conflictOwners={conflictActionsEnabled ? prepared.owners : undefined}
@@ -121,6 +157,44 @@ const prepared = (index: number) => {
 const controller = (index: number) => prepared(index).owners.conflicts();
 const api = {
   copiedCalls: () => [...clipboardCalls],
+  flushParent() {
+    flushSync(render);
+  },
+  setGenericOpenTrap(enabled: boolean) {
+    trapGenericOpen = enabled;
+    flushSync(render);
+  },
+  genericOpenCalls: () => genericOpenCalls,
+  controlRecoveredReads(
+    sourceNoteId: string,
+    options: { fail?: number; hold?: boolean },
+    index = selected,
+  ) {
+    recoveredReadControls.set(index, {
+      sourceNoteId,
+      fail: options.fail ?? 0,
+      hold: options.hold ?? false,
+      reads: 0,
+    });
+  },
+  recoveredReadCount: (index = selected) =>
+    recoveredReadControls.get(index)?.reads ?? 0,
+  heldRecoveredReadCount: () => heldRecoveredReads.length,
+  releaseRecoveredReads() {
+    for (const control of recoveredReadControls.values()) control.hold = false;
+    for (const held of heldRecoveredReads.splice(0)) held.resolve();
+  },
+  async libraryNotes(index = selected) {
+    const { context } = prepared(index);
+    return (
+      await context.store.listLibrary(context.scope, {
+        collection: "notes",
+        limit: 32,
+        cursor: null,
+      })
+    ).entries;
+  },
+
   /** An explicit parent prop change, without replacing the account or editor. */
   setConflictActions(enabled: boolean) {
     conflictActionsEnabled = enabled;
@@ -195,6 +269,9 @@ const api = {
   /** Removes only databases carrying this fixture's explicit owned prefix. */
   async destroy() {
     clipboardCalls.length = 0;
+    api.releaseRecoveredReads();
+    recoveredReadControls.clear();
+    trapGenericOpen = false;
     for (const owned of controllers) owned.abort();
     root.unmount();
     await Promise.allSettled([...tasks]);

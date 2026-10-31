@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -21,7 +22,7 @@ import {
 } from "./cloud-cached-library";
 import { CloudConflictPreview } from "./cloud-conflict-preview";
 import { CloudConflictResolutionPanel } from "./cloud-conflict-resolution-panel";
-import type { CloudLibraryOwners } from "./cloud-library-owners";
+import { CloudLibraryOwners } from "./cloud-library-owners";
 import type { CloudDraftSession } from "./cloud-draft-session";
 import type { CloudNoteUpload } from "./cloud-note-upload";
 import { CloudUploadingNoteEditor } from "./cloud-uploading-note-editor";
@@ -363,6 +364,55 @@ function isValidUpload(candidate: unknown): candidate is CloudNoteUpload {
   );
 }
 
+type RecoveryOpenBinding = Readonly<{
+  owners: CloudLibraryOwners;
+  context: CloudLibraryContext;
+  open: CloudLibraryOwners["open"];
+}>;
+
+function captureRecoveryOpenBinding(
+  owners: unknown,
+  context: CloudLibraryContext,
+  signal: AbortSignal,
+): RecoveryOpenBinding | null {
+  try {
+    if (
+      !owners ||
+      typeof owners !== "object" ||
+      Object.getPrototypeOf(owners) !== CloudLibraryOwners.prototype ||
+      !(owners instanceof CloudLibraryOwners) ||
+      signal.aborted
+    )
+      return null;
+    const ownerContext = ownDataProperty(owners, "context"),
+      ownerSignal = ownDataProperty(owners, "signal"),
+      open = ownDataProperty(owners, "open");
+    if (
+      !ownerContext.ok ||
+      !ownerSignal.ok ||
+      !open.ok ||
+      ownerSignal.value !== signal ||
+      typeof open.value !== "function" ||
+      !ownerContext.value ||
+      typeof ownerContext.value !== "object"
+    )
+      return null;
+    const store = ownDataProperty(ownerContext.value, "store"),
+      scope = ownDataProperty(ownerContext.value, "scope");
+    if (!store.ok || !scope.ok || store.value !== context.store) return null;
+    const checked = captureScope(scope.value);
+    if (!checked || JSON.stringify(checked) !== JSON.stringify(context.scope))
+      return null;
+    return Object.freeze({
+      owners,
+      context: ownerContext.value as CloudLibraryContext,
+      open: open.value as CloudLibraryOwners["open"],
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Explicit scoped composition only; neither this workspace nor its callbacks grant Cloud auth. */
 export function CloudWorkspace(props: CloudWorkspaceProps) {
   const captured = captureWorkspaceProps(props),
@@ -446,7 +496,7 @@ function SelectedWorkspace({
   const scopeKey = useMemo(() => JSON.stringify(scope), [scope]);
   const workspaceContext = useMemo<CloudLibraryContext>(
     () => Object.freeze({ store, scope: Object.freeze({ ...scope }) }),
-    [store, scope],
+    [store, scopeKey],
   );
   const [aborted, setAborted] = useState(() => signal.aborted),
     [isNarrow, setIsNarrow] = useState(readIsNarrow),
@@ -457,6 +507,14 @@ function SelectedWorkspace({
     ),
     [workspaceIssue, setWorkspaceIssue] = useState<string | null>(null),
     [returnFocus, setReturnFocus] = useState<ReturnFocusTarget | null>(null);
+
+  const recoveryOpenBinding = useMemo(
+    () => captureRecoveryOpenBinding(conflictOwners, workspaceContext, signal),
+    [conflictOwners, workspaceContext, signal],
+  );
+  const recoveryOpenBindingRef = useRef(recoveryOpenBinding),
+    recoveryOpeningRef = useRef(false);
+  recoveryOpenBindingRef.current = recoveryOpenBinding;
 
   const validRefreshKey = Number.isSafeInteger(refreshKey) && refreshKey >= 0;
   const usable = !aborted && !signal.aborted && validRefreshKey;
@@ -1009,6 +1067,92 @@ function SelectedWorkspace({
     }
   };
 
+  const inspectedRecoverySource = visibleInspection?.noteId ?? null;
+  const handleNewNoteRetained = useCallback(
+    async (newNoteId: string) => {
+      const binding = recoveryOpenBinding,
+        inspection = activeInspectionRef.current;
+      const unavailable = () =>
+        Error("Could not open this retained Cloud draft");
+      const currentBinding = () => {
+        if (!binding || recoveryOpenBindingRef.current !== binding)
+          return false;
+        const live = captureRecoveryOpenBinding(
+          binding.owners,
+          workspaceContext,
+          signal,
+        );
+        return (
+          live !== null &&
+          live.context === binding.context &&
+          live.open === binding.open
+        );
+      };
+      if (
+        !binding ||
+        !mounted.current ||
+        signal.aborted ||
+        !validRefreshKeyRef.current ||
+        transitioning.current ||
+        recoveryOpeningRef.current ||
+        activeEditorRef.current ||
+        !inspection ||
+        inspection.noteId !== inspectedRecoverySource ||
+        !isValidNoteId(newNoteId) ||
+        newNoteId === inspection.noteId ||
+        !currentBinding()
+      ) {
+        throw unavailable();
+      }
+      const requestId = ++latestRequest.current;
+      recoveryOpeningRef.current = true;
+      try {
+        const upload = await binding.open.call(binding.owners, {
+          ...workspaceContext,
+          noteId: newNoteId,
+        });
+        if (
+          !isValidUpload(upload) ||
+          upload.session.snapshot().noteId !== newNoteId ||
+          upload.session.snapshot().closed ||
+          !mounted.current ||
+          signal.aborted ||
+          !validRefreshKeyRef.current ||
+          latestRequest.current !== requestId ||
+          activeInspectionRef.current !== inspection ||
+          activeEditorRef.current ||
+          !currentBinding()
+        ) {
+          throw unavailable();
+        }
+        const next: ActiveEditor = {
+          context: workspaceContext,
+          upload,
+          origin: "open",
+          closingTask: null,
+          dismissWatching: false,
+          notifiedParent: false,
+          closedComplete: false,
+        };
+        activeEditorRef.current = next;
+        activeInspectionRef.current = null;
+        pendingInspectionFocusRef.current = null;
+        desiredCardTitleRef.current = null;
+        desiredConflictNoteIdRef.current = null;
+        setWorkspaceIssue(null);
+        setReturnFocus(null);
+        setActiveInspection(null);
+        setActiveEditor(next);
+      } catch {
+        // The source inspection and panel keep the retained ID for an explicit retry.
+        throw unavailable();
+      } finally {
+        recoveryOpeningRef.current = false;
+      }
+    },
+    [recoveryOpenBinding, inspectedRecoverySource, workspaceContext, signal],
+  );
+
   const handleCreate = async (context: CloudLibraryContext) => {
     if (
       !mounted.current ||
@@ -1365,6 +1509,9 @@ function SelectedWorkspace({
             <CloudConflictResolutionPanel
               context={workspaceContext}
               owners={conflictOwners}
+              onNewNoteRetained={
+                recoveryOpenBinding ? handleNewNoteRetained : undefined
+              }
               noteId={visibleInspection.noteId}
               signal={signal}
               refreshKey={effectiveRefreshKey}

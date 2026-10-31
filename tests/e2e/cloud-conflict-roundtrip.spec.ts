@@ -1297,3 +1297,344 @@ test.describe("workspace conflict actions", () => {
     ).toBeFocused();
   });
 });
+
+test.describe("workspace new-note recovery", () => {
+  const recoveryPanel = (session: Session) =>
+    session.page.getByRole("region", {
+      name: "Cloud conflict resolution",
+      exact: true,
+    });
+  const newState = (session: Session, id: string, index?: number) =>
+    session.page.evaluate(
+      ([note, at]) =>
+        window.cloudConflictRoundtripFixture.state(
+          note as string,
+          at as number | undefined,
+        ),
+      [id, index] as const,
+    );
+  const retainedCopies = (session: Session, index?: number) =>
+    session.page.evaluate(
+      (at) => window.cloudConflictRoundtripFixture.libraryNotes(at),
+      index,
+    );
+  async function purgedSource(
+    browser: Browser,
+    baseURL: string,
+    body = DEVICE_B,
+  ) {
+    const { b } = await twoSessions(browser, baseURL, true);
+    if (body) sensitive.push(body);
+    server.setSwitch("b", { offline: true });
+    await openEditor(b, START);
+    await type(b, body);
+    await expect(article(b).getByRole("alert")).toContainText(
+      "Could not upload",
+    );
+    await expect(editorStatus(b)).toHaveText("Pending upload");
+    await server.purgeNote(0, noteId);
+    server.setSwitch("b", { offline: false });
+    await article(b).getByRole("button", { name: "Retry upload" }).click();
+    await expect(editorStatus(b)).toHaveText("Conflict");
+    await putAway(b);
+    await expect
+      .poll(() =>
+        b.page.evaluate(
+          (id) => window.cloudConflictRoundtripFixture.ownerQuiet(id),
+          noteId,
+        ),
+      )
+      .toBe(true);
+    await library(b)
+      .getByRole("button", { name: "Needs attention", exact: true })
+      .click();
+    await library(b)
+      .getByRole("button", {
+        name: `Inspect conflict for ${RECOVERY}`,
+        exact: true,
+      })
+      .click();
+    await expect(recoveryPanel(b)).toContainText("Permanently purged in Cloud");
+    await expect(
+      recoveryPanel(b).getByRole("button", {
+        name: "Recover as new note",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await b.page.evaluate(() =>
+      window.cloudConflictRoundtripFixture.setGenericOpenTrap(true),
+    );
+    return b;
+  }
+  async function recover(session: Session) {
+    const panel = recoveryPanel(session);
+    await panel
+      .getByRole("button", { name: "Recover as new note", exact: true })
+      .click();
+    await panel
+      .getByRole("button", { name: "Confirm new note recovery", exact: true })
+      .click();
+  }
+  for (const body of [DEVICE_B, ""]) {
+    test(`opens ${body ? "a nonempty" : "an empty"} new-ID draft through original owners, stays Pending under a held ACK and puts away with narrow focus intact`, async ({
+      browser,
+      baseURL,
+    }, testInfo) => {
+      const b = await purgedSource(browser, baseURL!, body),
+        beforeSource = await durable(b),
+        before = mutations("b").length;
+      server.setSwitch("b", { hold: true });
+      await recover(b);
+      await expect(article(b)).toBeVisible();
+      const editable = article(b).getByRole("textbox", { name: "Note text" });
+      if (body) await expect(editable).toHaveText(body);
+      else {
+        // CodeMirror renders an aria-hidden hint inside an empty editable.
+        await expect(editable.locator('span[aria-hidden="true"]')).toHaveText(
+          "A thought worth keeping…",
+        );
+        expect(
+          await editable.evaluate((element) => {
+            const copy = element.cloneNode(true) as HTMLElement;
+            for (const hint of copy.querySelectorAll('[aria-hidden="true"]'))
+              hint.remove();
+            return copy.textContent;
+          }),
+        ).toBe("");
+      }
+      await expect.poll(() => server.held("b")).toBe(1);
+      await expect(editorStatus(b)).toHaveText("Pending upload");
+      const copies = await retainedCopies(b);
+      expect(copies).toHaveLength(1);
+      const newId = copies[0].noteId;
+      expect(newId).not.toBe(noteId);
+      const retained = await newState(b, newId);
+      expect(retained?.inFlight).not.toBeNull();
+      expect(retained?.current?.snapshot?.bodyMarkdown).toBe(body);
+      expect(await durable(b)).toEqual(beforeSource);
+      expect((await server.head(0, noteId)).kind).toBe("purged");
+      expect(await headBody(0, newId)).toBe(body);
+      expect(mutations("b")).toHaveLength(before + 1);
+      expect(
+        await b.page.evaluate(() =>
+          window.cloudConflictRoundtripFixture.genericOpenCalls(),
+        ),
+      ).toBe(0);
+      if (body) {
+        await b.page.setViewportSize({ width: 1280, height: 800 });
+        await b.page.screenshot({
+          path: testInfo.outputPath("workspace-new-note-pending-desktop.png"),
+        });
+      }
+      await b.page.setViewportSize({ width: 390, height: 844 });
+      await expect(b.page.locator(".cloud-workspace-library")).toHaveAttribute(
+        "inert",
+        "",
+      );
+      const textbox = article(b).getByRole("textbox", { name: "Note text" });
+      await textbox.focus();
+      await expect(textbox).toBeFocused();
+      expect(
+        await b.page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(390);
+      if (body)
+        await b.page.screenshot({
+          path: testInfo.outputPath("workspace-new-note-pending-mobile.png"),
+        });
+      await putAway(b);
+      await expect(
+        b.page.locator(".cloud-workspace-library"),
+      ).not.toHaveAttribute("inert", "");
+      await expect(
+        library(b).getByRole("button", { name: "New note", exact: true }),
+      ).toBeFocused();
+      expect(await durable(b)).toEqual(beforeSource);
+      expect((await newState(b, newId))?.inFlight?.opId).toBe(
+        retained?.inFlight?.opId,
+      );
+      server.release("b");
+      await expect
+        .poll(async () => (await newState(b, newId))?.inFlight)
+        .toBeNull();
+      expect((await newState(b, newId))?.pending).toBeNull();
+      await library(b)
+        .getByRole("button", { name: "Notes", exact: true })
+        .click();
+      await expect(library(b)).toContainText("Saved in Cloud");
+      expect((await server.head(0, noteId)).kind).toBe("purged");
+      expect(await headBody(0, newId)).toBe(body);
+    });
+  }
+  test("retries a lost recovered-note reply using the exact retained operation and never the purged ID", async ({
+    browser,
+    baseURL,
+  }) => {
+    const b = await purgedSource(browser, baseURL!),
+      source = await durable(b),
+      before = mutations("b").length;
+    server.setSwitch("b", { lose: 1 });
+    await recover(b);
+    await expect(article(b).getByRole("alert")).toContainText(
+      "Could not upload",
+    );
+    await expect(editorStatus(b)).toHaveText("Pending upload");
+    const copies = await retainedCopies(b);
+    expect(copies).toHaveLength(1);
+    const id = copies[0].noteId;
+    const first = await newState(b, id);
+    expect(first?.inFlight).not.toBeNull();
+    await article(b)
+      .getByRole("button", { name: "Retry upload", exact: true })
+      .click();
+    await expect(editorStatus(b)).toHaveText("Saved in Cloud");
+    const sent = mutations("b").slice(before);
+    expect(sent).toHaveLength(2);
+    expect(sent[1].opId).toBe(sent[0].opId);
+    expect(sent[1].contentHash).toBe(sent[0].contentHash);
+    expect(sent[1].opId).toBe(first?.inFlight?.opId);
+    expect(sent[1].replayed).toBe(true);
+    expect((await server.head(0, noteId)).kind).toBe("purged");
+    expect(await headBody(0, id)).toBe(DEVICE_B);
+    expect(await durable(b)).toEqual(source);
+    expect(
+      await b.page.evaluate(() =>
+        window.cloudConflictRoundtripFixture.genericOpenCalls(),
+      ),
+    ).toBe(0);
+  });
+  test("keeps a failed genuine-owner opening reachable and retries the same retained ID without preparing another copy", async ({
+    browser,
+    baseURL,
+  }) => {
+    const b = await purgedSource(browser, baseURL!),
+      source = await durable(b),
+      before = mutations("b").length;
+    await b.page.evaluate(
+      (id) =>
+        window.cloudConflictRoundtripFixture.controlRecoveredReads(id, {
+          fail: 1,
+        }),
+      noteId,
+    );
+    await recover(b);
+    const panel = recoveryPanel(b),
+      retry = panel.getByRole("button", {
+        name: "Open retained note again",
+        exact: true,
+      });
+    await expect(retry).toBeVisible();
+    await expect(article(b)).toHaveCount(0);
+    const copies = await retainedCopies(b);
+    expect(copies).toHaveLength(1);
+    const id = copies[0].noteId;
+    expect(id).not.toBe(noteId);
+    expect((await newState(b, id))?.generation).toBe(1);
+    expect(mutations("b")).toHaveLength(before);
+    expect(await durable(b)).toEqual(source);
+    server.setSwitch("b", { hold: true });
+    await retry.evaluate((button: HTMLButtonElement) => {
+      button.click();
+      button.click();
+    });
+    await expect(article(b)).toBeVisible();
+    await expect.poll(() => server.held("b")).toBe(1);
+    await expect(editorStatus(b)).toHaveText("Pending upload");
+    expect((await retainedCopies(b)).map((copy) => copy.noteId)).toEqual([id]);
+    expect((await newState(b, id))?.inFlight?.noteId).toBe(id);
+    expect(mutations("b")).toHaveLength(before + 1);
+    expect(await durable(b)).toEqual(source);
+    expect(
+      await b.page.evaluate(() =>
+        window.cloudConflictRoundtripFixture.genericOpenCalls(),
+      ),
+    ).toBe(0);
+    server.release("b");
+    await expect(editorStatus(b)).toHaveText("Saved in Cloud");
+  });
+  test("ignores an original-scope opening that finishes after Back navigation without sending or discarding its retained copy", async ({
+    browser,
+    baseURL,
+  }) => {
+    const b = await purgedSource(browser, baseURL!),
+      source = await durable(b),
+      before = mutations("b").length;
+    await b.page.evaluate(
+      (id) =>
+        window.cloudConflictRoundtripFixture.controlRecoveredReads(id, {
+          hold: true,
+        }),
+      noteId,
+    );
+    await recover(b);
+    await b.page.waitForFunction(
+      () => window.cloudConflictRoundtripFixture.heldRecoveredReadCount() === 1,
+    );
+    const copies = await retainedCopies(b);
+    expect(copies).toHaveLength(1);
+    const id = copies[0].noteId;
+    await b.page
+      .getByRole("button", { name: "Back to notes", exact: true })
+      .click();
+    await b.page.evaluate(() =>
+      window.cloudConflictRoundtripFixture.releaseRecoveredReads(),
+    );
+    await expect
+      .poll(() =>
+        b.page.evaluate(
+          (id) => window.cloudConflictRoundtripFixture.ownerQuiet(id),
+          id,
+        ),
+      )
+      .toBe(false);
+    await expect(article(b)).toHaveCount(0);
+    await expect(recoveryPanel(b)).toHaveCount(0);
+    expect((await newState(b, id))?.pending).not.toBeNull();
+    expect(mutations("b")).toHaveLength(before);
+    expect(await durable(b)).toEqual(source);
+    expect((await server.head(0, noteId)).kind).toBe("purged");
+  });
+  test("hides the old account during a held recovered-note opening and never opens its retained ID in a replacement account", async ({
+    browser,
+    baseURL,
+  }) => {
+    const b = await purgedSource(browser, baseURL!);
+    const replacement = "Replacement account visible note";
+    sensitive.push(replacement);
+    await b.page.evaluate(
+      (id) =>
+        window.cloudConflictRoundtripFixture.controlRecoveredReads(id, {
+          hold: true,
+        }),
+      noteId,
+    );
+    await recover(b);
+    await b.page.waitForFunction(
+      () => window.cloudConflictRoundtripFixture.heldRecoveredReadCount() === 1,
+    );
+    const copies = await retainedCopies(b);
+    expect(copies).toHaveLength(1);
+    const id = copies[0].noteId;
+    await server.seedNote(1, noteId, replacement);
+    const issued = await server.openSession("replacement", 1);
+    sensitive.push(issued.csrfToken, issued.cookie.split("=")[1]);
+    b.proxyLabel.current = "replacement";
+    const immediate = await b.page.evaluate((token) => {
+      window.cloudConflictRoundtripFixture.select(token);
+      window.cloudConflictRoundtripFixture.flushParent();
+      return document.body.textContent ?? "";
+    }, issued.csrfToken);
+    expect(immediate).not.toContain(DEVICE_B);
+    await prepare(b);
+    await download(b);
+    await b.page.evaluate(() =>
+      window.cloudConflictRoundtripFixture.releaseRecoveredReads(),
+    );
+    await expect(card(b, replacement)).toBeVisible();
+    await expect(article(b)).toHaveCount(0);
+    await expect(b.page.locator("body")).not.toContainText(DEVICE_B);
+    expect((await newState(b, id, 0))?.pending).not.toBeNull();
+    expect(await newState(b, id, 1)).toBeNull();
+    expect((await server.head(0, noteId)).kind).toBe("purged");
+    expect((await server.head(1, id)).kind).toBe("missing");
+  });
+});
