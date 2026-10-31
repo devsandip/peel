@@ -112,6 +112,7 @@ let selectedSession = -1,
   getterCount = 0,
   holdReadsForIndex: number | null = null,
   failReadsForIndex: number | null = null,
+  failCommitsForIndex: number | null = null,
   mutableContextOverride: CloudLibraryContext | null = null;
 
 const heldReadsQueue: Array<{
@@ -180,6 +181,9 @@ function createSessionModel(token: string): number {
           },
           async commit(...args) {
             commitCounts[index] += 1;
+            if (failCommitsForIndex === index) {
+              throw Error("synthetic-private-store-commit-failure");
+            }
             return original.commit(...args);
           },
           readPull: (...args) => original.readPull(...args),
@@ -585,9 +589,11 @@ const api = {
     malformedPreset = preset;
     renderFixture();
   },
-  abortSession(index = selectedSession) {
+  abortSession(index = selectedSession, rerender = true) {
     controllers[index]?.abort();
-    renderFixture();
+    if (rerender) {
+      renderFixture();
+    }
   },
   unmountPanel() {
     panelMounted = false;
@@ -787,6 +793,9 @@ const api = {
   failReads(index: number | null) {
     failReadsForIndex = index;
   },
+  failCommits(index: number | null) {
+    failCommitsForIndex = index;
+  },
   async closeUnderlyingStore(index = selectedSession) {
     const storeName = sessionStoreNames[index];
     if (!storeName) throw Error("Unknown store for session");
@@ -826,6 +835,8 @@ const api = {
     (await indexedDB.databases()).map((database) => database.name),
   storageKeys: () => Object.keys(localStorage),
   async destroy() {
+    failReadsForIndex = null;
+    failCommitsForIndex = null;
     api.releaseReads(false);
     api.releaseAllClipboard(false);
     openUploads.clear();

@@ -1435,3 +1435,654 @@ test("clears an earlier success notice when a newer generation becomes Pending",
     expect(mutations(label)).toHaveLength(before);
   }
 });
+
+test("preserves manual combined text including empty text across read and pre-commit write failures and restores conflict view on explicit Retry loading conflict", async ({
+  browser,
+  baseURL,
+}) => {
+  const label = "manual-unavailable-recovery",
+    { harness } = await openHarness(browser, baseURL!, label, 0),
+    { page } = harness,
+    region = panelRegion(page);
+
+  // 1. Store read failure during Confirm resolution preserves novel manual text, fake clipboard copy and original durable branches.
+  const localRead = "# Architecture draft\n- Local offline notes",
+    remoteRead = "# Architecture draft\n- Observed remote notes",
+    novelManual =
+      "# Architecture draft\n- Hand-combined novel recovery text ##keep";
+  trackSecretText(localRead, remoteRead, novelManual);
+  await seedActiveConflict(
+    page,
+    0,
+    "manual-read-recovery",
+    localRead,
+    remoteRead,
+  );
+
+  const durableBeforeReadFail = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "manual-read-recovery",
+      ),
+    ),
+    serverBeforeReadFail = await server.head(0, "manual-read-recovery"),
+    mutationsBeforeReadFail = mutations(label).length;
+
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByLabel("Combined note text", { exact: true })
+    .fill(novelManual);
+
+  const readsBeforeConfirm = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.readCount(0),
+  );
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(page.locator("body")).not.toContainText("synthetic-private");
+  await expect(region).not.toContainText("Saved in Cloud");
+  await expect(region).not.toContainText("were not changed");
+  await expect(region.getByRole("article")).toHaveCount(0);
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toHaveCount(0);
+
+  const preservedTextbox = region.getByRole("textbox", {
+    name: "Preserved manual combined text",
+    exact: true,
+  });
+  await expect(preservedTextbox).toHaveValue(novelManual);
+  await expect(preservedTextbox).toHaveAttribute("readonly", "");
+
+  // Confirm uses the controller and its owner-release notification. Establish
+  // the settled failure boundary before measuring the explicit one-read retry.
+  const readsAfterConfirm = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.readCount(0),
+  );
+  expect(readsAfterConfirm).toBeGreaterThan(readsBeforeConfirm);
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readCount(0),
+    ),
+  ).toBe(readsAfterConfirm);
+  expect(mutations(label)).toHaveLength(mutationsBeforeReadFail);
+
+  // Guarded fake clipboard lifecycle (held/denied then succeeded) while unavailable.
+  const copyCombinedBtn = region.getByRole("button", {
+    name: "Copy combined text",
+    exact: true,
+  });
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdClipboard(true),
+  );
+  await copyCombinedBtn.click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldClipboardCount() === 1,
+  );
+  await expect(copyCombinedBtn).toBeDisabled();
+  await expect(copyCombinedBtn).toHaveAttribute("data-busy", "true");
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseAllClipboard(true),
+  );
+  await expect(
+    region.locator(".cloud-conflict-resolution-copy-error"),
+  ).toHaveText(
+    "Could not copy combined text. Select the text below to copy it manually.",
+  );
+  await expect(preservedTextbox).toHaveValue(novelManual);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearCopiedCalls(),
+  );
+  await copyCombinedBtn.click();
+  await expect(
+    region.getByRole("status", {
+      name: "Combined text copy status",
+      exact: true,
+    }),
+  ).toHaveText("Combined text copied to clipboard.");
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.copiedCalls(),
+    ),
+  ).toEqual([novelManual]);
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+
+  // Repeated load failure performs strictly one cache read, sends zero mutations and keeps manual recovery available.
+  const retryLoadBtn = region.getByRole("button", {
+    name: "Retry loading conflict",
+    exact: true,
+  });
+  await retryLoadBtn.click();
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(preservedTextbox).toHaveValue(novelManual);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readCount(0),
+    ),
+  ).toBe(readsAfterConfirm + 1);
+  expect(mutations(label)).toHaveLength(mutationsBeforeReadFail);
+
+  // Clearing store read failure does not auto-reload or auto-resolve; original durable branches remain intact.
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failReads(null),
+  );
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(preservedTextbox).toHaveValue(novelManual);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readCount(0),
+    ),
+  ).toBe(readsAfterConfirm + 1);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "manual-read-recovery",
+      ),
+    ),
+  ).toEqual(durableBeforeReadFail);
+  expect(await server.head(0, "manual-read-recovery")).toEqual(
+    serverBeforeReadFail,
+  );
+
+  // The independent durable-state assertion above also reads the store.
+  // Measure the explicit retry from its own immediate boundary.
+  const readsBeforeSuccessfulReload = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.readCount(0),
+  );
+  // Explicit Retry loading conflict performs one cache read, restores current view + manual text, clears old proposal and requires fresh choice.
+  await retryLoadBtn.click();
+  await expect(
+    region
+      .getByRole("article", { name: "Draft on this device" })
+      .locator(".cloud-conflict-resolution-body"),
+  ).toHaveText(localRead);
+  await expect(
+    region
+      .getByRole("article", { name: "Observed Cloud version" })
+      .locator(".cloud-conflict-resolution-body"),
+  ).toHaveText(remoteRead);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readCount(0),
+    ),
+  ).toBe(readsBeforeSuccessfulReload + 1);
+  await expect(preservedTextbox).toHaveCount(0);
+  await expect(
+    region.getByLabel("Combined note text", { exact: true }),
+  ).toHaveValue(novelManual);
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toHaveCount(0);
+  await expect(
+    region.getByRole("button", { name: "Confirm resolution", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    region.getByRole("button", { name: "Combine text", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+  expect(mutations(label)).toHaveLength(mutationsBeforeReadFail);
+
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await expect(
+    region.getByLabel("Combined note text", { exact: true }),
+  ).toHaveValue(novelManual);
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("status", { name: "Resolution status", exact: true }),
+  ).toHaveText("Saved in Cloud");
+  expect(
+    (await server.head(0, "manual-read-recovery")).snapshot?.bodyMarkdown,
+  ).toBe(novelManual);
+
+  // 2. Pre-commit store write failure with empty user-entered combined text preserves empty text + Copy combined text and leaves durable branches unchanged.
+  const localCommit = "# Scratchpad\n- Non-empty local text",
+    remoteCommit = "# Scratchpad\n- Non-empty remote text";
+  trackSecretText(localCommit, remoteCommit);
+  await seedActiveConflict(
+    page,
+    0,
+    "manual-commit-empty",
+    localCommit,
+    remoteCommit,
+  );
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearCopiedCalls(),
+  );
+
+  const durableBeforeCommitFail = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "manual-commit-empty",
+      ),
+    ),
+    serverBeforeCommitFail = await server.head(0, "manual-commit-empty"),
+    mutationsBeforeCommitFail = mutations(label).length;
+
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  const editableCombine = region.getByLabel("Combined note text", {
+    exact: true,
+  });
+  await editableCombine.fill("");
+  await expect(editableCombine).toHaveValue("");
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failCommits(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(page.locator("body")).not.toContainText("synthetic-private");
+  await expect(region).not.toContainText("Saved in Cloud");
+  await expect(region).not.toContainText("were not changed");
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+
+  await expect(preservedTextbox).toHaveValue("");
+  await expect(preservedTextbox).toHaveAttribute("readonly", "");
+  await region
+    .getByRole("button", { name: "Copy combined text", exact: true })
+    .click();
+  await expect(
+    region.getByRole("status", {
+      name: "Combined text copy status",
+      exact: true,
+    }),
+  ).toHaveText("Combined text copied to clipboard.");
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.copiedCalls(),
+    ),
+  ).toEqual([""]);
+
+  expect(mutations(label)).toHaveLength(mutationsBeforeCommitFail);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "manual-commit-empty",
+      ),
+    ),
+  ).toEqual(durableBeforeCommitFail);
+  expect(await server.head(0, "manual-commit-empty")).toEqual(
+    serverBeforeCommitFail,
+  );
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failCommits(null),
+  );
+  const readsBeforeCommitReload = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.readCount(0),
+  );
+  await region
+    .getByRole("button", { name: "Retry loading conflict", exact: true })
+    .click();
+  await expect(
+    region.getByLabel("Combined note text", { exact: true }),
+  ).toHaveValue("");
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readCount(0),
+    ),
+  ).toBe(readsBeforeCommitReload + 1);
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toHaveCount(0);
+  await expect(
+    region.getByRole("button", { name: "Combine text", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+  expect(mutations(label)).toHaveLength(mutationsBeforeCommitFail);
+
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("status", { name: "Resolution status", exact: true }),
+  ).toHaveText("Saved in Cloud");
+  expect(
+    (await server.head(0, "manual-commit-empty")).snapshot?.bodyMarkdown,
+  ).toBe("");
+});
+
+test("hides preserved manual recovery text immediately and suppresses late copy or reload completions across note, account, malformed-binding and abort transitions", async ({
+  browser,
+  baseURL,
+}) => {
+  const labelA = "recovery-isolation-a",
+    labelB = "recovery-isolation-b",
+    { harness } = await openHarness(browser, baseURL!, labelA, 0),
+    { page, proxyLabel } = harness,
+    region = panelRegion(page);
+
+  const note1LocalA = "# Account A note 1 local",
+    note1RemoteA = "# Account A note 1 remote",
+    note2LocalA = "# Account A note 2 local",
+    note2RemoteA = "# Account A note 2 remote",
+    note1LocalB = "# Account B note 1 local",
+    note1RemoteB = "# Account B note 1 remote",
+    manualNote1Secret = "Account A note 1 preserved manual secret",
+    manualAccountSecret = "Account A cross-account preserved manual secret",
+    manualAbortSecret = "Account A abort preserved manual secret";
+  trackSecretText(
+    note1LocalA,
+    note1RemoteA,
+    note2LocalA,
+    note2RemoteA,
+    note1LocalB,
+    note1RemoteB,
+    manualNote1Secret,
+    manualAccountSecret,
+    manualAbortSecret,
+  );
+
+  await seedActiveConflict(
+    page,
+    0,
+    "recovery-note-1",
+    note1LocalA,
+    note1RemoteA,
+  );
+  await seedActiveConflict(
+    page,
+    0,
+    "recovery-note-2",
+    note2LocalA,
+    note2RemoteA,
+  );
+
+  const issuedB = await server.openSession(labelB, 1);
+  sensitive.push(issuedB.csrfToken, issuedB.cookie.split("=")[1]);
+  proxyLabel.current = labelB;
+  const indexB = await page.evaluate(
+    (token) =>
+      window.cloudConflictResolutionPanelFixture.createAndPrepare(token, false),
+    issuedB.csrfToken,
+  );
+  expect(indexB).toBe(1);
+  await server.seedNote(1, "recovery-note-1", "# Account B base");
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.download(1),
+  );
+  await server.seedNote(1, "recovery-note-1", note1RemoteB);
+  expect(
+    await page.evaluate(
+      (body) =>
+        window.cloudConflictResolutionPanelFixture.submitDirectMutation({
+          noteId: "recovery-note-1",
+          kind: "upsert",
+          bodyMarkdown: body,
+          state: "active",
+          index: 1,
+        }),
+      note1LocalB,
+    ),
+  ).toBe(409);
+
+  // 1. Note replacement immediately hides old note's manual recovery text and suppresses late copy + reload completions.
+  proxyLabel.current = labelA;
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.selectSession(
+      0,
+      "recovery-note-1",
+    ),
+  );
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByLabel("Combined note text", { exact: true })
+    .fill(manualNote1Secret);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("textbox", {
+      name: "Preserved manual combined text",
+      exact: true,
+    }),
+  ).toHaveValue(manualNote1Secret);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdClipboard(true),
+  );
+  await region
+    .getByRole("button", { name: "Copy combined text", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldClipboardCount() === 1,
+  );
+
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.failReads(null);
+    window.cloudConflictResolutionPanelFixture.holdReads(0);
+  });
+  await region
+    .getByRole("button", { name: "Retry loading conflict", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldReadCount() === 1,
+  );
+
+  const noteSwitchedSnapshot = await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.setNote("recovery-note-2");
+    const section = document.querySelector(".cloud-conflict-resolution-panel")!;
+    return {
+      text: section.textContent ?? "",
+      textboxes: section.querySelectorAll("textarea").length,
+    };
+  });
+  expect(noteSwitchedSnapshot.text).not.toContain(manualNote1Secret);
+  expect(noteSwitchedSnapshot.textboxes).toBe(0);
+
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.releaseReads(false);
+    window.cloudConflictResolutionPanelFixture.releaseAllClipboard(false);
+  });
+  await expect(region).toContainText(note2LocalA);
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(page.locator("body")).not.toContainText(manualNote1Secret);
+  await expect(
+    region.getByRole("status", {
+      name: "Combined text copy status",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  // 2. Malformed/foreign binding and account replacement immediately hide manual recovery text and suppress late copy + reload completions.
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setNote("recovery-note-1"),
+  );
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByLabel("Combined note text", { exact: true })
+    .fill(manualAccountSecret);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("textbox", {
+      name: "Preserved manual combined text",
+      exact: true,
+    }),
+  ).toHaveValue(manualAccountSecret);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setMalformedPreset(
+      "foreign-owners",
+    ),
+  );
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region.getByRole("textbox")).toHaveCount(0);
+  await expect(region.getByRole("button")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText(manualAccountSecret);
+
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.failReads(null);
+    window.cloudConflictResolutionPanelFixture.setMalformedPreset(null);
+  });
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByLabel("Combined note text", { exact: true })
+    .fill(manualAccountSecret);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("textbox", {
+      name: "Preserved manual combined text",
+      exact: true,
+    }),
+  ).toHaveValue(manualAccountSecret);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdClipboard(true),
+  );
+  await region
+    .getByRole("button", { name: "Copy combined text", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldClipboardCount() === 1,
+  );
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.failReads(null);
+    window.cloudConflictResolutionPanelFixture.holdReads(0);
+  });
+  await region
+    .getByRole("button", { name: "Retry loading conflict", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldReadCount() === 1,
+  );
+
+  proxyLabel.current = labelB;
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.selectSession(
+      1,
+      "recovery-note-1",
+    ),
+  );
+  await expect(region).toContainText(note1LocalB);
+  await expect(page.locator("body")).not.toContainText(manualAccountSecret);
+  await expect(
+    region.getByRole("textbox", {
+      name: "Preserved manual combined text",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.releaseReads(false);
+    window.cloudConflictResolutionPanelFixture.releaseAllClipboard(false);
+  });
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region).toContainText(note1LocalB);
+  await expect(page.locator("body")).not.toContainText(manualAccountSecret);
+  await expect(
+    region.getByRole("status", {
+      name: "Combined text copy status",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  // 3. In-place signal abort (without parent prop rerender) hides manual recovery text immediately, suppresses late read/copy and never closes caller stores.
+  proxyLabel.current = labelA;
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.selectSession(
+      0,
+      "recovery-note-1",
+    ),
+  );
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByLabel("Combined note text", { exact: true })
+    .fill(manualAbortSecret);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("textbox", {
+      name: "Preserved manual combined text",
+      exact: true,
+    }),
+  ).toHaveValue(manualAbortSecret);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdClipboard(true),
+  );
+  await region
+    .getByRole("button", { name: "Copy combined text", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldClipboardCount() === 1,
+  );
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.failReads(null);
+    window.cloudConflictResolutionPanelFixture.holdReads(0);
+  });
+  await region
+    .getByRole("button", { name: "Retry loading conflict", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldReadCount() === 1,
+  );
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.abortSession(0, false),
+  );
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region.getByRole("textbox")).toHaveCount(0);
+  await expect(region.getByRole("button")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText(manualAbortSecret);
+
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.releaseReads(false);
+    window.cloudConflictResolutionPanelFixture.releaseAllClipboard(false);
+  });
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region.getByRole("textbox")).toHaveCount(0);
+  await expect(region.getByRole("button")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText(manualAbortSecret);
+  await expect(page.locator("body")).not.toContainText(
+    "Combined text copied to clipboard.",
+  );
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.closeCounts(),
+    ),
+  ).toEqual([0, 0]);
+});
