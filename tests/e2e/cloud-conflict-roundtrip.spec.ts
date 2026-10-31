@@ -649,6 +649,16 @@ test.describe("real controller recovery", () => {
       )
       .toBe(NEWER);
     await putAway(b);
+    // Put away retains the draft before the original upload owner settles.
+    // Only a ready owner lets this case isolate the stale-generation refusal.
+    await expect
+      .poll(() =>
+        b.page.evaluate(
+          (id) => window.cloudConflictRoundtripFixture.ownerQuiet(id),
+          noteId,
+        ),
+      )
+      .toBe(true);
     const refused = await resolveChoice(b, stale.generation!, {
       kind: "cloud",
     });
