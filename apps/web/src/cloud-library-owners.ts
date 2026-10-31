@@ -1,6 +1,8 @@
+import { CloudConflictNewNoteRecovery } from "./cloud-conflict-new-note";
 import {
   CloudConflictResolutionController,
   CloudConflictResolutionError,
+  type CloudConflictResolutionGate,
 } from "./cloud-conflict-resolution";
 import {
   assertCloudScope,
@@ -36,6 +38,7 @@ export class CloudLibraryOwners {
   private intent = 0;
   private resolving = new Set<string>();
   private resolution: CloudConflictResolutionController | null = null;
+  private recovery: CloudConflictNewNoteRecovery | null = null;
   private view: Readonly<{ refreshKey: number }> = Object.freeze({
     refreshKey: 0,
   });
@@ -66,48 +69,59 @@ export class CloudLibraryOwners {
       this.listeners.delete(listener);
     };
   };
+  private readonly conflictGate: CloudConflictResolutionGate = async (
+    noteId,
+    action,
+  ) => {
+    this.validate(this.context);
+    validateCloudNoteId(noteId);
+    const entry = this.entries.get(noteId);
+    if (
+      this.resolving.has(noteId) ||
+      this.opening.has(noteId) ||
+      (entry && (!entry.viewClosed || !entry.upload.resolutionReady()))
+    )
+      throw new CloudConflictResolutionError("busy");
+    this.resolving.add(noteId);
+    try {
+      let retired = false;
+      const retire = () => {
+        this.signal.throwIfAborted();
+        if (retired) return;
+        const current = this.entries.get(noteId);
+        if (
+          current &&
+          (current !== entry ||
+            !current.viewClosed ||
+            !current.upload.resolutionReady())
+        )
+          throw new CloudConflictResolutionError("busy");
+        if (current) this.release(current);
+        retired = true;
+      };
+      this.signal.throwIfAborted();
+      return await action(
+        Object.freeze({ retire, changed: () => this.publish() }),
+      );
+    } finally {
+      this.resolving.delete(noteId);
+      this.publish();
+    }
+  };
   /** Lazy original-context model; never authenticates or opens storage. */
   conflicts = () =>
     (this.resolution ??= new CloudConflictResolutionController(
       this.context,
       this.send,
       this.signal,
-      async (noteId, action) => {
-        this.validate(this.context);
-        validateCloudNoteId(noteId);
-        const entry = this.entries.get(noteId);
-        if (
-          this.resolving.has(noteId) ||
-          this.opening.has(noteId) ||
-          (entry && (!entry.viewClosed || !entry.upload.resolutionReady()))
-        )
-          throw new CloudConflictResolutionError("busy");
-        this.resolving.add(noteId);
-        try {
-          let retired = false;
-          const retire = () => {
-            this.signal.throwIfAborted();
-            if (retired) return;
-            const current = this.entries.get(noteId);
-            if (
-              current &&
-              (current !== entry ||
-                !current.viewClosed ||
-                !current.upload.resolutionReady())
-            )
-              throw new CloudConflictResolutionError("busy");
-            if (current) this.release(current);
-            retired = true;
-          };
-          this.signal.throwIfAborted();
-          return await action(
-            Object.freeze({ retire, changed: () => this.publish() }),
-          );
-        } finally {
-          this.resolving.delete(noteId);
-          this.publish();
-        }
-      },
+      this.conflictGate,
+    ));
+  /** Explicit local new-ID preparation only; never uploads or clears its source. */
+  newNoteRecovery = () =>
+    (this.recovery ??= new CloudConflictNewNoteRecovery(
+      this.context,
+      this.signal,
+      this.conflictGate,
     ));
   retainedOwners() {
     return Object.freeze(
