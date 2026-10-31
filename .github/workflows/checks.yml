@@ -50,6 +50,8 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-cloud-iac.txt
       - run: pnpm install --frozen-lockfile
+      - run: node --test tests/scripts/cloud-audit-diagnostic.test.mjs
+      - run: node scripts/check-cloud-audit-diagnostic.mjs
       - run: python -m venv .venv/cloud-iac
       - run: .venv/cloud-iac/bin/python -m pip install --requirement requirements-cloud-iac.txt
       - run: pnpm cloud:build

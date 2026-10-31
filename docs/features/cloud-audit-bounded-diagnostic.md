@@ -554,3 +554,7 @@ it("does not retain thrown identity details or start a command after identity fa
   const result=await diagnose(input(),f); expect(result).toMatchObject({status:"stopped",code:"read-unavailable",stage:"identity-before"}); expect(f.execute).not.toHaveBeenCalled(); safe(result);
 });
 ```
+
+## Automated synthetic validation follow-up, 31 October 2026
+
+[Issue223](https://github.com/devsandip/peel/issues/223) adds an offline-only CI replay of this exact canonical candidate and harness. The earlier hosted-check limitation describes the original issue219 evidence. The new pinned Node24 cloud-artifact steps run `node --test tests/scripts/cloud-audit-diagnostic.test.mjs` and `node scripts/check-cloud-audit-diagnostic.mjs`; they verify the reviewed hashes before extraction, isolate temporary synthetic configuration and require all28 cases without skips. They never invoke the candidate CLI. No candidate/harness bytes, provider helpers, actual authorization or app behavior changes. See the [CI replay plan](cloud-audit-diagnostic-ci.md) for validation evidence and limits. Actual provider/profile execution remains subject to the separate review and authorization above.
