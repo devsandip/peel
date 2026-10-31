@@ -1,0 +1,19 @@
+# Recover manual conflict text after unavailable resolution
+
+[Issue228](https://github.com/devsandip/peel/issues/228) is a focused correction under parent225/currentM2.2, SPEC FR-02/13/14 and AC-09/10/12/13. The panel props/owners/controller contract stays unchanged. This plan precedes code. Root reproduced the failure on frozen62f79f9: real UI Combine text, type novel text, fail the original store read, Confirm resolution; the generic unavailable panel has no Preserved manual combined text textbox. No provider/default data was accessed. Original durable branches remain intact.
+
+## Boundary and ownership
+
+AG may edit only this plan, apps/web/src/cloud-conflict-resolution-panel.tsx, tests/fixtures/cloud-conflict-resolution-panel.tsx and tests/e2e/cloud-conflict-resolution-panel.spec.ts in a new isolated branch. Reuse existing styles; no CSS, workspace, controller, owners, backend, schema, auth, dependency or default-route change. Root runs Git/tests after worker exit and is sole reviewer/integrator. Frozen227sourcebranch stays preserved. This branch begins at62f79f9 because actual227main gates are pending; Root will normally merge its verified main before this fix PR publishes/merges, preserving source history.
+
+## Recovery behavior
+
+Separate invalid/aborted/replaced identity from a read/commit/resolve failure while the original binding remains valid. Only in that still-active original identity may an unavailable view show the already-entered manual combined text in a clearly labelled readonly recovery textarea with explicit Copy combined text using the existing scoped copy lifecycle. Do not infer it was saved or rolled back, or expose raw errors. Empty combined text is also a preserved value. Initial malformed/foreign binding or abort/account/owners/signal/note replacement must hide ALL old content immediately and suppress late reads/copy results. Never close caller stores or mint a new sender/scope.
+
+An explicit Retry loading conflict may perform only one original-controller cache read. On success restore the current view while preserving manual text, but clear the old proposal and require a fresh explicit choice/generation confirmation; no automatic resolve/upload/retry. On repeated failure keep recovery available. Existing successful/paused/busy/stale flows and older-success/newer-Pending fix remain intact.
+
+## Evidence
+
+Add the reproduced case as an actual UI regression against the real controller/IndexedDB/loopback fixture. Cover read failure and pre-commit write failure, recovery text/copy to synthetic memory clipboard, repeated load failure then successful explicit reload/fresh choice, empty text, no network mutation during failed load, old durable branches unchanged where failure precedes commit, and immediate hiding/late suppression on abort/account change. Do not promise rollback of an already-started commit. Preserve all7 prior panel tests/assertions/default timeouts/retries/workers/isolation. Root's scratch issue225-retention-probe contains the failing oracle, not shipped code. Fix-first tests must demonstrate failure on unchanged source before claiming positives.
+
+Run pinnedNode24 focused new+old panel/browser regressions/type/format/shared/build as relevant under test-window and peer lock. Obtain independent review and fresh source/main all3 jobs/logs/counters, normal no-force/no-reply/scans/tree equality and actual closure/ProjectDone/guardedprimaryff/Root-only cleanup. Parent225 remains OPEN/Inprogress until this fix's acceptance is evidenced; PR227 itself can be marked integrated with the remaining child explicitly recorded. All peer refs/worktrees/Root226WIP remain preserved. Actual51/30/31 stayblocked/CloudOFF/no actual AWS-profile permission renewal. Continue the UI sequence to tomorrow10amIST, no speculative milestone.
