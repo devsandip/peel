@@ -21,6 +21,10 @@ import {
 import type { CloudLibraryStateStore } from "../../../packages/cloud-protocol/src/library-local";
 import type { CloudLibraryContext } from "./cloud-cached-library";
 import {
+  CloudConflictNewNoteRecovery,
+  type CloudConflictNewNoteResult,
+} from "./cloud-conflict-new-note";
+import {
   CloudConflictResolutionController,
   type CloudConflictResolutionChoice,
   type CloudConflictResolutionKind,
@@ -35,7 +39,15 @@ export type CloudConflictResolutionPanelProps = {
   signal: AbortSignal;
   noteId: string;
   refreshKey: number;
+  onNewNoteRetained?: (newNoteId: string) => void | Promise<void>;
 };
+
+type CapturedNewNoteCallback =
+  | Readonly<{
+      kind: "enabled";
+      fn: (newNoteId: string) => void | Promise<void>;
+    }>
+  | Readonly<{ kind: "omitted" | "invalid"; fn: null }>;
 
 type CapturedPanelIdentity = Readonly<{
   store: CloudLibraryStateStore;
@@ -62,7 +74,7 @@ type SelectedIdentityState = Readonly<{
 
 type ActiveLifecycleLabel = "Active" | "Archived" | "In Trash";
 
-type ProposalKind = "local" | "cloud" | "merge";
+type ProposalKind = "local" | "cloud" | "merge" | "new-note";
 
 type ResolutionProposal = Readonly<{
   kind: ProposalKind;
@@ -75,11 +87,24 @@ type CombineDraftState = Readonly<{
   dirty: boolean;
 }>;
 
+type PanelOutcomeKind =
+  | CloudConflictResolutionKind
+  | "retained-new-note"
+  | "retained-open-failed"
+  | "retained-open-withheld";
+
 type OutcomeNotice = Readonly<{
-  kind: CloudConflictResolutionKind;
+  kind: PanelOutcomeKind;
   role: "status" | "alert";
   tone: "info" | "warning" | "error";
   message: string;
+}>;
+
+type RetainedNewNoteState = Readonly<{
+  newNoteId: string;
+  sourceGeneration: number;
+  handoff: "in-flight" | "succeeded" | "retry-needed";
+  retryReason: "failed" | "withheld" | null;
 }>;
 
 type CopySide = "local" | "remote" | "combined";
@@ -91,9 +116,15 @@ type CapturedControllerBinding = Readonly<{
   retry: CloudConflictResolutionController["retry"];
 }>;
 
+type CapturedNewNoteRecoveryBinding = Readonly<{
+  model: CloudConflictNewNoteRecovery;
+  prepare: CloudConflictNewNoteRecovery["prepare"];
+}>;
+
 type SelectedResolutionPanelProps = {
   identity: CapturedPanelIdentity;
   refreshKey: number;
+  newNoteCallback: CapturedNewNoteCallback;
 };
 
 export const RESOLUTION_UNAVAILABLE_COPY =
@@ -109,6 +140,18 @@ const CACHED_OBSERVATION_CAVEAT =
 
 const BODY_LIMIT_ERROR_COPY =
   "This note has reached its 256 KiB limit. Copy the extra text into a new note.";
+
+const NEW_NOTE_RETAINED_COPY =
+  "New Active note copy retained on this device as Pending upload until matching Cloud confirmation. This original purged-note conflict remains kept until you separately accept the observed Cloud version.";
+
+const NEW_NOTE_OPEN_FAILED_COPY =
+  "New Active note copy is durably retained on this device as Pending upload until matching Cloud confirmation, but opening it did not complete. Use Open retained note again to open that same copy without creating another note.";
+
+const NEW_NOTE_WITHHELD_COPY =
+  "New Active note copy is durably retained on this device as Pending upload until matching Cloud confirmation. Automatic opening was withheld because the open handler changed while recovery was in progress.";
+
+const NOT_RECOVERABLE_NEW_NOTE_COPY =
+  "This note no longer has a recoverable purged-note draft on this device. Review the updated status below; any manual combined text was preserved.";
 
 const OUTCOME_MESSAGES: Readonly<
   Record<
@@ -292,15 +335,56 @@ function captureContextWithoutGetters(
   return { store, scope };
 }
 
+const OMITTED_NEW_NOTE_CALLBACK: CapturedNewNoteCallback = Object.freeze({
+  kind: "omitted",
+  fn: null,
+});
+
+const INVALID_NEW_NOTE_CALLBACK: CapturedNewNoteCallback = Object.freeze({
+  kind: "invalid",
+  fn: null,
+});
+
+function captureNewNoteCallbackWithoutGetters(
+  rawProps: object,
+): CapturedNewNoteCallback {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    rawProps,
+    "onNewNoteRetained",
+  );
+  if (!descriptor) {
+    return OMITTED_NEW_NOTE_CALLBACK;
+  }
+  if (!descriptor.enumerable || !("value" in descriptor)) {
+    return INVALID_NEW_NOTE_CALLBACK;
+  }
+  if (descriptor.value === undefined) {
+    return OMITTED_NEW_NOTE_CALLBACK;
+  }
+  if (typeof descriptor.value !== "function") {
+    return INVALID_NEW_NOTE_CALLBACK;
+  }
+  return Object.freeze({
+    kind: "enabled",
+    fn: descriptor.value as (newNoteId: string) => void | Promise<void>,
+  });
+}
+
 function capturePanelProps(rawProps: unknown): {
   identity: CapturedPanelIdentity | null;
   refreshKey: number;
+  newNoteCallback: CapturedNewNoteCallback;
 } {
   try {
     if (!rawProps || typeof rawProps !== "object" || Array.isArray(rawProps)) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
-    const contextProp = ownDataProperty(rawProps, "context"),
+    const newNoteCallback = captureNewNoteCallbackWithoutGetters(rawProps),
+      contextProp = ownDataProperty(rawProps, "context"),
       ownersProp = ownDataProperty(rawProps, "owners"),
       signalProp = ownDataProperty(rawProps, "signal"),
       noteIdProp = ownDataProperty(rawProps, "noteId"),
@@ -312,7 +396,11 @@ function capturePanelProps(rawProps: unknown): {
       !noteIdProp.ok ||
       !refreshKeyProp.ok
     ) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
     const rawRefreshKey = refreshKeyProp.value;
     if (
@@ -320,22 +408,38 @@ function capturePanelProps(rawProps: unknown): {
       !Number.isSafeInteger(rawRefreshKey) ||
       rawRefreshKey < 0
     ) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
     const rawNoteId = noteIdProp.value;
     if (typeof rawNoteId !== "string" || /[\r\n]/.test(rawNoteId)) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
     validateCloudNoteId(rawNoteId);
 
     const rawSignal = signalProp.value;
     if (!isAbortSignalWithoutGetters(rawSignal) || rawSignal.aborted) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
 
     const parsedContext = captureContextWithoutGetters(contextProp.value);
     if (!parsedContext) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
 
     const rawOwners = ownersProp.value;
@@ -347,7 +451,11 @@ function capturePanelProps(rawProps: unknown): {
       !(rawOwners instanceof CloudLibraryOwners) ||
       !hasOnlyOwnDataProperties(rawOwners)
     ) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
     for (const protoKey of [
       "context",
@@ -360,7 +468,11 @@ function capturePanelProps(rawProps: unknown): {
         protoKey,
       );
       if (protoDesc && !("value" in protoDesc)) {
-        return { identity: null, refreshKey: -1 };
+        return {
+          identity: null,
+          refreshKey: -1,
+          newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+        };
       }
     }
 
@@ -377,7 +489,11 @@ function capturePanelProps(rawProps: unknown): {
       typeof subscribeProp.value !== "function" ||
       ownersSignalProp.value !== rawSignal
     ) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
 
     const parsedOwnersContext = captureContextWithoutGetters(
@@ -388,7 +504,11 @@ function capturePanelProps(rawProps: unknown): {
       parsedOwnersContext.store !== parsedContext.store ||
       !scopesEqual(parsedOwnersContext.scope, parsedContext.scope)
     ) {
-      return { identity: null, refreshKey: -1 };
+      return {
+        identity: null,
+        refreshKey: -1,
+        newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+      };
     }
 
     return {
@@ -403,10 +523,152 @@ function capturePanelProps(rawProps: unknown): {
         noteId: rawNoteId,
       }),
       refreshKey: rawRefreshKey,
+      newNoteCallback,
     };
   } catch {
-    return { identity: null, refreshKey: -1 };
+    return {
+      identity: null,
+      refreshKey: -1,
+      newNoteCallback: OMITTED_NEW_NOTE_CALLBACK,
+    };
   }
+}
+
+function verifyLiveOriginalOwnersIdentity(
+  identity: CapturedPanelIdentity,
+): boolean {
+  try {
+    if (identity.signal.aborted) return false;
+    const rawOwners = identity.owners;
+    if (
+      !rawOwners ||
+      typeof rawOwners !== "object" ||
+      Array.isArray(rawOwners) ||
+      Object.getPrototypeOf(rawOwners) !== CloudLibraryOwners.prototype ||
+      !(rawOwners instanceof CloudLibraryOwners) ||
+      !hasOnlyOwnDataProperties(rawOwners)
+    ) {
+      return false;
+    }
+    for (const protoKey of [
+      "context",
+      "signal",
+      "conflicts",
+      "subscribe",
+      "newNoteRecovery",
+    ] as const) {
+      const protoDesc = Object.getOwnPropertyDescriptor(
+        CloudLibraryOwners.prototype,
+        protoKey,
+      );
+      if (protoDesc && !("value" in protoDesc)) {
+        return false;
+      }
+    }
+    const ownersContextProp = ownDataProperty(rawOwners, "context"),
+      ownersSignalProp = ownDataProperty(rawOwners, "signal");
+    if (
+      !ownersContextProp.ok ||
+      !ownersSignalProp.ok ||
+      ownersSignalProp.value !== identity.signal
+    ) {
+      return false;
+    }
+    const parsedOwnersContext = captureContextWithoutGetters(
+      ownersContextProp.value,
+    );
+    return (
+      parsedOwnersContext !== null &&
+      parsedOwnersContext.store === identity.store &&
+      scopesEqual(parsedOwnersContext.scope, identity.scope)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function verifyNewNoteRecoveryModel(
+  candidate: unknown,
+  expectedSignal: AbortSignal,
+): candidate is CloudConflictNewNoteRecovery {
+  if (
+    !candidate ||
+    typeof candidate !== "object" ||
+    Array.isArray(candidate) ||
+    Object.getPrototypeOf(candidate) !==
+      CloudConflictNewNoteRecovery.prototype ||
+    !(candidate instanceof CloudConflictNewNoteRecovery) ||
+    !hasOnlyOwnDataProperties(candidate)
+  ) {
+    return false;
+  }
+  for (const protoKey of ["signal", "prepare"] as const) {
+    const protoDesc = Object.getOwnPropertyDescriptor(
+      CloudConflictNewNoteRecovery.prototype,
+      protoKey,
+    );
+    if (protoDesc && !("value" in protoDesc)) {
+      return false;
+    }
+  }
+  const signalProp = ownDataProperty(candidate, "signal"),
+    prepareProp = ownDataProperty(candidate, "prepare");
+  return (
+    signalProp.ok &&
+    signalProp.value === expectedSignal &&
+    prepareProp.ok &&
+    typeof prepareProp.value === "function"
+  );
+}
+
+function captureNewNoteRecoveryBinding(identity: CapturedPanelIdentity): {
+  ownersValid: boolean;
+  binding: CapturedNewNoteRecoveryBinding | null;
+} {
+  if (!verifyLiveOriginalOwnersIdentity(identity)) {
+    return { ownersValid: false, binding: null };
+  }
+  try {
+    const factoryProp = ownDataProperty(identity.owners, "newNoteRecovery");
+    if (!factoryProp.ok || typeof factoryProp.value !== "function") {
+      return { ownersValid: true, binding: null };
+    }
+    const factory = factoryProp.value as CloudLibraryOwners["newNoteRecovery"];
+    const candidate = factory.call(identity.owners);
+    if (!verifyNewNoteRecoveryModel(candidate, identity.signal)) {
+      return { ownersValid: true, binding: null };
+    }
+    const prepareProp = ownDataProperty(candidate, "prepare");
+    if (!prepareProp.ok || typeof prepareProp.value !== "function") {
+      return { ownersValid: true, binding: null };
+    }
+    return {
+      ownersValid: true,
+      binding: Object.freeze({
+        model: candidate,
+        prepare: prepareProp.value as CloudConflictNewNoteRecovery["prepare"],
+      }),
+    };
+  } catch {
+    return { ownersValid: true, binding: null };
+  }
+}
+
+export function isRecoverablePurgedConflict(
+  conflict: CloudClientState["conflict"] | null,
+): conflict is NonNullable<CloudClientState["conflict"]> & {
+  remote: null;
+  local: { kind: "upsert"; snapshot: CloudDraft };
+} {
+  return (
+    conflict !== null &&
+    conflict.remote === null &&
+    typeof conflict.remoteRevision === "number" &&
+    Number.isSafeInteger(conflict.remoteRevision) &&
+    conflict.remoteRevision >= 1 &&
+    conflict.local.kind === "upsert" &&
+    Boolean(conflict.local.snapshot)
+  );
 }
 
 function captureControllerBinding(
@@ -561,7 +823,9 @@ function UnavailableResolutionPanel() {
 export function CloudConflictResolutionPanel(
   props: CloudConflictResolutionPanelProps,
 ) {
-  const { identity: captured, refreshKey } = capturePanelProps(props),
+  const parsedProps = capturePanelProps(props),
+    captured = parsedProps.identity,
+    { refreshKey, newNoteCallback } = parsedProps,
     [selected, setSelected] = useState<SelectedIdentityState>(() => ({
       store: captured?.store ?? null,
       scope: captured?.scope ?? null,
@@ -607,6 +871,7 @@ export function CloudConflictResolutionPanel(
       key={selected.serial}
       identity={captured}
       refreshKey={refreshKey}
+      newNoteCallback={newNoteCallback}
     />
   );
 }
@@ -614,6 +879,7 @@ export function CloudConflictResolutionPanel(
 function SelectedResolutionPanel({
   identity,
   refreshKey,
+  newNoteCallback,
 }: SelectedResolutionPanelProps) {
   const sectionHeadingId = useId(),
     localHeadingId = useId(),
@@ -628,6 +894,33 @@ function SelectedResolutionPanel({
     [identity],
   );
 
+  const recoveryBindingRef = useRef<{
+    attempted: boolean;
+    ownersValid: boolean;
+    binding: CapturedNewNoteRecoveryBinding | null;
+  }>({
+    attempted: false,
+    ownersValid: true,
+    binding: null,
+  });
+
+  if (
+    newNoteCallback.kind === "enabled" &&
+    !recoveryBindingRef.current.attempted
+  ) {
+    const capturedRecovery = captureNewNoteRecoveryBinding(identity);
+    recoveryBindingRef.current = {
+      attempted: true,
+      ownersValid: capturedRecovery.ownersValid,
+      binding: capturedRecovery.binding,
+    };
+  }
+
+  const recoveryBinding =
+    newNoteCallback.kind === "enabled"
+      ? recoveryBindingRef.current.binding
+      : null;
+
   const [aborted, setAborted] = useState(() => identity.signal.aborted),
     [bindingInvalid, setBindingInvalid] = useState(
       () => controllerBinding === null,
@@ -637,8 +930,15 @@ function SelectedResolutionPanel({
     [view, setView] = useState<CloudConflictResolutionView | null>(null),
     [proposal, setProposal] = useState<ResolutionProposal | null>(null),
     [combineDraft, setCombineDraft] = useState<CombineDraftState | null>(null),
+    [retainedNewNote, setRetainedNewNote] =
+      useState<RetainedNewNoteState | null>(null),
     [actionMode, setActionMode] = useState<
-      "uploading" | "adopting" | "reloading" | null
+      | "uploading"
+      | "adopting"
+      | "reloading"
+      | "preparing-new-note"
+      | "opening-retained"
+      | null
     >(null),
     [outcome, setOutcome] = useState<OutcomeNotice | null>(null),
     [adoptedRevision, setAdoptedRevision] = useState<number | null>(null),
@@ -661,6 +961,8 @@ function SelectedResolutionPanel({
     actionLatchRef = useRef(false),
     proposalRef = useRef<ResolutionProposal | null>(null),
     combineDraftRef = useRef<CombineDraftState | null>(null),
+    retainedNewNoteRef = useRef<RetainedNewNoteState | null>(null),
+    newNoteCallbackRef = useRef<CapturedNewNoteCallback>(newNoteCallback),
     viewRef = useRef<CloudConflictResolutionView | null>(null),
     copyAttemptCounterRef = useRef(0),
     inFlightCopyRef = useRef<Record<CopySide, number | null>>({
@@ -671,6 +973,8 @@ function SelectedResolutionPanel({
 
   proposalRef.current = proposal;
   combineDraftRef.current = combineDraft;
+  retainedNewNoteRef.current = retainedNewNote;
+  newNoteCallbackRef.current = newNoteCallback;
   viewRef.current = view;
 
   useLayoutEffect(() => {
@@ -678,6 +982,7 @@ function SelectedResolutionPanel({
     return () => {
       mountedRef.current = false;
       actionLatchRef.current = false;
+      retainedNewNoteRef.current = null;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
     };
   }, []);
@@ -685,12 +990,14 @@ function SelectedResolutionPanel({
   useEffect(() => {
     if (identity.signal.aborted) {
       readSerialRef.current += 1;
+      retainedNewNoteRef.current = null;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
       setAborted(true);
       return;
     }
     const onAbort = () => {
       readSerialRef.current += 1;
+      retainedNewNoteRef.current = null;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
       setAborted(true);
     };
@@ -735,6 +1042,7 @@ function SelectedResolutionPanel({
     if (!mountedRef.current) return;
     if (identity.signal.aborted) {
       readSerialRef.current += 1;
+      retainedNewNoteRef.current = null;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
       setAborted(true);
       return;
@@ -794,7 +1102,10 @@ function SelectedResolutionPanel({
             // A receipt or adopted-observation notice belongs to its old generation.
             // A later local edit must not retain that success claim beside Pending.
             setOutcome((current) =>
-              current?.kind === "complete" ? null : current,
+              current?.kind === "complete" ||
+              current?.kind === "retained-new-note"
+                ? null
+                : current,
             );
             setAdoptedRevision(null);
           }
@@ -828,6 +1139,7 @@ function SelectedResolutionPanel({
           if (!active || !mountedRef.current) return;
           if (identity.signal.aborted) {
             readSerialRef.current += 1;
+            retainedNewNoteRef.current = null;
             inFlightCopyRef.current = {
               local: null,
               remote: null,
@@ -859,7 +1171,12 @@ function SelectedResolutionPanel({
   }, [runRead, refreshKey, ownerTick]);
 
   const isAborted = aborted || identity.signal.aborted;
-  if (isAborted || bindingInvalid || !controllerBinding) {
+  if (
+    isAborted ||
+    bindingInvalid ||
+    !controllerBinding ||
+    !recoveryBindingRef.current.ownersValid
+  ) {
     return <UnavailableResolutionPanel />;
   }
 
@@ -867,6 +1184,7 @@ function SelectedResolutionPanel({
   const actionInFlight = actionMode !== null;
   const uploadingToCloud = actionMode === "uploading";
   const reloadingConflict = actionMode === "reloading";
+  const openingRetained = actionMode === "opening-retained";
 
   const handleCopy = async (side: CopySide, capturedBody: string) => {
     if (
@@ -980,7 +1298,24 @@ function SelectedResolutionPanel({
       unavailableRef.current = false;
       setUnavailable(false);
       setProposal(null);
-      setOutcome(null);
+      const pendingRetained = retainedNewNoteRef.current;
+      setOutcome(
+        pendingRetained?.handoff === "retry-needed"
+          ? pendingRetained.retryReason === "withheld"
+            ? {
+                kind: "retained-open-withheld",
+                role: "status",
+                tone: "warning",
+                message: NEW_NOTE_WITHHELD_COPY,
+              }
+            : {
+                kind: "retained-open-failed",
+                role: "alert",
+                tone: "warning",
+                message: NEW_NOTE_OPEN_FAILED_COPY,
+              }
+          : null,
+      );
       setAdoptedRevision(null);
       setCopyOutcomes((prev) => {
         const nextCombined =
@@ -1018,12 +1353,17 @@ function SelectedResolutionPanel({
   const applyControllerResult = (
     result: CloudConflictResolutionResult,
     source:
-      | { kind: "resolve"; choiceKind: ProposalKind; remoteRevision: number }
+      | {
+          kind: "resolve";
+          choiceKind: Exclude<ProposalKind, "new-note">;
+          remoteRevision: number;
+        }
       | { kind: "retry" },
   ) => {
     if (!mountedRef.current) return;
     if (identity.signal.aborted || result.kind === "canceled") {
       readSerialRef.current += 1;
+      retainedNewNoteRef.current = null;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
       setAborted(true);
       return;
@@ -1043,6 +1383,10 @@ function SelectedResolutionPanel({
       setProposal(null);
       setCombineDraft(null);
       setCopyOutcomes({ local: null, remote: null, combined: null });
+      if (retainedNewNoteRef.current?.handoff === "succeeded") {
+        retainedNewNoteRef.current = null;
+        setRetainedNewNote(null);
+      }
       if (source.kind === "resolve" && source.choiceKind === "cloud") {
         setAdoptedRevision(source.remoteRevision);
         const deleted = result.view?.status === "Deleted in Cloud";
@@ -1111,6 +1455,19 @@ function SelectedResolutionPanel({
     if (kind === "merge" && !view.canMerge) {
       return;
     }
+    if (kind === "new-note") {
+      const currentRetained = retainedNewNoteRef.current;
+      if (
+        newNoteCallbackRef.current.kind !== "enabled" ||
+        !recoveryBinding ||
+        !isRecoverablePurgedConflict(view.conflict) ||
+        (currentRetained !== null &&
+          (currentRetained.handoff !== "succeeded" ||
+            currentRetained.sourceGeneration === view.generation))
+      ) {
+        return;
+      }
+    }
     if (
       kind === "merge" &&
       (combineDraft === null || !combineDraft.dirty) &&
@@ -1121,7 +1478,9 @@ function SelectedResolutionPanel({
         dirty: false,
       });
     }
-    setOutcome(null);
+    if (retainedNewNoteRef.current?.handoff !== "retry-needed") {
+      setOutcome(null);
+    }
     setProposal({
       kind,
       capturedGeneration: view.generation,
@@ -1153,6 +1512,249 @@ function SelectedResolutionPanel({
       });
       return;
     }
+
+    if (proposal.kind === "new-note") {
+      const activeCallback = newNoteCallbackRef.current,
+        currentRetained = retainedNewNoteRef.current;
+      if (
+        activeCallback.kind !== "enabled" ||
+        !recoveryBinding ||
+        !isRecoverablePurgedConflict(view.conflict) ||
+        (currentRetained !== null &&
+          (currentRetained.handoff !== "succeeded" ||
+            currentRetained.sourceGeneration === proposal.capturedGeneration))
+      ) {
+        setProposal(null);
+        return;
+      }
+      if (
+        !verifyLiveOriginalOwnersIdentity(identity) ||
+        !verifyNewNoteRecoveryModel(recoveryBinding.model, identity.signal)
+      ) {
+        retainedNewNoteRef.current = null;
+        setRetainedNewNote(null);
+        readSerialRef.current += 1;
+        inFlightCopyRef.current = {
+          local: null,
+          remote: null,
+          combined: null,
+        };
+        if (identity.signal.aborted) {
+          setAborted(true);
+        } else {
+          setBindingInvalid(true);
+        }
+        return;
+      }
+
+      const expectedGeneration = proposal.capturedGeneration,
+        startedCallback = activeCallback.fn;
+      actionLatchRef.current = true;
+      setActionMode("preparing-new-note");
+      setOutcome(null);
+
+      try {
+        let result: CloudConflictNewNoteResult;
+        try {
+          result = await recoveryBinding.prepare.call(
+            recoveryBinding.model,
+            identity.noteId,
+            expectedGeneration,
+          );
+        } catch {
+          result = Object.freeze({ kind: "unavailable", newNoteId: null });
+        }
+
+        if (!mountedRef.current) return;
+        if (identity.signal.aborted || result.kind === "canceled") {
+          retainedNewNoteRef.current = null;
+          setRetainedNewNote(null);
+          readSerialRef.current += 1;
+          inFlightCopyRef.current = {
+            local: null,
+            remote: null,
+            combined: null,
+          };
+          setAborted(true);
+          return;
+        }
+        if (
+          !verifyLiveOriginalOwnersIdentity(identity) ||
+          !verifyNewNoteRecoveryModel(recoveryBinding.model, identity.signal)
+        ) {
+          retainedNewNoteRef.current = null;
+          setRetainedNewNote(null);
+          readSerialRef.current += 1;
+          inFlightCopyRef.current = {
+            local: null,
+            remote: null,
+            combined: null,
+          };
+          setBindingInvalid(true);
+          return;
+        }
+
+        if (result.kind === "unavailable") {
+          enterUnavailable();
+          return;
+        }
+        if (result.kind === "stale") {
+          setProposal(null);
+          runRead();
+          setOutcome({
+            kind: "stale",
+            role: "alert",
+            tone: "warning",
+            message: OUTCOME_MESSAGES.stale,
+          });
+          return;
+        }
+        if (result.kind === "busy") {
+          setProposal(null);
+          runRead();
+          setOutcome({
+            kind: "busy",
+            role: "alert",
+            tone: "warning",
+            message: OUTCOME_MESSAGES.busy,
+          });
+          return;
+        }
+        if (result.kind === "not-recoverable") {
+          setProposal(null);
+          runRead();
+          setOutcome({
+            kind: "new-note-required",
+            role: "alert",
+            tone: "warning",
+            message: NOT_RECOVERABLE_NEW_NOTE_COPY,
+          });
+          return;
+        }
+
+        if (
+          typeof result.newNoteId !== "string" ||
+          /[\r\n]/.test(result.newNoteId) ||
+          result.newNoteId === identity.noteId
+        ) {
+          enterUnavailable();
+          return;
+        }
+        try {
+          validateCloudNoteId(result.newNoteId);
+        } catch {
+          enterUnavailable();
+          return;
+        }
+
+        const retainedId = result.newNoteId,
+          remembered: RetainedNewNoteState = Object.freeze({
+            newNoteId: retainedId,
+            sourceGeneration: expectedGeneration,
+            handoff: "in-flight",
+            retryReason: null,
+          });
+        retainedNewNoteRef.current = remembered;
+        setRetainedNewNote(remembered);
+        setProposal(null);
+
+        const latestCallback = newNoteCallbackRef.current;
+        if (
+          latestCallback.kind !== "enabled" ||
+          latestCallback.fn !== startedCallback
+        ) {
+          const withheld: RetainedNewNoteState = Object.freeze({
+            newNoteId: retainedId,
+            sourceGeneration: expectedGeneration,
+            handoff: "retry-needed",
+            retryReason: "withheld",
+          });
+          retainedNewNoteRef.current = withheld;
+          setRetainedNewNote(withheld);
+          setOutcome({
+            kind: "retained-open-withheld",
+            role: "status",
+            tone: "warning",
+            message: NEW_NOTE_WITHHELD_COPY,
+          });
+          return;
+        }
+
+        setActionMode("opening-retained");
+        let opened = false;
+        try {
+          await startedCallback(retainedId);
+          opened = true;
+        } catch {
+          opened = false;
+        }
+
+        if (!mountedRef.current) return;
+        if (identity.signal.aborted) {
+          retainedNewNoteRef.current = null;
+          setRetainedNewNote(null);
+          readSerialRef.current += 1;
+          inFlightCopyRef.current = {
+            local: null,
+            remote: null,
+            combined: null,
+          };
+          setAborted(true);
+          return;
+        }
+        if (!verifyLiveOriginalOwnersIdentity(identity)) {
+          retainedNewNoteRef.current = null;
+          setRetainedNewNote(null);
+          readSerialRef.current += 1;
+          inFlightCopyRef.current = {
+            local: null,
+            remote: null,
+            combined: null,
+          };
+          setBindingInvalid(true);
+          return;
+        }
+
+        if (opened) {
+          const completed: RetainedNewNoteState = Object.freeze({
+            newNoteId: retainedId,
+            sourceGeneration: expectedGeneration,
+            handoff: "succeeded",
+            retryReason: null,
+          });
+          retainedNewNoteRef.current = completed;
+          setRetainedNewNote(completed);
+          setOutcome({
+            kind: "retained-new-note",
+            role: "status",
+            tone: "warning",
+            message: NEW_NOTE_RETAINED_COPY,
+          });
+        } else {
+          const retryNeeded: RetainedNewNoteState = Object.freeze({
+            newNoteId: retainedId,
+            sourceGeneration: expectedGeneration,
+            handoff: "retry-needed",
+            retryReason: "failed",
+          });
+          retainedNewNoteRef.current = retryNeeded;
+          setRetainedNewNote(retryNeeded);
+          setOutcome({
+            kind: "retained-open-failed",
+            role: "alert",
+            tone: "warning",
+            message: NEW_NOTE_OPEN_FAILED_COPY,
+          });
+        }
+      } finally {
+        actionLatchRef.current = false;
+        if (mountedRef.current && !identity.signal.aborted) {
+          setActionMode(null);
+        }
+      }
+      return;
+    }
+
     const restoreKind = restoredRemoteLifecycle(view.conflict);
     if (
       proposal.kind === "local" &&
@@ -1202,6 +1804,114 @@ function SelectedResolutionPanel({
       });
     } catch {
       enterUnavailable();
+    } finally {
+      actionLatchRef.current = false;
+      if (mountedRef.current && !identity.signal.aborted) {
+        setActionMode(null);
+      }
+    }
+  };
+
+  const handleOpenRetainedAgain = async () => {
+    const currentRetained = retainedNewNoteRef.current,
+      activeCallback = newNoteCallbackRef.current;
+    if (
+      actionLatchRef.current ||
+      !mountedRef.current ||
+      identity.signal.aborted ||
+      unavailableRef.current ||
+      !currentRetained ||
+      currentRetained.handoff !== "retry-needed" ||
+      activeCallback.kind !== "enabled"
+    ) {
+      return;
+    }
+    if (!verifyLiveOriginalOwnersIdentity(identity)) {
+      retainedNewNoteRef.current = null;
+      setRetainedNewNote(null);
+      readSerialRef.current += 1;
+      inFlightCopyRef.current = { local: null, remote: null, combined: null };
+      if (identity.signal.aborted) {
+        setAborted(true);
+      } else {
+        setBindingInvalid(true);
+      }
+      return;
+    }
+
+    const retainedId = currentRetained.newNoteId,
+      sourceGeneration = currentRetained.sourceGeneration,
+      openCallback = activeCallback.fn;
+
+    actionLatchRef.current = true;
+    setActionMode("opening-retained");
+
+    try {
+      let opened = false;
+      try {
+        await openCallback(retainedId);
+        opened = true;
+      } catch {
+        opened = false;
+      }
+
+      if (!mountedRef.current) return;
+      if (identity.signal.aborted) {
+        retainedNewNoteRef.current = null;
+        setRetainedNewNote(null);
+        readSerialRef.current += 1;
+        inFlightCopyRef.current = {
+          local: null,
+          remote: null,
+          combined: null,
+        };
+        setAborted(true);
+        return;
+      }
+      if (!verifyLiveOriginalOwnersIdentity(identity)) {
+        retainedNewNoteRef.current = null;
+        setRetainedNewNote(null);
+        readSerialRef.current += 1;
+        inFlightCopyRef.current = {
+          local: null,
+          remote: null,
+          combined: null,
+        };
+        setBindingInvalid(true);
+        return;
+      }
+
+      if (opened) {
+        const completed: RetainedNewNoteState = Object.freeze({
+          newNoteId: retainedId,
+          sourceGeneration,
+          handoff: "succeeded",
+          retryReason: null,
+        });
+        retainedNewNoteRef.current = completed;
+        setRetainedNewNote(completed);
+        setOutcome({
+          kind: "retained-new-note",
+          role: "status",
+          tone: "warning",
+          message: NEW_NOTE_RETAINED_COPY,
+        });
+      } else {
+        const retryNeeded: RetainedNewNoteState = Object.freeze({
+          newNoteId: retainedId,
+          sourceGeneration,
+          handoff: "retry-needed",
+          retryReason: "failed",
+        });
+        retainedNewNoteRef.current = retryNeeded;
+        setRetainedNewNote(retryNeeded);
+        setOutcome({
+          kind: "retained-open-failed",
+          role: "alert",
+          tone: "warning",
+          message: NEW_NOTE_OPEN_FAILED_COPY,
+        });
+      }
     } finally {
       actionLatchRef.current = false;
       if (mountedRef.current && !identity.signal.aborted) {
@@ -1320,13 +2030,24 @@ function SelectedResolutionPanel({
 
   const conflict =
     view?.status === "Conflict" && view.conflict ? view.conflict : null;
+  const showNewNoteRecoveryChoice =
+    isRecoverablePurgedConflict(conflict) &&
+    newNoteCallback.kind === "enabled" &&
+    recoveryBinding !== null;
+  const alreadyRetainedForCurrentGeneration =
+    retainedNewNote !== null &&
+    (retainedNewNote.handoff !== "succeeded" ||
+      (view?.generation !== null &&
+        view?.generation === retainedNewNote.sourceGeneration));
   const activeProposal =
     conflict &&
     proposal &&
     isProposalGenerationCurrent(
       proposal.capturedGeneration,
       view?.generation ?? null,
-    )
+    ) &&
+    (proposal.kind !== "new-note" ||
+      (showNewNoteRecoveryChoice && !alreadyRetainedForCurrentGeneration))
       ? proposal
       : null;
 
@@ -1379,6 +2100,24 @@ function SelectedResolutionPanel({
           {outcome.message}
         </p>
       )}
+
+      {retainedNewNote?.handoff === "retry-needed" &&
+        newNoteCallback.kind === "enabled" && (
+          <div className="cloud-conflict-resolution-retry-row">
+            <button
+              type="button"
+              className="cloud-conflict-resolution-button"
+              data-variant="primary"
+              data-busy={openingRetained ? "true" : "false"}
+              disabled={actionInFlight}
+              onClick={() => {
+                void handleOpenRetainedAgain();
+              }}
+            >
+              Open retained note again
+            </button>
+          </div>
+        )}
 
       {view && view.status !== "Conflict" && (
         <div className="cloud-conflict-resolution-nonconflict">
@@ -1600,7 +2339,9 @@ function SelectedResolutionPanel({
 
             {conflict.remote === null && conflict.local.kind === "upsert" && (
               <p className="cloud-conflict-resolution-purge-notice">
-                {`Because this note ID was permanently purged in Cloud at observed revision ${conflict.remoteRevision}, it cannot be resurrected or combined under the old ID. Copy your preserved draft text above to create a new note separately, or accept permanent deletion below.`}
+                {showNewNoteRecoveryChoice
+                  ? `Because this note ID was permanently purged in Cloud at observed revision ${conflict.remoteRevision}, it cannot be resurrected or combined under the old ID. Recover this device draft as a fresh Active note under a new note ID (retained locally as Pending upload while keeping this original conflict), or accept permanent deletion below.`
+                  : `Because this note ID was permanently purged in Cloud at observed revision ${conflict.remoteRevision}, it cannot be resurrected or combined under the old ID. Copy your preserved draft text above to create a new note separately, or accept permanent deletion below.`}
               </p>
             )}
 
@@ -1614,6 +2355,19 @@ function SelectedResolutionPanel({
                   onClick={() => selectProposal("local")}
                 >
                   Keep device version
+                </button>
+              )}
+              {showNewNoteRecoveryChoice && (
+                <button
+                  type="button"
+                  className="cloud-conflict-resolution-button"
+                  aria-pressed={activeProposal?.kind === "new-note"}
+                  disabled={
+                    actionInFlight || alreadyRetainedForCurrentGeneration
+                  }
+                  onClick={() => selectProposal("new-note")}
+                >
+                  Recover as new note
                 </button>
               )}
               <button
@@ -1748,6 +2502,13 @@ function SelectedResolutionPanel({
                   </p>
                 )}
 
+                {activeProposal.kind === "new-note" &&
+                  conflict.local.kind === "upsert" && (
+                    <p className="cloud-conflict-resolution-confirm-detail">
+                      {`Confirm creating a fresh Active note under a new note ID from this device draft (current local state: ${lifecycleLabel(conflict.local.snapshot.state)}${conflict.local.snapshot.bodyMarkdown.length === 0 ? ", empty text" : ""}). The new copy is durably retained on this device as Pending upload until matching Cloud confirmation. Observed Cloud permanent deletion (revision ${conflict.remoteRevision}) under the old note ID stays unchanged, and this original conflict recovery draft stays kept until you separately accept the observed Cloud version.`}
+                    </p>
+                  )}
+
                 <div className="cloud-conflict-resolution-confirm-actions">
                   <button
                     type="button"
@@ -1766,7 +2527,9 @@ function SelectedResolutionPanel({
                       void handleConfirmResolution();
                     }}
                   >
-                    Confirm resolution
+                    {activeProposal.kind === "new-note"
+                      ? "Confirm new note recovery"
+                      : "Confirm resolution"}
                   </button>
                   <button
                     type="button"

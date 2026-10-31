@@ -2086,3 +2086,1119 @@ test("hides preserved manual recovery text immediately and suppresses late copy 
     ),
   ).toEqual([0, 0]);
 });
+
+async function seedPurgedConflict(
+  page: Page,
+  accountIndex: number,
+  noteId: string,
+  localBody: string,
+  localState: "active" | "archived" | "trashed" = "active",
+  sessionIndex = 0,
+) {
+  trackSecretText(localBody);
+  await server.seedNote(accountIndex, noteId, `# Base for ${noteId}`);
+  const downloaded = await page.evaluate(
+    (idx) => window.cloudConflictResolutionPanelFixture.download(idx),
+    sessionIndex,
+  );
+  expect(downloaded.kind).toBe("complete");
+  await server.purgeNote(accountIndex, noteId);
+  const status = await page.evaluate(
+    (args) =>
+      window.cloudConflictResolutionPanelFixture.submitDirectMutation({
+        noteId: args.noteId,
+        kind: "upsert",
+        bodyMarkdown: args.localBody,
+        state: args.localState,
+        index: args.sessionIndex,
+      }),
+    { noteId, localBody, localState, sessionIndex },
+  );
+  expect(status).toBe(409);
+  if (sessionIndex === 0) {
+    await page.evaluate(
+      (id) => window.cloudConflictResolutionPanelFixture.setNote(id),
+      noteId,
+    );
+  }
+}
+
+test("recovers observed purged local drafts (Archived nonempty and In Trash empty text) as fresh Active Pending notes under new IDs with zero Cloud sends, preserving original conflict for separate acceptance and responsive 1280x800 and 390x844 layouts", async ({
+  browser,
+  baseURL,
+}, testInfo) => {
+  const label = "purged-new-note-primary",
+    { harness } = await openHarness(browser, baseURL!, label, 0),
+    { page } = harness,
+    region = panelRegion(page);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setNewNoteCallbackMode(
+      "enabled",
+    ),
+  );
+
+  // 1. Archived nonempty local draft after permanent remote purge -> fresh Active Pending upload under new noteId, zero Cloud sends, original row intact.
+  const archivedLocal =
+    "# Purged draft recovered as Active\n- Preserved offline checklist 原文 ##recover";
+  await seedPurgedConflict(
+    page,
+    0,
+    "purged-archived-nonempty",
+    archivedLocal,
+    "archived",
+  );
+
+  const localCard = region.getByRole("article", {
+      name: "Draft on this device",
+    }),
+    remoteCard = region.getByRole("article", {
+      name: "Observed Cloud version",
+    });
+  await expect(localCard).toContainText("Local state: Archived");
+  await expect(localCard.locator(".cloud-conflict-resolution-body")).toHaveText(
+    archivedLocal,
+  );
+  await expect(remoteCard).toContainText(
+    "Observed Cloud state: Permanently purged in Cloud",
+  );
+  await expect(
+    region.getByRole("button", { name: "Keep device version" }),
+  ).toHaveCount(0);
+  await expect(
+    region.getByRole("button", { name: "Combine text" }),
+  ).toHaveCount(0);
+
+  const sourceBefore = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "purged-archived-nonempty",
+      ),
+    ),
+    activeEntriesBefore = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    ),
+    commitsBeforeProposal = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+    mutationsBefore = mutations(label).length;
+
+  const recoverBtn = region.getByRole("button", {
+    name: "Recover as new note",
+    exact: true,
+  });
+  await expect(recoverBtn).toBeVisible();
+  await expect(recoverBtn).toHaveAttribute("aria-pressed", "false");
+  await recoverBtn.click();
+  await expect(recoverBtn).toHaveAttribute("aria-pressed", "true");
+
+  const confirmRegion = region.getByRole("region", {
+    name: "Confirm chosen version",
+  });
+  await expect(confirmRegion).toBeVisible();
+  await expect(confirmRegion).toHaveAttribute("data-destructive", "false");
+  await expect(confirmRegion).toContainText(
+    "fresh Active note under a new note ID",
+  );
+  await expect(confirmRegion).toContainText("current local state: Archived");
+  await expect(confirmRegion).toContainText("Pending upload");
+  await expect(confirmRegion).toContainText(
+    "Observed Cloud permanent deletion (revision 2) under the old note ID stays unchanged",
+  );
+  await expect(confirmRegion).toContainText(
+    "original conflict recovery draft stays kept",
+  );
+
+  // Opening inline confirmation allocates/commits nothing and sends zero Cloud requests.
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+    ),
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+  ).toBe(commitsBeforeProposal);
+  expect(mutations(label)).toHaveLength(mutationsBefore);
+
+  // Desktop 1280x800 and narrow 390x844 layout & target-size checks + screenshots.
+  const confirmNewBtn = confirmRegion.getByRole("button", {
+    name: "Confirm new note recovery",
+    exact: true,
+  });
+  const recoverBoxDesktop = await recoverBtn.boundingBox(),
+    confirmBoxDesktop = await confirmNewBtn.boundingBox();
+  expect(recoverBoxDesktop!.width).toBeGreaterThanOrEqual(24);
+  expect(recoverBoxDesktop!.height).toBeGreaterThanOrEqual(36);
+  expect(confirmBoxDesktop!.width).toBeGreaterThanOrEqual(24);
+  expect(confirmBoxDesktop!.height).toBeGreaterThanOrEqual(36);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(1280);
+  await page.screenshot({
+    path: testInfo.outputPath("purged-new-note-panel-desktop.png"),
+    fullPage: true,
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const recoverBoxMobile = await recoverBtn.boundingBox(),
+    confirmBoxMobile = await confirmNewBtn.boundingBox();
+  expect(recoverBoxMobile!.width).toBeGreaterThanOrEqual(24);
+  expect(recoverBoxMobile!.height).toBeGreaterThanOrEqual(40);
+  expect(confirmBoxMobile!.width).toBeGreaterThanOrEqual(24);
+  expect(confirmBoxMobile!.height).toBeGreaterThanOrEqual(40);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    path: testInfo.outputPath("purged-new-note-panel-mobile.png"),
+    fullPage: true,
+  });
+  await confirmNewBtn.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: testInfo.outputPath(
+      "purged-new-note-panel-mobile-confirmation-viewport.png",
+    ),
+    fullPage: false,
+  });
+  await page.setViewportSize({ width: 1280, height: 800 });
+
+  // Cancel choice performs zero writes or callbacks.
+  await confirmRegion
+    .getByRole("button", { name: "Cancel choice", exact: true })
+    .click();
+  await expect(confirmRegion).toHaveCount(0);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+  ).toBe(commitsBeforeProposal);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    ),
+  ).toEqual(activeEntriesBefore);
+
+  // Confirm recovery as new note.
+  await recoverBtn.click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+
+  await expect(
+    region.getByRole("status", { name: "Resolution notice", exact: true }),
+  ).toContainText(
+    "New Active note copy retained on this device as Pending upload",
+  );
+  await expect(region).not.toContainText("Saved in Cloud");
+  await expect(page.locator("body")).not.toContainText("All notes synced");
+  await expect(page.locator("body")).not.toContainText("Up to date");
+  await expect(page.locator("body")).not.toContainText("Latest");
+  await expect(page.locator("body")).not.toContainText("Live");
+
+  // Successful callback does not re-enable duplicate preparation from the same confirmed attempt.
+  await expect(recoverBtn).toBeDisabled();
+  await expect(
+    region.getByRole("button", { name: "Open retained note again" }),
+  ).toHaveCount(0);
+
+  const callsAfterArchived = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+  );
+  expect(callsAfterArchived).toHaveLength(1);
+  const newArchivedNoteId = callsAfterArchived[0].newNoteId;
+  expect(callsAfterArchived[0].sessionIndex).toBe(0);
+  expect(newArchivedNoteId).not.toBe("purged-archived-nonempty");
+  expect(mutations(label)).toHaveLength(mutationsBefore);
+  expect((await server.head(0, "purged-archived-nonempty")).kind).toBe(
+    "purged",
+  );
+
+  // Original conflict row is completely untouched in IndexedDB.
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "purged-archived-nonempty",
+      ),
+    ),
+  ).toEqual(sourceBefore);
+
+  // Retained new note row is fresh Active Pending upload at generation 1, baseRevision 0, null trash/origin metadata.
+  const retainedArchived = await page.evaluate(
+    (id) => window.cloudConflictResolutionPanelFixture.readDurableState(id),
+    newArchivedNoteId,
+  );
+  expect(retainedArchived?.generation).toBe(1);
+  expect(retainedArchived?.base).toBeNull();
+  expect(retainedArchived?.baseRevision).toBe(0);
+  expect(retainedArchived?.inFlight).toBeNull();
+  expect(retainedArchived?.conflict).toBeNull();
+  expect(retainedArchived?.pending?.kind).toBe("upsert");
+  if (retainedArchived?.pending?.kind === "upsert") {
+    expect(retainedArchived.pending.snapshot.noteId).toBe(newArchivedNoteId);
+    expect(retainedArchived.pending.snapshot.bodyMarkdown).toBe(archivedLocal);
+    expect(retainedArchived.pending.snapshot.state).toBe("active");
+    expect(retainedArchived.pending.snapshot.deletedAt).toBeNull();
+    expect(retainedArchived.pending.snapshot.purgeAfter).toBeNull();
+    expect("origin" in retainedArchived.pending.snapshot).toBe(false);
+  }
+  const activeEntriesAfter = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+  );
+  expect(
+    activeEntriesAfter.find((entry) => entry.noteId === newArchivedNoteId),
+  ).toMatchObject({
+    noteId: newArchivedNoteId,
+    kind: "active",
+    status: "Pending upload",
+  });
+
+  // Original observed-purge acceptance remains a separate explicit decision.
+  await region
+    .getByRole("button", { name: "Use observed Cloud version", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("status", { name: "Resolution status", exact: true }),
+  ).toHaveText("Deleted in Cloud");
+  expect(mutations(label)).toHaveLength(mutationsBefore);
+  expect(
+    await page.evaluate(
+      (id) => window.cloudConflictResolutionPanelFixture.readDurableState(id),
+      newArchivedNoteId,
+    ),
+  ).toEqual(retainedArchived);
+
+  // 2. Empty-text In Trash local draft after permanent remote purge -> fresh Active Pending upload with cleared trash timestamps.
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls(),
+  );
+  await seedPurgedConflict(page, 0, "purged-trashed-empty", "", "trashed");
+
+  const emptySourceBefore = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.readDurableState(
+      "purged-trashed-empty",
+    ),
+  );
+  if (emptySourceBefore?.conflict?.local.kind === "upsert") {
+    expect(emptySourceBefore.conflict.local.snapshot.state).toBe("trashed");
+    expect(emptySourceBefore.conflict.local.snapshot.deletedAt).not.toBeNull();
+    expect(emptySourceBefore.conflict.local.snapshot.purgeAfter).not.toBeNull();
+  }
+
+  await expect(localCard).toContainText("Local state: In Trash");
+  await expect(localCard).toContainText(
+    "This local draft is an empty trashed note with no text.",
+  );
+  const mutationsBeforeEmpty = mutations(label).length;
+
+  await recoverBtn.click();
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toContainText("current local state: In Trash, empty text");
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+
+  await expect(
+    region.getByRole("status", { name: "Resolution notice", exact: true }),
+  ).toContainText(
+    "New Active note copy retained on this device as Pending upload",
+  );
+  await expect(recoverBtn).toBeDisabled();
+
+  const emptyCalls = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+  );
+  expect(emptyCalls).toHaveLength(1);
+  const emptyNewId = emptyCalls[0].newNoteId;
+  expect(emptyNewId).not.toBe("purged-trashed-empty");
+  expect(emptyNewId).not.toBe(newArchivedNoteId);
+  expect(mutations(label)).toHaveLength(mutationsBeforeEmpty);
+
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.readDurableState(
+        "purged-trashed-empty",
+      ),
+    ),
+  ).toEqual(emptySourceBefore);
+
+  const retainedEmpty = await page.evaluate(
+    (id) => window.cloudConflictResolutionPanelFixture.readDurableState(id),
+    emptyNewId,
+  );
+  expect(retainedEmpty?.generation).toBe(1);
+  expect(retainedEmpty?.base).toBeNull();
+  expect(retainedEmpty?.baseRevision).toBe(0);
+  expect(retainedEmpty?.inFlight).toBeNull();
+  expect(retainedEmpty?.conflict).toBeNull();
+  expect(retainedEmpty?.pending?.kind).toBe("upsert");
+  if (retainedEmpty?.pending?.kind === "upsert") {
+    expect(retainedEmpty.pending.snapshot.noteId).toBe(emptyNewId);
+    expect(retainedEmpty.pending.snapshot.bodyMarkdown).toBe("");
+    expect(retainedEmpty.pending.snapshot.state).toBe("active");
+    expect(retainedEmpty.pending.snapshot.deletedAt).toBeNull();
+    expect(retainedEmpty.pending.snapshot.purgeAfter).toBeNull();
+    expect("origin" in retainedEmpty.pending.snapshot).toBe(false);
+  }
+});
+
+test("enforces synchronous latch during held work, refuses stale generations, retains manual recovery text on store failures, retries failed or withheld callback handoff with the same retained ID and refuses omitted, malformed or getter callbacks without newNoteRecovery lookup", async ({
+  browser,
+  baseURL,
+}) => {
+  const label = "purged-new-note-guards",
+    { harness } = await openHarness(browser, baseURL!, label, 0),
+    { page } = harness,
+    region = panelRegion(page);
+
+  // 1. Omitted, undefined, malformed and getter callbacks perform zero getter calls and zero newNoteRecovery lookups while preserving safe copy-only purge UX.
+  const copyOnlyBody = "# Purged draft under omitted or malformed callback";
+  await seedPurgedConflict(page, 0, "purged-callback-modes", copyOnlyBody);
+
+  const refusedModes = [
+    "omitted",
+    "undefined-data",
+    "malformed-null",
+    "malformed-string",
+    "non-enumerable",
+    "callback-getter",
+  ] as const;
+
+  for (const mode of refusedModes) {
+    await page.evaluate(
+      (nextMode) =>
+        window.cloudConflictResolutionPanelFixture.setNewNoteCallbackMode(
+          nextMode,
+        ),
+      mode,
+    );
+    await expect(region).toContainText(copyOnlyBody);
+    await expect(
+      region.getByRole("button", { name: "Recover as new note" }),
+    ).toHaveCount(0);
+    await expect(region).toContainText(
+      "Copy your preserved draft text above to create a new note separately",
+    );
+    expect(
+      await page.evaluate(() =>
+        window.cloudConflictResolutionPanelFixture.getterCalls(),
+      ),
+      mode,
+    ).toBe(0);
+    expect(
+      await page.evaluate(() =>
+        window.cloudConflictResolutionPanelFixture.newNoteRecoveryCount(0),
+      ),
+      mode,
+    ).toBe(0);
+  }
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearCopiedCalls(),
+  );
+  await region.getByRole("button", { name: "Copy draft text" }).click();
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.copiedCalls(),
+    ),
+  ).toEqual([copyOnlyBody]);
+
+  // Enabling valid callback on non-purged conflicts never offers Recover as new note.
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setNewNoteCallbackMode(
+      "enabled",
+    ),
+  );
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.newNoteRecoveryCount(0),
+    ),
+  ).toBe(1);
+  await seedActiveConflict(
+    page,
+    0,
+    "non-purged-active",
+    "# Local active",
+    "# Remote active",
+  );
+  await expect(
+    region.getByRole("button", { name: "Recover as new note" }),
+  ).toHaveCount(0);
+
+  // 2. One synchronous latch covers held prepare read + held callback handoff against duplicate clicks.
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls();
+    window.cloudConflictResolutionPanelFixture.setNote("purged-callback-modes");
+  });
+  await expect(region).toContainText(copyOnlyBody);
+
+  const notesBeforeLatch = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    ),
+    commitsBeforeLatch = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    );
+
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.holdReads(0);
+    window.cloudConflictResolutionPanelFixture.holdNewNoteHandoff(true);
+  });
+
+  const confirmLatchBtn = region.getByRole("button", {
+    name: "Confirm new note recovery",
+    exact: true,
+  });
+  await confirmLatchBtn.evaluate((button: HTMLButtonElement) => {
+    button.click();
+    button.click();
+  });
+
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldReadCount() === 1,
+  );
+  await expect(confirmLatchBtn).toBeDisabled();
+  await expect(confirmLatchBtn).toHaveAttribute("data-busy", "true");
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseReads(false),
+  );
+
+  await page.waitForFunction(
+    () =>
+      window.cloudConflictResolutionPanelFixture.heldNewNoteHandoffCount() ===
+      1,
+  );
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+    ),
+  ).toHaveLength(1);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+  ).toBe(commitsBeforeLatch + 1);
+  await expect(
+    region.getByRole("button", { name: "Use observed Cloud version" }),
+  ).toBeDisabled();
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseNewNoteHandoffs(false),
+  );
+  await expect(
+    region.getByRole("button", { name: "Recover as new note", exact: true }),
+  ).toBeDisabled();
+  const notesAfterLatch = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+  );
+  expect(notesAfterLatch).toHaveLength(notesBeforeLatch.length + 1);
+
+  // 3. Stale generation refusal, busy open-note lock and unavailable store failures preserve manual combined text and copy only the model-selected device snapshot.
+  const manualBuffer =
+      "# Manual combined buffer preserved across purge ##manual",
+    purgedSnap0 = "# Device snapshot v0 after remote purge",
+    purgedSnap1 = "# Device snapshot v1 background refresh",
+    purgedSnap2 = "# Device snapshot v2 unrefreshed store write";
+  trackSecretText(manualBuffer, purgedSnap0, purgedSnap1, purgedSnap2);
+
+  await seedActiveConflict(
+    page,
+    0,
+    "purged-stale-and-unavailable",
+    "# Pre-purge local",
+    "# Pre-purge remote",
+  );
+  await region
+    .getByRole("button", { name: "Combine text", exact: true })
+    .click();
+  await region
+    .getByLabel("Combined note text", { exact: true })
+    .fill(manualBuffer);
+
+  await server.purgeNote(0, "purged-stale-and-unavailable");
+  // The note already has a conflict. Retain its newer device branch, then
+  // explicitly choose it through the existing UI to observe the server purge.
+  await page.evaluate(
+    (body) =>
+      window.cloudConflictResolutionPanelFixture.advanceLocalGeneration(
+        "purged-stale-and-unavailable",
+        body,
+        true,
+      ),
+    purgedSnap0,
+  );
+  await region
+    .getByRole("button", { name: "Keep device version", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm resolution", exact: true })
+    .click();
+  await expect(
+    region.getByRole("article", { name: "Observed Cloud version" }),
+  ).toContainText("Permanently purged in Cloud");
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls(),
+  );
+
+  const preservedTextbox = region.getByRole("textbox", {
+    name: "Preserved manual combined text",
+    exact: true,
+  });
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+
+  // 3a. Background generation advance retires open Recover as new note confirmation.
+  const notesBeforeStale = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+  );
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toBeVisible();
+  await page.evaluate(
+    (body) =>
+      window.cloudConflictResolutionPanelFixture.advanceLocalGeneration(
+        "purged-stale-and-unavailable",
+        body,
+        true,
+      ),
+    purgedSnap1,
+  );
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toHaveCount(0);
+  await expect(
+    region.getByRole("alert", { name: "Resolution notice" }),
+  ).toContainText("This note changed on this device before confirmation");
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+
+  // 3b. Unrefreshed concurrent generation advance before Confirm click returns stale without allocating a new note.
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await page.evaluate(
+    (body) =>
+      window.cloudConflictResolutionPanelFixture.advanceLocalGeneration(
+        "purged-stale-and-unavailable",
+        body,
+        false,
+      ),
+    purgedSnap2,
+  );
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await expect(
+    region.getByRole("alert", { name: "Resolution notice" }),
+  ).toContainText("This note changed on this device before confirmation");
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toHaveCount(0);
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+  await expect(
+    region
+      .getByRole("article", { name: "Draft on this device" })
+      .locator(".cloud-conflict-resolution-body"),
+  ).toHaveText(purgedSnap2);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+    ),
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    ),
+  ).toEqual(notesBeforeStale);
+
+  // 3c. Busy open-note lock refuses preparation and preserves manual text.
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.openNoteOwner(
+      "purged-stale-and-unavailable",
+    ),
+  );
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await expect(
+    region.getByRole("alert", { name: "Resolution notice" }),
+  ).toHaveText(
+    "This note is currently open or busy in another Cloud view. Put away the open note first; any manual combined text was preserved.",
+  );
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.putAwayNoteOwner(
+      "purged-stale-and-unavailable",
+    ),
+  );
+
+  // 3d. Pre-commit store failure enters unavailable without rollback claims and preserves manual text + fake clipboard copy.
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.clearCopiedCalls();
+    window.cloudConflictResolutionPanelFixture.failCommits(0);
+  });
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region).not.toContainText("were not changed");
+  await expect(region).not.toContainText("Saved in Cloud");
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+  await region
+    .getByRole("button", { name: "Copy combined text", exact: true })
+    .click();
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.copiedCalls(),
+    ),
+  ).toEqual([manualBuffer]);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+    ),
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    ),
+  ).toEqual(notesBeforeStale);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failCommits(null),
+  );
+  await region
+    .getByRole("button", { name: "Retry loading conflict", exact: true })
+    .click();
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+  await expect(
+    region.getByRole("region", { name: "Confirm chosen version" }),
+  ).toHaveCount(0);
+
+  // Fresh proposal after recovery copies the model-selected device snapshot (purgedSnap2), never manualBuffer.
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await expect(
+    region.getByRole("status", { name: "Resolution notice", exact: true }),
+  ).toContainText(
+    "New Active note copy retained on this device as Pending upload",
+  );
+  const postUnavailableCalls = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+  );
+  expect(postUnavailableCalls).toHaveLength(1);
+  const snap2Retained = await page.evaluate(
+    (id) => window.cloudConflictResolutionPanelFixture.readDurableState(id),
+    postUnavailableCalls[0].newNoteId,
+  );
+  expect(snap2Retained?.pending?.kind).toBe("upsert");
+  if (snap2Retained?.pending?.kind === "upsert") {
+    expect(snap2Retained.pending.snapshot.bodyMarkdown).toBe(purgedSnap2);
+    expect(snap2Retained.pending.snapshot.bodyMarkdown).not.toBe(manualBuffer);
+  }
+  await expect(preservedTextbox).toHaveValue(manualBuffer);
+
+  // 4. Callback rejection remembers retained ID and Open retained note again retries with the SAME ID and zero extra prepare/commit calls.
+  const retryOpenBody = "# Retained note awaiting same-ID open retry";
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls(),
+  );
+  await seedPurgedConflict(page, 0, "purged-open-retry", retryOpenBody);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failNewNoteHandoffs(1),
+  );
+
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+
+  await expect(
+    region.getByRole("alert", { name: "Resolution notice", exact: true }),
+  ).toContainText(
+    "New Active note copy is durably retained on this device as Pending upload",
+  );
+  await expect(page.locator("body")).not.toContainText("synthetic-private");
+  await expect(
+    region.getByRole("button", { name: "Recover as new note", exact: true }),
+  ).toBeDisabled();
+
+  const failedOpenCalls = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+  );
+  expect(failedOpenCalls).toHaveLength(1);
+  const rememberedId = failedOpenCalls[0].newNoteId;
+  const commitsAfterFirstPrepare = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+    notesAfterFirstPrepare = await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    );
+
+  const openAgainBtn = region.getByRole("button", {
+    name: "Open retained note again",
+    exact: true,
+  });
+  await expect(openAgainBtn).toBeVisible();
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdNewNoteHandoff(true),
+  );
+  await openAgainBtn.evaluate((button: HTMLButtonElement) => {
+    button.click();
+    button.click();
+  });
+  await page.waitForFunction(
+    () =>
+      window.cloudConflictResolutionPanelFixture.heldNewNoteHandoffCount() ===
+      1,
+  );
+  await expect(openAgainBtn).toBeDisabled();
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseNewNoteHandoffs(false),
+  );
+
+  await expect(openAgainBtn).toHaveCount(0);
+  await expect(
+    region.getByRole("status", { name: "Resolution notice", exact: true }),
+  ).toContainText(
+    "New Active note copy retained on this device as Pending upload",
+  );
+  await expect(
+    region.getByRole("button", { name: "Recover as new note", exact: true }),
+  ).toBeDisabled();
+
+  const retriedOpenCalls = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+  );
+  expect(retriedOpenCalls).toHaveLength(2);
+  expect(retriedOpenCalls[1].newNoteId).toBe(rememberedId);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+  ).toBe(commitsAfterFirstPrepare);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.listLibraryNotes("notes"),
+    ),
+  ).toEqual(notesAfterFirstPrepare);
+
+  // 5. Callback rotation/omission while prepare is pending withholds automatic handoff while keeping same-binding explicit open reachable.
+  const rotatedBody = "# Purged draft with rotated callback during prepare";
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls(),
+  );
+  await seedPurgedConflict(page, 0, "purged-rotated-callback", rotatedBody);
+
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldReadCount() === 1,
+  );
+  const rotatedSlot = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.rotateNewNoteCallback(),
+  );
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseReads(false),
+  );
+
+  await expect(
+    region.getByRole("status", { name: "Resolution notice", exact: true }),
+  ).toContainText("Automatic opening was withheld");
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+    ),
+  ).toEqual([]);
+
+  const commitsAfterWithheld = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.commitCount(0),
+  );
+  // Temporarily omitting callback hides Open retained note again without discarding retained state on the same account/note.
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setNewNoteCallbackMode(
+      "omitted",
+    ),
+  );
+  await expect(
+    region.getByRole("button", { name: "Open retained note again" }),
+  ).toHaveCount(0);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setNewNoteCallbackMode(
+      "enabled",
+    ),
+  );
+  await region
+    .getByRole("button", { name: "Open retained note again", exact: true })
+    .click();
+
+  const withheldExplicitCalls = await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+  );
+  expect(withheldExplicitCalls).toHaveLength(1);
+  expect(withheldExplicitCalls[0].slot).toBe(rotatedSlot);
+  expect(withheldExplicitCalls[0].sessionIndex).toBe(0);
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.commitCount(0),
+    ),
+  ).toBe(commitsAfterWithheld);
+});
+
+test("hides old text and retained IDs synchronously and suppresses late new-note preparation or callback completions across account, note, malformed-binding and signal-abort transitions", async ({
+  browser,
+  baseURL,
+}) => {
+  const labelA = "new-note-isolation-a",
+    labelB = "new-note-isolation-b",
+    { harness } = await openHarness(browser, baseURL!, labelA, 0),
+    { page, proxyLabel } = harness,
+    region = panelRegion(page);
+
+  const draftA1 = "# Account A purged isolation secret 1",
+    draftA2 = "# Account A purged isolation secret 2",
+    draftA3 = "# Account A purged isolation secret 3",
+    draftB1 = "# Account B purged isolation secret 1";
+
+  await seedPurgedConflict(page, 0, "iso-purged-1", draftA1, "active", 0);
+  await seedPurgedConflict(page, 0, "iso-purged-2", draftA2, "active", 0);
+  await seedPurgedConflict(page, 0, "iso-purged-3", draftA3, "active", 0);
+
+  const issuedB = await server.openSession(labelB, 1);
+  sensitive.push(issuedB.csrfToken, issuedB.cookie.split("=")[1]);
+  proxyLabel.current = labelB;
+  const indexB = await page.evaluate(
+    (token) =>
+      window.cloudConflictResolutionPanelFixture.createAndPrepare(token, false),
+    issuedB.csrfToken,
+  );
+  expect(indexB).toBe(1);
+  await seedPurgedConflict(page, 1, "iso-purged-1", draftB1, "active", 1);
+
+  proxyLabel.current = labelA;
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.setNewNoteCallbackMode(
+      "enabled",
+    );
+    window.cloudConflictResolutionPanelFixture.selectSession(0, "iso-purged-1");
+  });
+  await expect(region).toContainText(draftA1);
+
+  // 1. Account switch during held prepare read hides Account A synchronously and never invokes Account A or Account B handler.
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdReads(0),
+  );
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await page.waitForFunction(
+    () => window.cloudConflictResolutionPanelFixture.heldReadCount() === 1,
+  );
+
+  proxyLabel.current = labelB;
+  const switchedAccountDom = await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.selectSession(1, "iso-purged-1");
+    const section = document.querySelector(".cloud-conflict-resolution-panel")!;
+    return section.textContent ?? "";
+  });
+  expect(switchedAccountDom).not.toContain(draftA1);
+
+  await expect(region).toContainText(draftB1);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseReads(false),
+  );
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.retainedCallbackCalls(),
+    ),
+  ).toEqual([]);
+  await expect(region).toContainText(draftB1);
+  await expect(page.locator("body")).not.toContainText(draftA1);
+  await expect(
+    region.getByRole("button", { name: "Open retained note again" }),
+  ).toHaveCount(0);
+
+  // 2. Account switch during held callback handoff suppresses late rejection/notice on Account B.
+  proxyLabel.current = labelA;
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls();
+    window.cloudConflictResolutionPanelFixture.selectSession(0, "iso-purged-1");
+  });
+  await expect(region).toContainText(draftA1);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdNewNoteHandoff(true),
+  );
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await page.waitForFunction(
+    () =>
+      window.cloudConflictResolutionPanelFixture.heldNewNoteHandoffCount() ===
+      1,
+  );
+
+  proxyLabel.current = labelB;
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.selectSession(1, "iso-purged-1"),
+  );
+  await expect(region).toContainText(draftB1);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseNewNoteHandoffs(true),
+  );
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region).toContainText(draftB1);
+  await expect(region.getByRole("alert")).toHaveCount(0);
+  await expect(
+    region.getByRole("button", { name: "Open retained note again" }),
+  ).toHaveCount(0);
+
+  // 3. Note replacement and foreign-owners binding replacement hide Open retained note again synchronously and suppress late retry completions.
+  proxyLabel.current = labelA;
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.clearRetainedCallbackCalls();
+    window.cloudConflictResolutionPanelFixture.selectSession(0, "iso-purged-2");
+    window.cloudConflictResolutionPanelFixture.failNewNoteHandoffs(1);
+  });
+  await expect(region).toContainText(draftA2);
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await expect(
+    region.getByRole("button", {
+      name: "Open retained note again",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.holdNewNoteHandoff(true),
+  );
+  await region
+    .getByRole("button", { name: "Open retained note again", exact: true })
+    .click();
+  await page.waitForFunction(
+    () =>
+      window.cloudConflictResolutionPanelFixture.heldNewNoteHandoffCount() ===
+      1,
+  );
+
+  const noteSwitchedDom = await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.setNote("iso-purged-3");
+    const section = document.querySelector(".cloud-conflict-resolution-panel")!;
+    return section.textContent ?? "";
+  });
+  expect(noteSwitchedDom).not.toContain(draftA2);
+  expect(noteSwitchedDom).not.toContain("Open retained note again");
+
+  await expect(region).toContainText(draftA3);
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseNewNoteHandoffs(false),
+  );
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region).toContainText(draftA3);
+  await expect(
+    region.getByRole("button", { name: "Recover as new note", exact: true }),
+  ).toBeEnabled();
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.failNewNoteHandoffs(1),
+  );
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await expect(
+    region.getByRole("button", {
+      name: "Open retained note again",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.setMalformedPreset(
+      "foreign-owners",
+    ),
+  );
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region.getByRole("button")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText(draftA3);
+
+  // 4. In-place signal abort during held callback handoff hides content immediately without rollback claims or closing caller stores.
+  proxyLabel.current = labelB;
+  await page.evaluate(() => {
+    window.cloudConflictResolutionPanelFixture.setMalformedPreset(null);
+    window.cloudConflictResolutionPanelFixture.selectSession(1, "iso-purged-1");
+    window.cloudConflictResolutionPanelFixture.holdNewNoteHandoff(true);
+  });
+  await expect(region).toContainText(draftB1);
+  await region
+    .getByRole("button", { name: "Recover as new note", exact: true })
+    .click();
+  await region
+    .getByRole("button", { name: "Confirm new note recovery", exact: true })
+    .click();
+  await page.waitForFunction(
+    () =>
+      window.cloudConflictResolutionPanelFixture.heldNewNoteHandoffCount() ===
+      1,
+  );
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.abortSession(1, false),
+  );
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region.getByRole("alert")).not.toContainText("were not changed");
+  await expect(region.getByRole("button")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText(draftB1);
+
+  await page.evaluate(() =>
+    window.cloudConflictResolutionPanelFixture.releaseNewNoteHandoffs(true),
+  );
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await expect(region.getByRole("alert")).toHaveText(UNAVAILABLE_COPY);
+  await expect(region.getByRole("button")).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("synthetic-private");
+  expect(
+    await page.evaluate(() =>
+      window.cloudConflictResolutionPanelFixture.closeCounts(),
+    ),
+  ).toEqual([0, 0]);
+});
