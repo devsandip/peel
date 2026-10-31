@@ -17,3 +17,11 @@ The CLI requires pinned Node24.22.1, uses a fresh private unique folder directly
 Builtin Node tests cover actual canonical extraction, changed candidate/harness, missing/duplicate/unterminated/wrong fences and fixed refusal. Root removes only the candidate hash check to prove the corresponding tamper case fails, then restores exact source and passes tests. Run pinnedNode24 builtin tests and actual exact28-case replay under test-window.py, plus relevant type/format/shared checks. Do not weaken the existing28case harness or assertions. Wire two small steps into cloud-artifact after dependency installation, with no other workflow policy change. Required source and separate actual-main jobs/logs/counters must include the new replay before normal no-force integration and actual closure/ProjectDone/guardedprimaryff.
 
 No actual provider/profile command, stopped probe, expired allowance renewal, audit observation, deployment or Cloud activation is authorized. Actual51/30/31 remainOPEN/Blocked; a three-region synthetic fixture is never real audit coverage, historical cause, ownership or teardown authority.
+
+## Local implementation and review
+
+Antigravity implemented only the two assigned files through file tools. Codex reviewed the actual code, added the two workflow steps and dated runbook amendment, and corrected the CLI error boundary to emit only the fixed refusal instead of an uncaught stack. No denied command, policy broadening or real provider/profile access occurred.
+
+Actual pinned Node24.22.1 passes7 builtin extraction/report tests, the exact28-case replay, shared1120/89 files, type checking, formatting, syntax and whitespace. Removing only the candidate-hash guard makes the changed-candidate refusal assertion fail; the exact original script is restored and all7 plus28 pass. A separate missing-runner probe fails with the fixed public error, removes its owned temporary folder and restores the exact script. Extra CLI arguments refuse without execution. No existing harness assertion or test control changed. The candidate/harness pins remain the reviewed values above.
+
+Source and separate main hosted evidence are still pending; these local results grant no audit/provider/managed/cleanup acceptance. Root remains sole final reviewer/integrator, with Antigravity independently checking Root-owned integration changes before publication.
