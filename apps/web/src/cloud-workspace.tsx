@@ -20,6 +20,8 @@ import {
   type CloudLibraryNoteSelection,
 } from "./cloud-cached-library";
 import { CloudConflictPreview } from "./cloud-conflict-preview";
+import { CloudConflictResolutionPanel } from "./cloud-conflict-resolution-panel";
+import type { CloudLibraryOwners } from "./cloud-library-owners";
 import type { CloudDraftSession } from "./cloud-draft-session";
 import type { CloudNoteUpload } from "./cloud-note-upload";
 import { CloudUploadingNoteEditor } from "./cloud-uploading-note-editor";
@@ -51,6 +53,8 @@ export type CloudWorkspaceProps = {
   onPutAway?: (closed: CloudWorkspacePutAway) => void | Promise<void>;
   onRetrySync?: (context: CloudLibraryContext) => void | Promise<void>;
   onSignIn?: (context: CloudLibraryContext) => void | Promise<void>;
+  /** Explicit original parent binding. Omission preserves read-only inspection. */
+  conflictOwners?: CloudLibraryOwners;
 };
 
 type ParsedConnection =
@@ -253,6 +257,7 @@ function captureWorkspaceProps(rawProps: unknown): {
   onPutAway: CloudWorkspaceProps["onPutAway"];
   onRetrySync: CloudWorkspaceProps["onRetrySync"];
   onSignIn: CloudWorkspaceProps["onSignIn"];
+  conflictOwners: CloudWorkspaceProps["conflictOwners"];
 } {
   if (!rawProps || typeof rawProps !== "object" || Array.isArray(rawProps)) {
     return {
@@ -266,6 +271,7 @@ function captureWorkspaceProps(rawProps: unknown): {
       onPutAway: undefined,
       onRetrySync: undefined,
       onSignIn: undefined,
+      conflictOwners: undefined,
     };
   }
   const contextProp = ownDataProperty(rawProps, "context"),
@@ -276,7 +282,8 @@ function captureWorkspaceProps(rawProps: unknown): {
     onCreateProp = ownDataProperty(rawProps, "onCreate"),
     onPutAwayProp = ownDataProperty(rawProps, "onPutAway"),
     onRetrySyncProp = ownDataProperty(rawProps, "onRetrySync"),
-    onSignInProp = ownDataProperty(rawProps, "onSignIn");
+    onSignInProp = ownDataProperty(rawProps, "onSignIn"),
+    conflictOwnersProp = ownDataProperty(rawProps, "conflictOwners");
   if (
     !contextProp.ok ||
     !signalProp.ok ||
@@ -299,6 +306,7 @@ function captureWorkspaceProps(rawProps: unknown): {
       onPutAway: undefined,
       onRetrySync: undefined,
       onSignIn: undefined,
+      conflictOwners: undefined,
     };
   }
   const signal = isAbortSignalLike(signalProp.value) ? signalProp.value : null;
@@ -323,6 +331,11 @@ function captureWorkspaceProps(rawProps: unknown): {
         : undefined,
     onRetrySync: onRetrySyncProp.value as CloudWorkspaceProps["onRetrySync"],
     onSignIn: onSignInProp.value as CloudWorkspaceProps["onSignIn"],
+    // A malformed optional binding must not discard an active editor.
+    // Refuse accessors without invoking them and retain read-only inspection.
+    conflictOwners: conflictOwnersProp.ok
+      ? (conflictOwnersProp.value as CloudWorkspaceProps["conflictOwners"])
+      : undefined,
   };
 }
 
@@ -408,6 +421,7 @@ export function CloudWorkspace(props: CloudWorkspaceProps) {
       onPutAway={captured.onPutAway}
       onRetrySync={captured.onRetrySync}
       onSignIn={captured.onSignIn}
+      conflictOwners={captured.conflictOwners}
     />
   );
 }
@@ -423,6 +437,7 @@ function SelectedWorkspace({
   onPutAway,
   onRetrySync,
   onSignIn,
+  conflictOwners,
 }: Omit<CloudWorkspaceProps, "context" | "connection"> & {
   store: CloudLibraryStateStore;
   scope: CloudScope;
@@ -1339,12 +1354,22 @@ function SelectedWorkspace({
               Back to notes
             </button>
           </div>
-          <CloudConflictPreview
-            context={workspaceContext}
-            noteId={visibleInspection.noteId}
-            signal={signal}
-            refreshKey={effectiveRefreshKey}
-          />
+          {conflictOwners === undefined ? (
+            <CloudConflictPreview
+              context={workspaceContext}
+              noteId={visibleInspection.noteId}
+              signal={signal}
+              refreshKey={effectiveRefreshKey}
+            />
+          ) : (
+            <CloudConflictResolutionPanel
+              context={workspaceContext}
+              owners={conflictOwners}
+              noteId={visibleInspection.noteId}
+              signal={signal}
+              refreshKey={effectiveRefreshKey}
+            />
+          )}
         </div>
       )}
     </div>
