@@ -629,14 +629,17 @@ function SelectedResolutionPanel({
   );
 
   const [aborted, setAborted] = useState(() => identity.signal.aborted),
-    [unavailable, setUnavailable] = useState(() => controllerBinding === null),
+    [bindingInvalid, setBindingInvalid] = useState(
+      () => controllerBinding === null,
+    ),
+    [unavailable, setUnavailable] = useState(false),
     [ownerTick, setOwnerTick] = useState(0),
     [view, setView] = useState<CloudConflictResolutionView | null>(null),
     [proposal, setProposal] = useState<ResolutionProposal | null>(null),
     [combineDraft, setCombineDraft] = useState<CombineDraftState | null>(null),
-    [actionMode, setActionMode] = useState<"uploading" | "adopting" | null>(
-      null,
-    ),
+    [actionMode, setActionMode] = useState<
+      "uploading" | "adopting" | "reloading" | null
+    >(null),
     [outcome, setOutcome] = useState<OutcomeNotice | null>(null),
     [adoptedRevision, setAdoptedRevision] = useState<number | null>(null),
     [copyingSide, setCopyingSide] = useState<Record<CopySide, boolean>>({
@@ -654,8 +657,10 @@ function SelectedResolutionPanel({
 
   const mountedRef = useRef(false),
     readSerialRef = useRef(0),
+    unavailableRef = useRef(false),
     actionLatchRef = useRef(false),
     proposalRef = useRef<ResolutionProposal | null>(null),
+    combineDraftRef = useRef<CombineDraftState | null>(null),
     viewRef = useRef<CloudConflictResolutionView | null>(null),
     copyAttemptCounterRef = useRef(0),
     inFlightCopyRef = useRef<Record<CopySide, number | null>>({
@@ -665,6 +670,7 @@ function SelectedResolutionPanel({
     });
 
   proposalRef.current = proposal;
+  combineDraftRef.current = combineDraft;
   viewRef.current = view;
 
   useLayoutEffect(() => {
@@ -678,11 +684,13 @@ function SelectedResolutionPanel({
 
   useEffect(() => {
     if (identity.signal.aborted) {
+      readSerialRef.current += 1;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
       setAborted(true);
       return;
     }
     const onAbort = () => {
+      readSerialRef.current += 1;
       inFlightCopyRef.current = { local: null, remote: null, combined: null };
       setAborted(true);
     };
@@ -703,12 +711,12 @@ function SelectedResolutionPanel({
         }
       });
       if (typeof candidate !== "function") {
-        setUnavailable(true);
+        setBindingInvalid(true);
         return;
       }
       unsubscribe = candidate;
     } catch {
-      setUnavailable(true);
+      setBindingInvalid(true);
       return;
     }
     return () => {
@@ -723,13 +731,41 @@ function SelectedResolutionPanel({
     };
   }, [controllerBinding, identity]);
 
+  const enterUnavailable = useCallback(() => {
+    if (!mountedRef.current) return;
+    if (identity.signal.aborted) {
+      readSerialRef.current += 1;
+      inFlightCopyRef.current = { local: null, remote: null, combined: null };
+      setAborted(true);
+      return;
+    }
+    readSerialRef.current += 1;
+    unavailableRef.current = true;
+    setUnavailable(true);
+    setView(null);
+    setProposal(null);
+    setOutcome(null);
+    setAdoptedRevision(null);
+    setCopyOutcomes((prev) =>
+      prev.local || prev.remote ? { ...prev, local: null, remote: null } : prev,
+    );
+  }, [identity.signal]);
+
   const runRead = useCallback(() => {
-    if (!controllerBinding || identity.signal.aborted) return () => {};
+    if (
+      !controllerBinding ||
+      identity.signal.aborted ||
+      unavailableRef.current
+    ) {
+      return () => {};
+    }
     const requestSerial = ++readSerialRef.current;
     let active = true;
     void Promise.resolve()
       .then(() => {
-        if (!active || identity.signal.aborted) return undefined;
+        if (!active || unavailableRef.current || identity.signal.aborted) {
+          return undefined;
+        }
         return controllerBinding.read.call(
           controllerBinding.controller,
           identity.noteId,
@@ -740,6 +776,7 @@ function SelectedResolutionPanel({
           if (
             nextView === undefined ||
             !active ||
+            unavailableRef.current ||
             !isCurrentReadSerial(
               requestSerial,
               readSerialRef.current,
@@ -788,8 +825,18 @@ function SelectedResolutionPanel({
           setView(nextView);
         },
         () => {
+          if (!active || !mountedRef.current) return;
+          if (identity.signal.aborted) {
+            readSerialRef.current += 1;
+            inFlightCopyRef.current = {
+              local: null,
+              remote: null,
+              combined: null,
+            };
+            setAborted(true);
+            return;
+          }
           if (
-            active &&
             isCurrentReadSerial(
               requestSerial,
               readSerialRef.current,
@@ -797,32 +844,36 @@ function SelectedResolutionPanel({
               mountedRef.current,
             )
           ) {
-            setUnavailable(true);
+            enterUnavailable();
           }
         },
       );
     return () => {
       active = false;
     };
-  }, [controllerBinding, identity]);
+  }, [controllerBinding, enterUnavailable, identity]);
 
-  useEffect(() => runRead(), [runRead, refreshKey, ownerTick]);
+  useEffect(() => {
+    if (unavailableRef.current) return;
+    return runRead();
+  }, [runRead, refreshKey, ownerTick]);
 
   const isAborted = aborted || identity.signal.aborted;
-  if (isAborted || unavailable || !controllerBinding) {
+  if (isAborted || bindingInvalid || !controllerBinding) {
     return <UnavailableResolutionPanel />;
   }
 
-  const initialLoading = view === null;
+  const initialLoading = view === null && !unavailable;
   const actionInFlight = actionMode !== null;
   const uploadingToCloud = actionMode === "uploading";
+  const reloadingConflict = actionMode === "reloading";
 
   const handleCopy = async (side: CopySide, capturedBody: string) => {
     if (
       !mountedRef.current ||
       identity.signal.aborted ||
       typeof capturedBody !== "string" ||
-      capturedBody.length === 0
+      (side !== "combined" && capturedBody.length === 0)
     ) {
       return;
     }
@@ -843,6 +894,11 @@ function SelectedResolutionPanel({
       ) {
         return;
       }
+    } else if (
+      !combineDraftRef.current?.dirty ||
+      combineDraftRef.current.text !== capturedBody
+    ) {
+      return;
     }
     if (inFlightCopyRef.current[side] !== null) return;
 
@@ -867,19 +923,96 @@ function SelectedResolutionPanel({
       ok = false;
     }
 
-    if (inFlightCopyRef.current[side] === attempt) {
+    const stillCurrentAttempt = inFlightCopyRef.current[side] === attempt;
+    if (stillCurrentAttempt) {
       inFlightCopyRef.current[side] = null;
     }
-    if (!mountedRef.current || identity.signal.aborted) return;
-    setCopyingSide((prev) => ({ ...prev, [side]: false }));
-
     if (
-      side !== "combined" &&
-      (viewRef.current?.generation ?? null) !== capturedGeneration
+      !stillCurrentAttempt ||
+      !mountedRef.current ||
+      identity.signal.aborted
     ) {
       return;
     }
+    setCopyingSide((prev) => ({ ...prev, [side]: false }));
+
+    if (side === "combined") {
+      if (
+        !combineDraftRef.current?.dirty ||
+        combineDraftRef.current.text !== capturedBody
+      ) {
+        return;
+      }
+    } else if ((viewRef.current?.generation ?? null) !== capturedGeneration) {
+      return;
+    }
     setCopyOutcomes((prev) => ({ ...prev, [side]: { ok } }));
+  };
+
+  const handleRetryLoad = async () => {
+    if (
+      actionLatchRef.current ||
+      !mountedRef.current ||
+      identity.signal.aborted ||
+      !unavailableRef.current
+    ) {
+      return;
+    }
+    const requestSerial = ++readSerialRef.current;
+    actionLatchRef.current = true;
+    setActionMode("reloading");
+
+    try {
+      const nextView = await controllerBinding.read.call(
+        controllerBinding.controller,
+        identity.noteId,
+      );
+      if (
+        !isCurrentReadSerial(
+          requestSerial,
+          readSerialRef.current,
+          identity.signal.aborted,
+          mountedRef.current,
+        )
+      ) {
+        return;
+      }
+      unavailableRef.current = false;
+      setUnavailable(false);
+      setProposal(null);
+      setOutcome(null);
+      setAdoptedRevision(null);
+      setCopyOutcomes((prev) => {
+        const nextCombined =
+          nextView.status === "Conflict" && nextView.canMerge
+            ? null
+            : prev.combined;
+        if (
+          prev.local === null &&
+          prev.remote === null &&
+          prev.combined === nextCombined
+        ) {
+          return prev;
+        }
+        return { local: null, remote: null, combined: nextCombined };
+      });
+      setView(nextView);
+    } catch {
+      if (!mountedRef.current) return;
+      if (identity.signal.aborted) {
+        enterUnavailable();
+        return;
+      }
+      if (requestSerial === readSerialRef.current) {
+        unavailableRef.current = true;
+        setUnavailable(true);
+      }
+    } finally {
+      actionLatchRef.current = false;
+      if (mountedRef.current && !identity.signal.aborted) {
+        setActionMode(null);
+      }
+    }
   };
 
   const applyControllerResult = (
@@ -888,9 +1021,15 @@ function SelectedResolutionPanel({
       | { kind: "resolve"; choiceKind: ProposalKind; remoteRevision: number }
       | { kind: "retry" },
   ) => {
-    if (!mountedRef.current || identity.signal.aborted) return;
-    if (result.kind === "canceled" || result.kind === "unavailable") {
-      setUnavailable(true);
+    if (!mountedRef.current) return;
+    if (identity.signal.aborted || result.kind === "canceled") {
+      readSerialRef.current += 1;
+      inFlightCopyRef.current = { local: null, remote: null, combined: null };
+      setAborted(true);
+      return;
+    }
+    if (result.kind === "unavailable") {
+      enterUnavailable();
       return;
     }
     if (result.view !== null) {
@@ -903,6 +1042,7 @@ function SelectedResolutionPanel({
     if (result.kind === "complete") {
       setProposal(null);
       setCombineDraft(null);
+      setCopyOutcomes({ local: null, remote: null, combined: null });
       if (source.kind === "resolve" && source.choiceKind === "cloud") {
         setAdoptedRevision(source.remoteRevision);
         const deleted = result.view?.status === "Deleted in Cloud";
@@ -1061,9 +1201,7 @@ function SelectedResolutionPanel({
         remoteRevision,
       });
     } catch {
-      if (mountedRef.current && !identity.signal.aborted) {
-        setUnavailable(true);
-      }
+      enterUnavailable();
     } finally {
       actionLatchRef.current = false;
       if (mountedRef.current && !identity.signal.aborted) {
@@ -1096,9 +1234,7 @@ function SelectedResolutionPanel({
       );
       applyControllerResult(result, { kind: "retry" });
     } catch {
-      if (mountedRef.current && !identity.signal.aborted) {
-        setUnavailable(true);
-      }
+      enterUnavailable();
     } finally {
       actionLatchRef.current = false;
       if (mountedRef.current && !identity.signal.aborted) {
@@ -1106,6 +1242,81 @@ function SelectedResolutionPanel({
       }
     }
   };
+
+  const preservedCombineCard = combineDraft?.dirty ? (
+    <div className="cloud-conflict-resolution-combine">
+      <div className="cloud-conflict-resolution-combine-header">
+        <label htmlFor={preservedInputId}>Preserved manual combined text</label>
+        <button
+          type="button"
+          className="cloud-conflict-resolution-copy"
+          data-busy={copyingSide.combined ? "true" : "false"}
+          disabled={copyingSide.combined}
+          onClick={() => {
+            void handleCopy("combined", combineDraft.text);
+          }}
+        >
+          Copy combined text
+        </button>
+      </div>
+      {copyOutcomes.combined &&
+        (copyOutcomes.combined.ok ? (
+          <p
+            className="cloud-conflict-resolution-copy-status"
+            role="status"
+            aria-label={COPY_STATUS_LABELS.combined}
+            aria-live="polite"
+          >
+            {COPY_SUCCESS_MESSAGES.combined}
+          </p>
+        ) : (
+          <p className="cloud-conflict-resolution-copy-error" role="alert">
+            {COPY_ERROR_MESSAGES.combined}
+          </p>
+        ))}
+      <textarea
+        id={preservedInputId}
+        className="cloud-conflict-resolution-textarea"
+        value={combineDraft.text}
+        readOnly
+        rows={5}
+      />
+    </div>
+  ) : null;
+
+  if (unavailable) {
+    return (
+      <section
+        className="cloud-conflict-resolution-panel"
+        aria-labelledby={sectionHeadingId}
+        aria-busy={reloadingConflict}
+      >
+        <header className="cloud-conflict-resolution-header">
+          <h1 id={sectionHeadingId}>Cloud conflict resolution</h1>
+        </header>
+
+        <p className="cloud-conflict-resolution-unavailable" role="alert">
+          {RESOLUTION_UNAVAILABLE_COPY}
+        </p>
+
+        <div className="cloud-conflict-resolution-retry-row">
+          <button
+            type="button"
+            className="cloud-conflict-resolution-button"
+            data-busy={reloadingConflict ? "true" : "false"}
+            disabled={reloadingConflict}
+            onClick={() => {
+              void handleRetryLoad();
+            }}
+          >
+            Retry loading conflict
+          </button>
+        </div>
+
+        {preservedCombineCard}
+      </section>
+    );
+  }
 
   const conflict =
     view?.status === "Conflict" && view.conflict ? view.conflict : null;
@@ -1446,6 +1657,9 @@ function SelectedResolutionPanel({
                   disabled={actionInFlight}
                   rows={7}
                   onChange={(event) => {
+                    setCopyOutcomes((prev) =>
+                      prev.combined ? { ...prev, combined: null } : prev,
+                    );
                     setCombineDraft({
                       text: event.target.value,
                       dirty: true,
@@ -1571,50 +1785,7 @@ function SelectedResolutionPanel({
         </>
       )}
 
-      {showPreservedReadonlyCombine && combineDraft && (
-        <div className="cloud-conflict-resolution-combine">
-          <div className="cloud-conflict-resolution-combine-header">
-            <label htmlFor={preservedInputId}>
-              Preserved manual combined text
-            </label>
-            {combineDraft.text.length > 0 && (
-              <button
-                type="button"
-                className="cloud-conflict-resolution-copy"
-                data-busy={copyingSide.combined ? "true" : "false"}
-                disabled={copyingSide.combined}
-                onClick={() => {
-                  void handleCopy("combined", combineDraft.text);
-                }}
-              >
-                Copy combined text
-              </button>
-            )}
-          </div>
-          {copyOutcomes.combined &&
-            (copyOutcomes.combined.ok ? (
-              <p
-                className="cloud-conflict-resolution-copy-status"
-                role="status"
-                aria-label={COPY_STATUS_LABELS.combined}
-                aria-live="polite"
-              >
-                {COPY_SUCCESS_MESSAGES.combined}
-              </p>
-            ) : (
-              <p className="cloud-conflict-resolution-copy-error" role="alert">
-                {COPY_ERROR_MESSAGES.combined}
-              </p>
-            ))}
-          <textarea
-            id={preservedInputId}
-            className="cloud-conflict-resolution-textarea"
-            value={combineDraft.text}
-            readOnly
-            rows={5}
-          />
-        </div>
-      )}
+      {showPreservedReadonlyCombine && preservedCombineCard}
     </section>
   );
 }
