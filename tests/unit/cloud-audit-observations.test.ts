@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   cloudAuditCommandArgs,
   cloudAuditLakeFailure,
+  cloudAuditRegionOptStatuses,
   cloudAuditStandaloneOrganization,
   collectCloudAuditObservation,
+  parseCloudAuditRegionStatuses,
   type CloudAuditCommand,
 } from "../../infra/cloud/audit-observations.ts";
 import {
@@ -34,6 +36,37 @@ function registry() {
       "</table>",
     new Date(now).toISOString(),
   );
+}
+const optInRegions = new Set([
+  "af-south-1",
+  "ap-east-1",
+  "ap-south-2",
+  "ap-southeast-3",
+  "ap-southeast-4",
+  "eu-central-2",
+  "eu-south-1",
+  "eu-south-2",
+  "il-central-1",
+  "me-central-1",
+  "me-south-1",
+]);
+function regionStatuses(
+  overrides: Record<string, string> = {},
+  extras: Array<{ RegionName: string; RegionOptStatus: string }> = [],
+  nextToken: unknown = null,
+) {
+  return JSON.stringify({
+    Regions: [
+      ...cloudAuditCommercialRegions.map((region) => ({
+        RegionName: region,
+        RegionOptStatus:
+          overrides[region] ??
+          (optInRegions.has(region) ? "ENABLED" : "ENABLED_BY_DEFAULT"),
+      })),
+      ...extras,
+    ],
+    NextToken: nextToken,
+  });
 }
 function fixture(expiry = now + 3 * 60 * 60000) {
   const regions = vi.fn(async () =>
@@ -68,6 +101,7 @@ function fixture(expiry = now + 3 * 60 * 60000) {
     organization: JSON.stringify({ ManagementAccountId: account }),
     hooks: JSON.stringify({ Count: 0, NextToken: null }),
     trails: JSON.stringify({ Count: 0 }),
+    "region-status": regionStatuses(),
     lake: JSON.stringify({ Count: 0, NextToken: null }),
     "caller-identity": JSON.stringify({ Account: account, Arn: arn }),
   };
@@ -119,7 +153,9 @@ describe("Cloud hook/audit observations", () => {
       organization: "management",
       hooksListed: true,
       trailsWithShadowsRead: true,
+      regionStatusesRead: true,
       lakeRegionsChecked: 28,
+      lakeRegionsDisabled: 0,
       lakeComplete: true,
     });
     const reads = f.read.mock.calls
@@ -800,12 +836,14 @@ describe("Cloud hook/audit observations", () => {
         });
         expect(outcome).toEqual({
           kind: "unavailable",
-          code: mode === "throw" ? "lake-unavailable" : "malformed-response",
-          stage: "lake",
-          region: null,
+          code: "invalid-input",
+          stage: "region-status",
+          region: "us-east-1",
           identityVerified: true,
           resourceWrites: 0,
         });
+        expect(commandCount(f.read, "region-status")).toBe(0);
+        expect(commandCount(f.read, "lake")).toBe(0);
         expect(Object.isFrozen(outcome)).toBe(true);
         expect(Object.keys(outcome).sort()).toEqual([
           "code",
@@ -821,5 +859,633 @@ describe("Cloud hook/audit observations", () => {
         expect(text).not.toContain(arn);
       }
     }
+  });
+  it("refuses incomplete, duplicate or unreviewed registry sets before status or Lake reads", async () => {
+    for (const regions of [
+      ["us-east-1"],
+      [...cloudAuditCommercialRegions, "ap-southeast-5"],
+      [...cloudAuditCommercialRegions, "us-east-1"],
+    ]) {
+      const f = fixture();
+      const result = await collectCloudAuditObservation(input(), {
+        ...f,
+        regions: async () =>
+          Object.freeze({
+            kind: "observed" as const,
+            registry: Object.freeze({
+              ...registry(),
+              regions: Object.freeze(regions),
+            }),
+            resourceWrites: 0 as const,
+          }),
+      });
+      expect(result.kind).toBe("unavailable");
+      expect(result).toMatchObject({
+        stage: "region-status",
+        region: "us-east-1",
+        resourceWrites: 0,
+      });
+      expect(commandCount(f.read, "region-status")).toBe(0);
+      expect(commandCount(f.read, "lake")).toBe(0);
+      expect(commandCount(f.read, "caller-identity")).toBe(0);
+    }
+  });
+  it("builds fixed us-east-1 Account ListRegions argv without pagination, account overrides or region mutation", () => {
+    expect(cloudAuditRegionOptStatuses).toEqual([
+      "ENABLED",
+      "ENABLED_BY_DEFAULT",
+      "DISABLED",
+      "ENABLING",
+      "DISABLING",
+    ]);
+    expect(Object.isFrozen(cloudAuditRegionOptStatuses)).toBe(true);
+    const regions = registry().regions;
+    const args = cloudAuditCommandArgs(
+      "synthetic",
+      { kind: "region-status" },
+      regions,
+    );
+    expect(args).toEqual([
+      "--profile",
+      "synthetic",
+      "--region",
+      "us-east-1",
+      "--no-cli-pager",
+      "--no-cli-auto-prompt",
+      "--color",
+      "off",
+      "--cli-connect-timeout",
+      "5",
+      "--cli-read-timeout",
+      "10",
+      "--cli-error-format",
+      "json",
+      "account",
+      "list-regions",
+      "--max-results",
+      "50",
+      "--no-paginate",
+      "--endpoint-url",
+      "https://account.us-east-1.amazonaws.com",
+      "--query",
+      "{Regions:Regions[].{RegionName:RegionName,RegionOptStatus:RegionOptStatus},NextToken:NextToken}",
+      "--output",
+      "json",
+    ]);
+    expect(args.join(" ")).not.toMatch(
+      /account-id|enable-region|disable-region|get-region-opt-status|region-opt-status-contains|next-token|starting-token|export-credentials|debug/,
+    );
+    let getterAccessed = false;
+    const withGetter = Object.defineProperty({}, "kind", {
+      enumerable: true,
+      get() {
+        getterAccessed = true;
+        return "region-status";
+      },
+    });
+    for (const badCommand of [
+      null,
+      { kind: "region-status", region: "us-east-1" },
+      { kind: "region-status", extra: true },
+      Object.create({ kind: "region-status" }),
+      withGetter,
+    ]) {
+      expect(() =>
+        cloudAuditCommandArgs(
+          "synthetic",
+          badCommand as unknown as CloudAuditCommand,
+          regions,
+        ),
+      ).toThrow("Cloud audit observation unavailable");
+    }
+    expect(getterAccessed).toBe(false);
+    expect(() =>
+      cloudAuditCommandArgs(
+        "synthetic",
+        { kind: "region-status" },
+        "us-east-1" as unknown as readonly string[],
+      ),
+    ).toThrow("Cloud audit observation unavailable");
+  });
+  it("validates Account ListRegions rows and extra commercial regions without inferring new Lake home regions", () => {
+    const expectCode = (fn: () => unknown, expected: string) => {
+      let caught: unknown;
+      try {
+        fn();
+      } catch (error) {
+        caught = error;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      expect((caught as Error).message).toBe(
+        "Cloud audit observation unavailable",
+      );
+      expect((caught as { code?: unknown }).code).toBe(expected);
+      const serialized = JSON.stringify(caught);
+      expect(serialized).not.toContain(account);
+      expect(serialized).not.toContain(arn);
+      expect(serialized).not.toContain("private-region-token");
+    };
+    const parsed = parseCloudAuditRegionStatuses(
+      regionStatuses({ "af-south-1": "DISABLED", "us-east-1": "ENABLED" }, [
+        { RegionName: "mx-central-1", RegionOptStatus: "DISABLED" },
+        { RegionName: "ap-southeast-5", RegionOptStatus: "ENABLED" },
+        { RegionName: "ca-west-1", RegionOptStatus: "ENABLING" },
+      ]),
+    );
+    expect(Object.isFrozen(parsed)).toBe(true);
+    expect(Object.isFrozen(parsed.statuses)).toBe(true);
+    expect(Object.isFrozen(parsed.enabledRegions)).toBe(true);
+    expect(Object.isFrozen(parsed.disabledRegions)).toBe(true);
+    expect(parsed.disabledRegions).toEqual(["af-south-1"]);
+    expect(parsed.enabledRegions).toEqual(
+      cloudAuditCommercialRegions.filter((r) => r !== "af-south-1"),
+    );
+    expect(parsed.statuses["us-east-1"]).toBe("ENABLED");
+    expect(parsed.statuses["af-south-1"]).toBe("DISABLED");
+    expect(parsed.statuses["mx-central-1"]).toBe("DISABLED");
+    expect(parsed.statuses["ap-southeast-5"]).toBe("ENABLED");
+    expect(parsed.statuses["ca-west-1"]).toBe("ENABLING");
+    const overflowExtras = Array.from({ length: 23 }, (_, index) => ({
+      RegionName: `aa-east-${index + 1}`,
+      RegionOptStatus: "DISABLED",
+    }));
+    for (const malformed of [
+      "{",
+      "[]",
+      "null",
+      "x".repeat(64 * 1024 + 1),
+      '{"Regions":[]}',
+      '{"Regions":[],"NextToken":null}',
+      JSON.stringify({
+        Regions: [
+          { RegionName: "us-east-1", RegionOptStatus: "ENABLED_BY_DEFAULT" },
+        ],
+        NextToken: null,
+        Extra: account,
+      }),
+      regionStatuses({}, overflowExtras),
+      JSON.stringify({ Regions: [null], NextToken: null }),
+      JSON.stringify({
+        Regions: [{ RegionName: "us-east-1" }],
+        NextToken: null,
+      }),
+      JSON.stringify({
+        Regions: [
+          {
+            RegionName: "us-east-1",
+            RegionOptStatus: "ENABLED_BY_DEFAULT",
+            Extra: true,
+          },
+        ],
+        NextToken: null,
+      }),
+      regionStatuses({ "af-south-1": "OPT_IN_REQUIRED" }),
+      regionStatuses({ "af-south-1": "enabled" }),
+      regionStatuses({}, [
+        { RegionName: "mx-central-1", RegionOptStatus: "UNKNOWN" },
+      ]),
+      regionStatuses({}, [
+        { RegionName: "af-south-1", RegionOptStatus: "ENABLED" },
+      ]),
+      regionStatuses({}, [
+        { RegionName: "mx-central-1", RegionOptStatus: "DISABLED" },
+        { RegionName: "mx-central-1", RegionOptStatus: "DISABLED" },
+      ]),
+      regionStatuses({}, [], ""),
+      regionStatuses({}, [], 123),
+      regionStatuses({}, [], "t".repeat(1025)),
+    ]) {
+      expectCode(
+        () => parseCloudAuditRegionStatuses(malformed),
+        "malformed-response",
+      );
+    }
+    for (const invalidName of [
+      "us-gov-east-1",
+      "cn-north-1",
+      "us-iso-east-1",
+      "eusc-de-east-1",
+      "us-east-0",
+      "US-EAST-1",
+      "us-east-1\n",
+      "aa-" + "east".repeat(8) + "-1",
+      "__proto__",
+      arn,
+    ]) {
+      expectCode(
+        () =>
+          parseCloudAuditRegionStatuses(
+            regionStatuses({}, [
+              { RegionName: invalidName, RegionOptStatus: "ENABLED" },
+            ]),
+          ),
+        "malformed-response",
+      );
+    }
+    expectCode(
+      () =>
+        parseCloudAuditRegionStatuses(
+          regionStatuses({}, [], "private-region-token"),
+        ),
+      "region-status-incomplete",
+    );
+    const missingOne = JSON.stringify({
+      Regions: cloudAuditCommercialRegions
+        .filter((r) => r !== "sa-east-1")
+        .map((r) => ({
+          RegionName: r,
+          RegionOptStatus: "ENABLED_BY_DEFAULT",
+        })),
+      NextToken: null,
+    });
+    expectCode(
+      () => parseCloudAuditRegionStatuses(missingOne),
+      "region-status-incomplete",
+    );
+    expectCode(
+      () =>
+        parseCloudAuditRegionStatuses(
+          regionStatuses({ "us-east-1": "DISABLED" }),
+        ),
+      "target-region-disabled",
+    );
+    for (const transitional of [
+      regionStatuses({ "af-south-1": "ENABLING" }),
+      regionStatuses({ "eu-central-2": "DISABLING" }),
+      regionStatuses({ "us-east-1": "ENABLING" }),
+      regionStatuses({ "us-east-1": "DISABLING" }),
+    ]) {
+      expectCode(
+        () => parseCloudAuditRegionStatuses(transitional),
+        "region-status-transitional",
+      );
+    }
+    for (const badRequired of [
+      [],
+      ["us-gov-east-1"],
+      ["us-east-1", "us-east-1"],
+    ]) {
+      expectCode(
+        () => parseCloudAuditRegionStatuses(regionStatuses(), badRequired),
+        "invalid-input",
+      );
+    }
+  });
+  it("skips disabled af-south-1 and mixed disabled home regions while keeping coverage unknown, not-ready and identity-rechecked", async () => {
+    const f = fixture();
+    f.values["region-status"] = regionStatuses({ "af-south-1": "DISABLED" }, [
+      { RegionName: "mx-central-1", RegionOptStatus: "DISABLED" },
+      { RegionName: "ap-southeast-5", RegionOptStatus: "ENABLED" },
+    ]);
+    let active = 0,
+      maximum = 0;
+    f.read.mockImplementation(async (c) => {
+      if (c.kind === "lake") {
+        if (
+          c.region === "af-south-1" ||
+          c.region === "mx-central-1" ||
+          c.region === "ap-southeast-5"
+        ) {
+          throw new Error("unexpected regional Lake call " + c.region);
+        }
+        active++;
+        maximum = Math.max(maximum, active);
+        await Promise.resolve();
+        active--;
+      }
+      return f.values[c.kind];
+    });
+    const result = await collectCloudAuditObservation(input(), f);
+    expect(result.kind).toBe("observed");
+    if (result.kind !== "observed") throw Error("missing observation");
+    expect(result.safety).toEqual({
+      hooks: "absent",
+      targetDataEvents: "unknown",
+    });
+    expect(result.coverage).toEqual({
+      organization: "management",
+      hooksListed: true,
+      trailsWithShadowsRead: true,
+      regionStatusesRead: true,
+      lakeRegionsChecked: 27,
+      lakeRegionsDisabled: 1,
+      lakeComplete: false,
+    });
+    expect(result.summary).toEqual({
+      identityVerified: true,
+      hooksAbsent: true,
+      dataEventsAbsent: false,
+      auditReady: false,
+      cleanupRunwayReady: true,
+      code: "lake-regions-disabled",
+    });
+    expect(maximum).toBe(4);
+    const lakeRegions = f.read.mock.calls
+      .map(([c]) => c)
+      .filter((c) => c.kind === "lake")
+      .map((c) => c.region)
+      .sort();
+    expect(lakeRegions).toEqual(
+      cloudAuditCommercialRegions.filter((r) => r !== "af-south-1"),
+    );
+    expect(commandCount(f.read, "caller-identity")).toBe(1);
+    const mixed = fixture();
+    mixed.values.organization = '{"Standalone":true}';
+    mixed.values["region-status"] = regionStatuses({
+      "af-south-1": "DISABLED",
+      "ap-east-1": "DISABLED",
+      "me-south-1": "DISABLED",
+    });
+    const mixedResult = await collectCloudAuditObservation(input(), mixed);
+    expect(mixedResult.kind).toBe("observed");
+    if (mixedResult.kind !== "observed") throw Error("missing observation");
+    expect(mixedResult.coverage).toEqual({
+      organization: "standalone",
+      hooksListed: true,
+      trailsWithShadowsRead: true,
+      regionStatusesRead: true,
+      lakeRegionsChecked: 25,
+      lakeRegionsDisabled: 3,
+      lakeComplete: false,
+    });
+    expect(mixedResult.summary.code).toBe("lake-regions-disabled");
+    expect(mixedResult.summary.auditReady).toBe(false);
+    expect(commandCount(mixed.read, "lake")).toBe(25);
+    expect(commandCount(mixed.read, "caller-identity")).toBe(1);
+    for (const skipped of ["af-south-1", "ap-east-1", "me-south-1"]) {
+      expect(
+        mixed.read.mock.calls.some(
+          ([c]) => c.kind === "lake" && c.region === skipped,
+        ),
+      ).toBe(false);
+    }
+    for (const driftedCaller of [
+      { Account: "999900001111", Arn: arn },
+      { Account: account, Arn: arn.replace(role, "DriftedRole") },
+    ]) {
+      const drifted = fixture();
+      drifted.values["region-status"] = regionStatuses({
+        "af-south-1": "DISABLED",
+      });
+      drifted.values["caller-identity"] = JSON.stringify(driftedCaller);
+      const outcome = await collectCloudAuditObservation(input(), drifted);
+      expect(outcome).toEqual({
+        kind: "unavailable",
+        code: "identity-mismatch",
+        stage: "caller-identity",
+        region: "us-east-1",
+        identityVerified: true,
+        resourceWrites: 0,
+      });
+      expect(JSON.stringify(outcome)).not.toContain("999900001111");
+      expect(JSON.stringify(outcome)).not.toContain("DriftedRole");
+    }
+    for (const [page, expectedReason] of [
+      [{ Count: 1, NextToken: null }, "lake-requires-review"],
+      [{ Count: 0, NextToken: "private-lake-token" }, "lake-page-incomplete"],
+    ] as const) {
+      const partial = fixture();
+      partial.values["region-status"] = regionStatuses({
+        "af-south-1": "DISABLED",
+      });
+      partial.values.lake = JSON.stringify(page);
+      const outcome = await collectCloudAuditObservation(input(), partial);
+      expect(outcome.kind).toBe("observed");
+      if (outcome.kind !== "observed") throw Error("missing observation");
+      expect(outcome.summary.code).toBe(expectedReason);
+      expect(outcome.summary.auditReady).toBe(false);
+      expect(outcome.coverage.lakeRegionsChecked).toBe(4);
+      expect(outcome.coverage.lakeRegionsDisabled).toBe(1);
+      expect(outcome.coverage.lakeComplete).toBe(false);
+      expect(
+        partial.read.mock.calls.some(
+          ([c]) => c.kind === "lake" && c.region === "af-south-1",
+        ),
+      ).toBe(false);
+      expect(JSON.stringify(outcome)).not.toContain("private-lake-token");
+    }
+  });
+  it("gates region-status after trails and refuses disabled target, incomplete, transitional or malformed status before Lake", async () => {
+    const member = fixture();
+    member.values.organization = JSON.stringify({
+      ManagementAccountId: "999900001111",
+    });
+    const memberResult = await collectCloudAuditObservation(input(), member);
+    expect(
+      memberResult.kind === "observed" &&
+        memberResult.coverage.regionStatusesRead === false &&
+        memberResult.coverage.lakeRegionsDisabled === 0,
+    ).toBe(true);
+    expect(commandCount(member.read, "region-status")).toBe(0);
+    const presentHooks = fixture();
+    presentHooks.values.hooks = JSON.stringify({ Count: 1, NextToken: null });
+    const hooksResult = await collectCloudAuditObservation(
+      input(),
+      presentHooks,
+    );
+    expect(
+      hooksResult.kind === "observed" &&
+        hooksResult.coverage.regionStatusesRead === false &&
+        hooksResult.coverage.lakeRegionsDisabled === 0,
+    ).toBe(true);
+    expect(commandCount(presentHooks.read, "region-status")).toBe(0);
+    const presentTrails = fixture();
+    presentTrails.values.trails = JSON.stringify({ Count: 1 });
+    const trailsResult = await collectCloudAuditObservation(
+      input(),
+      presentTrails,
+    );
+    expect(
+      trailsResult.kind === "observed" &&
+        trailsResult.coverage.regionStatusesRead === false &&
+        trailsResult.coverage.lakeRegionsDisabled === 0,
+    ).toBe(true);
+    expect(commandCount(presentTrails.read, "region-status")).toBe(0);
+    const missingRegion = JSON.stringify({
+      Regions: cloudAuditCommercialRegions
+        .filter((r) => r !== "il-central-1")
+        .map((r) => ({
+          RegionName: r,
+          RegionOptStatus: "ENABLED_BY_DEFAULT",
+        })),
+      NextToken: null,
+    });
+    for (const [raw, expectedCode] of [
+      [regionStatuses({ "us-east-1": "DISABLED" }), "target-region-disabled"],
+      [
+        regionStatuses({ "af-south-1": "ENABLING" }),
+        "region-status-transitional",
+      ],
+      [
+        regionStatuses({ "eu-central-2": "DISABLING" }),
+        "region-status-transitional",
+      ],
+      [
+        regionStatuses({ "us-east-1": "DISABLING" }),
+        "region-status-transitional",
+      ],
+      [missingRegion, "region-status-incomplete"],
+      [
+        regionStatuses({}, [], "private-next-token-" + account),
+        "region-status-incomplete",
+      ],
+      [
+        regionStatuses({}, [
+          { RegionName: "af-south-1", RegionOptStatus: "ENABLED" },
+        ]),
+        "malformed-response",
+      ],
+      [
+        regionStatuses({}, [
+          { RegionName: "mx-central-1", RegionOptStatus: "DISABLED" },
+          { RegionName: "mx-central-1", RegionOptStatus: "DISABLED" },
+        ]),
+        "malformed-response",
+      ],
+      [
+        regionStatuses({ "af-south-1": "OPT_IN_REQUIRED" }),
+        "malformed-response",
+      ],
+      [
+        regionStatuses({}, [
+          { RegionName: "mx-central-1", RegionOptStatus: "OPT_IN_REQUIRED" },
+        ]),
+        "malformed-response",
+      ],
+      [
+        regionStatuses({}, [
+          { RegionName: "us-gov-east-1", RegionOptStatus: "ENABLED" },
+        ]),
+        "malformed-response",
+      ],
+    ] as const) {
+      const f = fixture();
+      f.values["region-status"] = raw;
+      const outcome = await collectCloudAuditObservation(input(), f);
+      expect(outcome).toEqual({
+        kind: "unavailable",
+        code: expectedCode,
+        stage: "region-status",
+        region: "us-east-1",
+        identityVerified: true,
+        resourceWrites: 0,
+      });
+      expect(Object.isFrozen(outcome)).toBe(true);
+      expect(commandCount(f.read, "lake")).toBe(0);
+      expect(commandCount(f.read, "caller-identity")).toBe(0);
+      expect(JSON.stringify(outcome)).not.toContain("private-next-token");
+      expect(JSON.stringify(outcome)).not.toContain(account);
+    }
+  });
+  it("fails closed on region-status errors, aborts and deadlines without retries, leaks or late Lake batches", async () => {
+    const failed = fixture();
+    let observedSignal: AbortSignal | undefined;
+    failed.read.mockImplementation(async (c, s) => {
+      observedSignal = s;
+      if (c.kind === "region-status") {
+        throw new Error("private AccessDeniedException " + arn + " " + account);
+      }
+      return failed.values[c.kind];
+    });
+    const failedOutcome = await collectCloudAuditObservation(input(), failed);
+    expect(failedOutcome).toEqual({
+      kind: "unavailable",
+      code: "region-status-unavailable",
+      stage: "region-status",
+      region: "us-east-1",
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    expect(Object.isFrozen(failedOutcome)).toBe(true);
+    expect(observedSignal?.aborted).toBe(true);
+    expect(commandCount(failed.read, "region-status")).toBe(1);
+    expect(commandCount(failed.read, "lake")).toBe(0);
+    const failedText = JSON.stringify(failedOutcome);
+    for (const secret of [account, arn, "AccessDenied"]) {
+      expect(failedText).not.toContain(secret);
+    }
+    vi.useFakeTimers();
+    const timedOut = fixture();
+    let deadlineSignal: AbortSignal | undefined;
+    timedOut.read.mockImplementation((c, s) => {
+      deadlineSignal = s;
+      if (c.kind !== "region-status") {
+        return Promise.resolve(timedOut.values[c.kind]);
+      }
+      return new Promise<string>(() => {});
+    });
+    const pendingDeadline = collectCloudAuditObservation(input(), timedOut);
+    await vi.advanceTimersByTimeAsync(90000);
+    expect(await pendingDeadline).toEqual({
+      kind: "unavailable",
+      code: "deadline",
+      stage: "region-status",
+      region: null,
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    expect(deadlineSignal?.aborted).toBe(true);
+    expect(commandCount(timedOut.read, "lake")).toBe(0);
+    vi.useRealTimers();
+    const shared = new AbortController(),
+      aborted = fixture();
+    let markStarted = () => {};
+    const started = new Promise<void>((resolve) => {
+      markStarted = resolve;
+    });
+    aborted.read.mockImplementation((c) => {
+      if (c.kind !== "region-status") {
+        return Promise.resolve(aborted.values[c.kind]);
+      }
+      return new Promise<string>((_, reject) => {
+        shared.signal.addEventListener(
+          "abort",
+          () => reject(new DOMException("Aborted us-east-1", "AbortError")),
+          { once: true },
+        );
+        markStarted();
+      });
+    });
+    const abortedRun = collectCloudAuditObservation(input(), aborted);
+    await started;
+    shared.abort();
+    expect(await abortedRun).toEqual({
+      kind: "unavailable",
+      code: "read-unavailable",
+      stage: "region-status",
+      region: null,
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    expect(commandCount(aborted.read, "lake")).toBe(0);
+    const stoppedBatch = fixture();
+    stoppedBatch.values["region-status"] = regionStatuses({
+      "af-south-1": "DISABLED",
+    });
+    stoppedBatch.read.mockImplementation(async (c) => {
+      if (c.kind === "lake" && c.region === "ap-east-1") {
+        throw new Error("private regional error " + arn);
+      }
+      return stoppedBatch.values[c.kind];
+    });
+    const stoppedOutcome = await collectCloudAuditObservation(
+      input(),
+      stoppedBatch,
+    );
+    expect(stoppedOutcome).toEqual({
+      kind: "unavailable",
+      code: "lake-unavailable",
+      stage: "lake",
+      region: "ap-east-1",
+      identityVerified: true,
+      resourceWrites: 0,
+    });
+    expect(commandCount(stoppedBatch.read, "lake")).toBe(4);
+    expect(
+      stoppedBatch.read.mock.calls.some(
+        ([c]) => c.kind === "lake" && c.region === "af-south-1",
+      ),
+    ).toBe(false);
+    expect(commandCount(stoppedBatch.read, "caller-identity")).toBe(0);
   });
 });

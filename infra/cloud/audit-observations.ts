@@ -14,9 +14,26 @@ const execute = promisify(execFile),
   limit = 64 * 1024,
   deadlineMs = 90000,
   commercialRegions = new Set<string>(cloudAuditCommercialRegions);
+export const cloudAuditRegionOptStatuses = Object.freeze([
+  "ENABLED",
+  "ENABLED_BY_DEFAULT",
+  "DISABLED",
+  "ENABLING",
+  "DISABLING",
+] as const);
+export type CloudAuditRegionOptStatus =
+  (typeof cloudAuditRegionOptStatuses)[number];
+const allowedRegionOptStatuses = new Set<string>(cloudAuditRegionOptStatuses);
 type Input = { profile: string; region: string; authorizedUntil: string };
 export type CloudAuditCommand =
-  | { kind: "organization" | "hooks" | "trails" | "caller-identity" }
+  | {
+      kind:
+        | "organization"
+        | "hooks"
+        | "trails"
+        | "region-status"
+        | "caller-identity";
+    }
   | { kind: "lake"; region: string };
 export type CloudAuditFailureStage =
   | "registry"
@@ -24,6 +41,7 @@ export type CloudAuditFailureStage =
   | "organization"
   | "hooks"
   | "trails"
+  | "region-status"
   | "lake"
   | "caller-identity";
 type Reader = (
@@ -40,6 +58,10 @@ type Code =
   | "organization-unavailable"
   | "hooks-unavailable"
   | "trails-unavailable"
+  | "region-status-unavailable"
+  | "region-status-incomplete"
+  | "region-status-transitional"
+  | "target-region-disabled"
   | "lake-unavailable"
   | "lake-auth-unavailable"
   | "lake-access-denied"
@@ -54,6 +76,7 @@ type Reason =
   | "hooks-require-review"
   | "hook-page-incomplete"
   | "trails-require-review"
+  | "lake-regions-disabled"
   | "lake-requires-review"
   | "lake-page-incomplete";
 type Visibility = "standalone" | "management" | "member";
@@ -96,6 +119,59 @@ function fail(
 }
 const full = (value: unknown, pattern: RegExp): value is string =>
   typeof value === "string" && pattern.exec(value)?.[0] === value;
+const isCommercialRegionName = (value: unknown): value is string =>
+  typeof value === "string" &&
+  value.length <= 32 &&
+  full(value, /^(?!cn-)[a-z]{2}-[a-z]+-[1-9]\d*$/);
+function plainRecord(
+  value: unknown,
+  expectedSortedKeys: string,
+): Record<string, unknown> | null {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(value))
+  )
+    return null;
+  const keys = expectedSortedKeys.split(",");
+  if (Reflect.ownKeys(value).length !== keys.length) return null;
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  if (
+    Object.keys(descriptors).sort().join() !== expectedSortedKeys ||
+    Object.values(descriptors).some((v) => !v.enumerable || !("value" in v))
+  )
+    return null;
+  return value as Record<string, unknown>;
+}
+function validCommandShape(command: unknown): command is CloudAuditCommand {
+  if (
+    !command ||
+    typeof command !== "object" ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(command))
+  )
+    return false;
+  const keys = Reflect.ownKeys(command),
+    d = Object.getOwnPropertyDescriptors(command);
+  if (Object.values(d).some((v) => !v.enumerable || !("value" in v)))
+    return false;
+  const kind = d.kind?.value;
+  if (kind === "lake") {
+    return (
+      keys.length === 2 &&
+      Object.keys(d).sort().join() === "kind,region" &&
+      typeof d.region?.value === "string"
+    );
+  }
+  return (
+    keys.length === 1 &&
+    Object.keys(d).join() === "kind" &&
+    (kind === "organization" ||
+      kind === "hooks" ||
+      kind === "trails" ||
+      kind === "region-status" ||
+      kind === "caller-identity")
+  );
+}
 function snapshot(input: Input) {
   if (
     !input ||
@@ -179,7 +255,11 @@ export function cloudAuditCommandArgs(
   command: CloudAuditCommand,
   regions: readonly string[],
 ): readonly string[] {
-  if (!full(profile, /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/))
+  if (
+    !full(profile, /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/) ||
+    !validCommandShape(command) ||
+    !Array.isArray(regions)
+  )
     return fail("invalid-input");
   if (command.kind === "caller-identity")
     return [
@@ -188,11 +268,7 @@ export function cloudAuditCommandArgs(
       "json",
     ];
   const region = command.kind === "lake" ? command.region : "us-east-1";
-  if (
-    !full(region, /^[a-z]{2}(?:-[a-z]+)+-\d+$/) ||
-    region.length > 32 ||
-    !regions.includes(region)
-  )
+  if (!isCommercialRegionName(region) || !regions.includes(region))
     return fail("invalid-input");
   const common = [
     "--profile",
@@ -254,6 +330,21 @@ export function cloudAuditCommandArgs(
       "https://cloudtrail.us-east-1.amazonaws.com",
       "--query",
       "{Count:length(trailList)}",
+      "--output",
+      "json",
+    ];
+  if (command.kind === "region-status")
+    return [
+      ...common,
+      "account",
+      "list-regions",
+      "--max-results",
+      "50",
+      "--no-paginate",
+      "--endpoint-url",
+      "https://account.us-east-1.amazonaws.com",
+      "--query",
+      "{Regions:Regions[].{RegionName:RegionName,RegionOptStatus:RegionOptStatus},NextToken:NextToken}",
       "--output",
       "json",
     ];
@@ -351,6 +442,111 @@ function count(data: Record<string, unknown>, paginated: boolean) {
 }
 const paginatedCount = (data: Record<string, unknown>) => count(data, true);
 const singleCount = (data: Record<string, unknown>) => count(data, false);
+function validateRequiredRegions(regions: unknown): readonly string[] {
+  if (
+    !Array.isArray(regions) ||
+    regions.length < 1 ||
+    regions.length > 50 ||
+    Reflect.ownKeys(regions).length !== regions.length + 1
+  )
+    return fail("invalid-input");
+  const descriptors = Object.getOwnPropertyDescriptors(regions),
+    seen = new Set<string>();
+  for (let index = 0; index < regions.length; index++) {
+    const descriptor = descriptors[String(index)];
+    if (!descriptor || !descriptor.enumerable || !("value" in descriptor))
+      return fail("invalid-input");
+    const region: unknown = descriptor.value;
+    if (!isCommercialRegionName(region) || seen.has(region))
+      return fail("invalid-input");
+    seen.add(region);
+  }
+  return Object.freeze([...seen]);
+}
+function validateRegionStatuses(
+  data: Record<string, unknown>,
+  required: readonly string[],
+) {
+  if (!plainRecord(data, "NextToken,Regions"))
+    return fail("malformed-response");
+  const nextToken = data.NextToken;
+  if (
+    nextToken !== null &&
+    (typeof nextToken !== "string" ||
+      !nextToken.length ||
+      nextToken.length > 1024)
+  )
+    return fail("malformed-response");
+  const rows = data.Regions;
+  if (
+    !Array.isArray(rows) ||
+    rows.length < 1 ||
+    rows.length > 50 ||
+    Reflect.ownKeys(rows).length !== rows.length + 1
+  )
+    return fail("malformed-response");
+  const rowDescriptors = Object.getOwnPropertyDescriptors(rows),
+    seen = new Map<string, CloudAuditRegionOptStatus>();
+  for (let index = 0; index < rows.length; index++) {
+    const descriptor = rowDescriptors[String(index)];
+    if (!descriptor || !descriptor.enumerable || !("value" in descriptor))
+      return fail("malformed-response");
+    const row = plainRecord(descriptor.value, "RegionName,RegionOptStatus");
+    if (!row) return fail("malformed-response");
+    const regionName = row.RegionName,
+      optStatus = row.RegionOptStatus;
+    if (
+      !isCommercialRegionName(regionName) ||
+      typeof optStatus !== "string" ||
+      !allowedRegionOptStatuses.has(optStatus) ||
+      seen.has(regionName)
+    )
+      return fail("malformed-response");
+    seen.set(regionName, optStatus as CloudAuditRegionOptStatus);
+  }
+  if (
+    nextToken !== null ||
+    !seen.has("us-east-1") ||
+    required.some((region) => !seen.has(region))
+  )
+    return fail("region-status-incomplete");
+  const targetStatus = seen.get("us-east-1")!;
+  if (targetStatus === "DISABLED") return fail("target-region-disabled");
+  if (targetStatus === "ENABLING" || targetStatus === "DISABLING")
+    return fail("region-status-transitional");
+  const enabledRegions: string[] = [],
+    disabledRegions: string[] = [];
+  for (const region of required) {
+    const status = seen.get(region)!;
+    if (status === "ENABLING" || status === "DISABLING")
+      return fail("region-status-transitional");
+    if (status === "DISABLED") disabledRegions.push(region);
+    else enabledRegions.push(region);
+  }
+  const statuses: Record<string, CloudAuditRegionOptStatus> = {};
+  for (const [region, status] of [...seen.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    Object.defineProperty(statuses, region, {
+      value: status,
+      enumerable: true,
+      writable: false,
+      configurable: false,
+    });
+  }
+  return Object.freeze({
+    statuses: Object.freeze(statuses),
+    enabledRegions: Object.freeze([...enabledRegions].sort()),
+    disabledRegions: Object.freeze([...disabledRegions].sort()),
+  });
+}
+export function parseCloudAuditRegionStatuses(
+  raw: string,
+  requiredRegions: readonly string[] = cloudAuditCommercialRegions,
+) {
+  const required = validateRequiredRegions(requiredRegions);
+  return validateRegionStatuses(json(raw), required);
+}
 
 /** Configuration metadata only. Unknown coverage never establishes hook/data-event absence. */
 export async function collectCloudAuditObservation(
@@ -493,7 +689,9 @@ export async function collectCloudAuditObservation(
         code: Reason = "organization-coverage-unknown",
         hooksListed = false,
         trailsWithShadowsRead = false,
-        lakeRegionsChecked = 0;
+        regionStatusesRead = false,
+        lakeRegionsChecked = 0,
+        lakeRegionsDisabled = 0;
       if (visibility !== "member") {
         const hook = await inStage(
           "hooks",
@@ -513,13 +711,36 @@ export async function collectCloudAuditObservation(
           trailsWithShadowsRead = true;
           if (trail.present) code = "trails-require-review";
           else {
+            const regionStatuses = await inStage(
+              "region-status",
+              async () => {
+                const requiredHomeRegions = validateRequiredRegions(
+                  matrix.registry.regions,
+                );
+                if (
+                  requiredHomeRegions.length !== commercialRegions.size ||
+                  requiredHomeRegions.some(
+                    (region) => !commercialRegions.has(region),
+                  )
+                )
+                  return fail("registry-not-ready");
+                return runCommand({ kind: "region-status" }, (statuses) =>
+                  validateRegionStatuses(statuses, requiredHomeRegions),
+                );
+              },
+              "us-east-1",
+            );
+            regionStatusesRead = true;
+            lakeRegionsDisabled = regionStatuses.disabledRegions.length;
+            const enabledLakeRegions = regionStatuses.enabledRegions;
             code = await inStage("lake", async (): Promise<Reason> => {
               for (
                 let index = 0;
-                index < matrix.registry.regions.length;
+                index < enabledLakeRegions.length;
                 index += 4
               ) {
-                const batch = matrix.registry.regions.slice(index, index + 4);
+                controller.signal.throwIfAborted();
+                const batch = enabledLakeRegions.slice(index, index + 4);
                 const results = await Promise.all(
                   batch.map((region) =>
                     runCommand({ kind: "lake", region }, paginatedCount),
@@ -533,7 +754,9 @@ export async function collectCloudAuditObservation(
                   return "lake-page-incomplete";
                 }
               }
-              return "audit-absent";
+              return lakeRegionsDisabled > 0
+                ? "lake-regions-disabled"
+                : "audit-absent";
             });
             if (code === "audit-absent") targetDataEvents = "absent";
           }
@@ -582,7 +805,9 @@ export async function collectCloudAuditObservation(
           organization: visibility,
           hooksListed,
           trailsWithShadowsRead,
+          regionStatusesRead,
           lakeRegionsChecked,
+          lakeRegionsDisabled,
           lakeComplete: targetDataEvents === "absent",
         }),
         summary: Object.freeze({
